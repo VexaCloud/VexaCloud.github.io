@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav class="topbar">
+        <a href="index.html">Home</a>
+    </nav>
+
+    <div class="settings-container">
+        <h1>Settings</h1>
+
+        <h3>Upload Background Image</h3>
+        <input type="file" id="bgUpload" accept="image/*">
+
+        <button onclick="saveBackground()">Save Background</button>
+    </div>
+
+    <script>
+        function saveBackground() {
+            const file = document.getElementById("bgUpload").files[0];
+            if (!file) return alert("No file selected");
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                localStorage.setItem("customBackground", reader.result);
+                alert("Background saved!");
+            };
+            reader.readAsDataURL(file);
+        }
+    </script>
+
+</body>
+</html>
