@@ -23,6 +23,7 @@
     <div id="results"></div>
 
     <script>
+        // Load background from settings
         const bg = localStorage.getItem("customBackground");
         if (bg) document.body.style.backgroundImage = `url('${bg}')`;
 
@@ -31,9 +32,11 @@
             const resultsDiv = document.getElementById("results");
             resultsDiv.innerHTML = "Searching...";
 
+            // Fetch repo file list (GitHub Pages compatible)
             const response = await fetch("./");
             const text = await response.text();
 
+            // Parse all .html files
             const parser = new DOMParser();
             const doc = parser.parseFromString(text, "text/html");
             const links = [...doc.querySelectorAll("a")];
