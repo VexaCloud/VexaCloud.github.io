@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Account Banned</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #ff1b2d 0, #1a0004 40%, #000000 100%);
+      color: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .scanlines {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.04),
+        rgba(255, 255, 255, 0.04) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+      mix-blend-mode: soft-light;
+      opacity: 0.4;
+    }
+
+    .glow-orb {
+      position: fixed;
+      width: 420px;
+      height: 420px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 0, 0, 0.9), transparent 70%);
+      filter: blur(18px);
+      opacity: 0.35;
+      top: -80px;
+      right: -40px;
+      pointer-events: none;
+    }
+
+    .container {
+      position: relative;
+      max-width: 520px;
+      width: 90%;
+      padding: 2.5rem 2.8rem 3rem;
+      background: linear-gradient(145deg, rgba(10, 10, 10, 0.96), rgba(30, 0, 0, 0.96));
+      border-radius: 18px;
+      border: 1px solid rgba(255, 0, 0, 0.6);
+      box-shadow:
+        0 0 25px rgba(255, 0, 0, 0.4),
+        0 0 80px rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(10px);
+      text-align: center;
+    }
+
+    .container::before {
+      content: "";
+      position: absolute;
+      inset: -2px;
+      border-radius: inherit;
+      padding: 2px;
+      background: linear-gradient(135deg, #ff003c, #ff4b2b, #ff003c);
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .icon-wrapper {
+      width: 90px;
+      height: 90px;
+      margin: 0 auto 1.5rem;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow:
+        0 0 25px rgba(255, 0, 0, 0.7),
+        0 0 60px rgba(255, 0, 0, 0.4);
+      background: radial-gradient(circle at 30% 30%, #ff4b4b, #3b0000);
+    }
+
+    .icon-wrapper span {
+      font-size: 3rem;
+      color: #fff;
+      text-shadow: 0 0 18px rgba(0, 0, 0, 0.9);
+    }
+
+    h1 {
+      font-size: 2.1rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+      color: #ff4b4b;
+      text-shadow:
+        0 0 10px rgba(255, 0, 0, 0.8),
+        0 0 25px rgba(0, 0, 0, 1);
+    }
+
+    .subheading {
+      font-size: 0.9rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: #ff9b9b;
+      margin-bottom: 1.8rem;
+      opacity: 0.9;
+    }
+
+    .id-text {
+      font-size: 1.05rem;
+      margin-bottom: 0.6rem;
+      color: #f5f5f5;
+    }
+
+    .id-highlight {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      background: rgba(255, 0, 0, 0.18);
+      border: 1px solid rgba(255, 80, 80, 0.7);
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: #ffb3b3;
+      font-size: 0.9rem;
+      margin-left: 0.3rem;
+    }
+
+    .reason {
+      font-size: 0.95rem;
+      color: #d0d0d0;
+      margin-bottom: 1.8rem;
+      line-height: 1.6;
+    }
+
+    .warning {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: #ff8080;
+      margin-bottom: 2rem;
+      opacity: 0.85;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.9rem 2.6rem;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #fff;
+      background: linear-gradient(135deg, #ff003c, #ff4b2b);
+      box-shadow:
+        0 0 18px rgba(255, 0, 0, 0.7),
+        0 0 40px rgba(255, 0, 0, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        120deg,
+        transparent,
+        rgba(255, 255, 255, 0.35),
+        transparent
+      );
+      transform: translateX(-100%);
+      transition: transform 0.6s ease;
+    }
+
+    .btn:hover::before {
+      transform: translateX(100%);
+    }
+
+    .btn:hover {
+      transform: translateY(-1px) scale(1.02);
+      box-shadow:
+        0 0 25px rgba(255, 0, 0, 0.9),
+        0 0 60px rgba(255, 0, 0, 0.5);
+    }
+
+    .btn span.icon {
+      font-size: 1.1rem;
+    }
+
+    .footer-note {
+      margin-top: 1.8rem;
+      font-size: 0.75rem;
+      color: #aaaaaa;
+      opacity: 0.8;
+    }
+
+    .footer-note strong {
+      color: #ff5c5c;
+      font-weight: 600;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 2rem 1.6rem 2.4rem;
+      }
+
+      h1 {
+        font-size: 1.7rem;
+        letter-spacing: 0.12em;
+      }
+
+      .subheading {
+        letter-spacing: 0.18em;
+      }
+
+      .icon-wrapper {
+        width: 78px;
+        height: 78px;
+      }
+
+      .icon-wrapper span {
+        font-size: 2.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="scanlines"></div>
+  <div class="glow-orb"></div>
+
+  <div class="container">
+    <div class="icon-wrapper">
+      <span>!</span>
+    </div>
+
+    <h1>BANNED</h1>
+    <div class="subheading">ACCESS REVOKED</div>
+
+    <p class="id-text">
+      Your ID
+      <span class="id-highlight">______</span>
+      has been banned.
+    </p>
+
+    <p class="reason">
+      Your access to this service has been temporarily disabled due to a violation of our guidelines.
+      If you believe this action was taken in error, you may submit an appeal for review.
+    </p>
+
+    <p class="warning">
+      All actions are logged and monitored.
+    </p>
+
+    <a
+      class="btn"
+      href="https://forms.gle/G5hXeaDFTQUoWDbq8"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <span class="icon">↻</span>
+      <span>Appeal this ban</span>
+    </a>
+
+    <div class="footer-note">
+      Submitting an appeal does not guarantee reinstatement. All decisions are final after manual review by
+      <strong>admins</strong>.
+    </div>
+  </div>
+</body>
+</html>
