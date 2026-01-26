@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 - Page Not Found</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background-color: #0a0a0a;
+      color: #fff;
+      overflow: hidden;
+      height: 100vh;
+      width: 100%;
+      perspective: 1000px;
+    }
+
+    /* Particle background */
+    #particles-js {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* Main container */
+    .container {
+      position: relative;
+      z-index: 10;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* 404 Text with glow */
+    .error-code {
+      font-size: 12rem;
+      font-weight: 800;
+      letter-spacing: -5px;
+      background: linear-gradient(to right, #ff1e56, #ff0022);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 1.5rem;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.5s ease;
+      text-shadow:
+        0 0 10px rgba(255, 30, 86, 0.7),
+        0 0 40px rgba(255, 30, 86, 0.5),
+        0 0 80px rgba(255, 30, 86, 0.3);
+    }
+
+    /* Error message */
+    .error-message {
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 2.5rem;
+      background: linear-gradient(to right, #fff, #ccc);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      max-width: 800px;
+    }
+
+    /* Return button with hover effect */
+    .return-btn {
+      text-decoration: none;
+      color: #fff;
+      background: linear-gradient(45deg, #ff1e56, #ff0022);
+      padding: 1rem 2rem;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        0 0 10px rgba(255, 30, 86, 0.7),
+        0 0 20px rgba(255, 30, 86, 0.5);
+      transition: all 0.3s ease;
+      transform-style: preserve-3d;
+      transform: translateZ(0);
+    }
+
+    .return-btn:before {
+      content: '';
+      position: absolute;
+      background: rgba(255, 255, 255, 0.2);
+      width: 60px;
+      height: 100%;
+      left: -100px;
+      top: 0;
+      transform: skewX(-45deg);
+      transition: all 0.6s ease;
+    }
+
+    .return-btn:hover {
+      transform: scale(1.05) translateZ(20px);
+      box-shadow:
+        0 0 15px rgba(255, 30, 86, 0.8),
+        0 0 30px rgba(255, 30, 86, 0.6),
+        0 0 60px rgba(255, 30, 86, 0.4);
+    }
+
+    .return-btn:hover:before {
+      left: 150%;
+    }
+
+    /* 3D floating objects */
+    .floating-object {
+      position: absolute;
+      background: rgba(255, 30, 86, 0.1);
+      border: 1px solid rgba(255, 30, 86, 0.3);
+      border-radius: 50%;
+      box-shadow: 0 0 20px rgba(255, 30, 86, 0.5);
+      pointer-events: none;
+      z-index: 5;
+      backdrop-filter: blur(5px);
+      transition: transform 0.3s ease;
+    }
+
+    /* Interactive error text that follows mouse */
+    .interactive-text {
+      position: absolute;
+      bottom: 2rem;
+      font-size: 1rem;
+      color: #666;
+      font-weight: 400;
+      opacity: 0.7;
+      transform: translateZ(10px);
+    }
+
+    /* Glitch effect container */
+    .glitch-wrapper {
+      position: relative;
+      transform-style: preserve-3d;
+    }
+
+    /* Glitch effect layers */
+    .glitch-text {
+      position: relative;
+      animation: glitch-skew 1s infinite linear alternate-reverse;
+    }
+
+    .glitch-text::before,
+    .glitch-text::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .glitch-text::before {
+      left: 2px;
+      text-shadow: -2px 0 #ff1e56;
+      clip: rect(44px, 450px, 56px, 0);
+      animation: glitch-anim 5s infinite linear alternate-reverse;
+    }
+
+    .glitch-text::after {
+      left: -2px;
+      text-shadow: -2px 0 #00fff9;
+      clip: rect(44px, 450px, 56px, 0);
+      animation: glitch-anim2 5s infinite linear alternate-reverse;
+    }
+
+    @keyframes glitch-anim {
+      0% {
+        clip: rect(78px, 9999px, 15px, 0);
+        transform: skew(0.58deg);
+      }
+      5% {
+        clip: rect(53px, 9999px, 78px, 0);
+        transform: skew(0.69deg);
+      }
+      10% {
+        clip: rect(82px, 9999px, 59px, 0);
+        transform: skew(0.94deg);
+      }
+      15% {
+        clip: rect(21px, 9999px, 35px, 0);
+        transform: skew(0.4deg);
+      }
+      20% {
+        clip: rect(86px, 9999px, 80px, 0);
+        transform: skew(0.39deg);
+      }
+      25% {
+        clip: rect(13px, 9999px, 70px, 0);
+        transform: skew(0.21deg);
+      }
+      30% {
+        clip: rect(97px, 9999px, 75px, 0);
+        transform: skew(0.67deg);
+      }
+      35% {
+        clip: rect(10px, 9999px, 17px, 0);
+        transform: skew(0.75deg);
+      }
+      40% {
+        clip: rect(53px, 9999px, 3px, 0);
+        transform: skew(0.08deg);
+      }
+      45% {
+        clip: rect(47px, 9999px, 31px, 0);
+        transform: skew(0.67deg);
+      }
+      50% {
+        clip: rect(40px, 9999px, 88px, 0);
+        transform: skew(0.31deg);
+      }
+      55% {
+        clip: rect(57px, 9999px, 22px, 0);
+        transform: skew(0.73deg);
+      }
+      60% {
+        clip: rect(57px, 9999px, 66px, 0);
+        transform: skew(0.65deg);
+      }
+      65% {
+        clip: rect(99px, 9999px, 91px, 0);
+        transform: skew(0.72deg);
+      }
+      70% {
+        clip: rect(36px, 9999px, 10px, 0);
+        transform: skew(0.36deg);
+      }
+      75% {
+        clip: rect(72px, 9999px, 52px, 0);
+        transform: skew(0.01deg);
+      }
+      80% {
+        clip: rect(47px, 9999px, 44px, 0);
+        transform: skew(0.56deg);
+      }
+      85% {
+        clip: rect(71px, 9999px, 18px, 0);
+        transform: skew(0.98deg);
+      }
+      90% {
+        clip: rect(20px, 9999px, 70px, 0);
+        transform: skew(0.13deg);
+      }
+      95% {
+        clip: rect(58px, 9999px, 97px, 0);
+        transform: skew(0.55deg);
+      }
+      100% {
+        clip: rect(97px, 9999px, 52px, 0);
+        transform: skew(0.1deg);
+      }
+    }
+
+    @keyframes glitch-anim2 {
+      0% {
+        clip: rect(58px, 9999px, 59px, 0);
+        transform: skew(0.11deg);
+      }
+      5% {
+        clip: rect(59px, 9999px, 37px, 0);
+        transform: skew(0.65deg);
+      }
+      10% {
+        clip: rect(79px, 9999px, 99px, 0);
+        transform: skew(0.24deg);
+      }
+      15% {
+        clip: rect(91px, 9999px, 70px, 0);
+        transform: skew(0.75deg);
+      }
+      20% {
+        clip: rect(10px, 9999px, 88px, 0);
+        transform: skew(0.39deg);
+      }
+      25% {
+        clip: rect(23px, 9999px, 34px, 0);
+        transform: skew(0.39deg);
+      }
+      30% {
+        clip: rect(74px, 9999px, 76px, 0);
+        transform: skew(0.05deg);
+      }
+      35% {
+        clip: rect(83px, 9999px, 51px, 0);
+        transform: skew(0.71deg);
+      }
+      40% {
+        clip: rect(1px, 9999px, 48px, 0);
+        transform: skew(0.53deg);
+      }
+      45% {
+        clip: rect(96px, 9999px, 42px, 0);
+        transform: skew(0.03deg);
+      }
+      50% {
+        clip: rect(75px, 9999px, 89px, 0);
+        transform: skew(0.31deg);
+      }
+      55% {
+        clip: rect(42px, 9999px, 97px, 0);
+        transform: skew(0.53deg);
+      }
+      60% {
+        clip: rect(14px, 9999px, 3px, 0);
+        transform: skew(0.84deg);
+      }
+      65% {
+        clip: rect(12px, 9999px, 32px, 0);
+        transform: skew(0.95deg);
+      }
+      70% {
+        clip: rect(5px, 9999px, 30px, 0);
+        transform: skew(0.24deg);
+      }
+      75% {
+        clip: rect(21px, 9999px, 51px, 0);
+        transform: skew(0.98deg);
+      }
+      80% {
+        clip: rect(31px, 9999px, 21px, 0);
+        transform: skew(0.05deg);
+      }
+      85% {
+        clip: rect(99px, 9999px, 69px, 0);
+        transform: skew(0.31deg);
+      }
+      90% {
+        clip: rect(42px, 9999px, 73px, 0);
+        transform: skew(0.21deg);
+      }
+      95% {
+        clip: rect(87px, 9999px, 98px, 0);
+        transform: skew(0.05deg);
+      }
+      100% {
+        clip: rect(44px, 9999px, 12px, 0);
+        transform: skew(0.5deg);
+      }
+    }
+
+    @keyframes glitch-skew {
+      0% {
+        transform: skew(1deg);
+      }
+      10% {
+        transform: skew(-2deg);
+      }
+      20% {
+        transform: skew(0deg);
+      }
+      30% {
+        transform: skew(1deg);
+      }
+      40% {
+        transform: skew(-1deg);
+      }
+      50% {
+        transform: skew(3deg);
+      }
+      60% {
+        transform: skew(2deg);
+      }
+      70% {
+        transform: skew(0deg);
+      }
+      80% {
+        transform: skew(-3deg);
+      }
+      90% {
+        transform: skew(0deg);
+      }
+      100% {
+        transform: skew(-2deg);
+      }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .error-code {
+        font-size: 6rem;
+      }
+      .error-message {
+        font-size: 1.5rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .error-code {
+        font-size: 4rem;
+      }
+      .error-message {
+        font-size: 1rem;
+      }
+      .return-btn {
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Particle background container -->
+  <div id="particles-js"></div>
+
+  <!-- Main content -->
+  <div class="container">
+    <div class="glitch-wrapper">
+      <h1 class="error-code glitch-text" data-text="404">404</h1>
+    </div>
+    <p class="error-message"></p>
+    <a href="https://sites.google.com/student.evergreenps.org/rebel/" class="return-btn">Return Home</a>
+    <p class="interactive-text"></p>
+  </div>
+
+  <!-- Floating 3D objects that will be created by JS -->
+
+  <!-- Particles.js library -->
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+
+  <script>
+    // Initialize particles background
+    particlesJS('particles-js', {
+      particles: {
+        number: {
+          value: 80,
+          density: {
+            enable: true,
+            value_area: 800
+          }
+        },
+        color: {
+          value: "#ff1e56"
+        },
+        shape: {
+          type: "circle",
+          stroke: {
+            width: 0,
+            color: "#000000"
+          }
+        },
+        opacity: {
+          value: 0.5,
+          random: true,
+          anim: {
+            enable: true,
+            speed: 1,
+            opacity_min: 0.1,
+            sync: false
+          }
+        },
+        size: {
+          value: 3,
+          random: true,
+          anim: {
+            enable: true,
+            speed: 2,
+            size_min: 0.1,
+            sync: false
+          }
+        },
+        line_linked: {
+          enable: true,
+          distance: 150,
+          color: "#ff1e56",
+          opacity: 0.2,
+          width: 1
+        },
+        move: {
+          enable: true,
+          speed: 2,
+          direction: "none",
+          random: true,
+          straight: false,
+          out_mode: "out",
+          bounce: false,
+          attract: {
+            enable: false,
+            rotateX: 600,
+            rotateY: 1200
+          }
+        }
+      },
+      interactivity: {
+        detect_on: "canvas",
+        events: {
+          onhover: {
+            enable: true,
+            mode: "repulse"
+          },
+          onclick: {
+            enable: true,
+            mode: "push"
+          },
+          resize: true
+        },
+        modes: {
+          grab: {
+            distance: 140,
+            line_linked: {
+              opacity: 1
+            }
+          },
+          bubble: {
+            distance: 400,
+            size: 40,
+            duration: 2,
+            opacity: 8,
+            speed: 3
+          },
+          repulse: {
+            distance: 200,
+            duration: 0.4
+          },
+          push: {
+            particles_nb: 4
+          },
+          remove: {
+            particles_nb: 2
+          }
+        }
+      },
+      retina_detect: true
+    });
+
+    // 3D floating objects
+    const container = document.querySelector('.container');
+    const errorCode = document.querySelector('.error-code');
+    const floatingObjectsCount = 15;
+
+    // Create floating objects
+    for (let i = 0; i < floatingObjectsCount; i++) {
+      const size = Math.random() * 100 + 20;
+      const floatingObject = document.createElement('div');
+      floatingObject.classList.add('floating-object');
+
+      // Random position
+      floatingObject.style.width = `${size}px`;
+      floatingObject.style.height = `${size}px`;
+      floatingObject.style.left = `${Math.random() * 100}%`;
+      floatingObject.style.top = `${Math.random() * 100}%`;
+
+      // Random animation
+      const duration = Math.random() * 10 + 10;
+      const delay = Math.random() * 5;
+
+      floatingObject.style.animation = `float ${duration}s ${delay}s infinite ease-in-out`;
+      document.body.appendChild(floatingObject);
+    }
+
+    // 3D parallax effect with mouse
+    document.addEventListener('mousemove', (e) => {
+      const x = e.clientX / window.innerWidth;
+      const y = e.clientY / window.innerHeight;
+
+      // Effect on error code
+      errorCode.style.transform = `translateX(${x * 30 - 15}px) translateY(${y * 30 - 15}px) rotateX(${y * 10 - 5}deg) rotateY(${-x * 10 + 5}deg)`;
+
+      // Effect on floating objects
+      const floatingObjects = document.querySelectorAll('.floating-object');
+      floatingObjects.forEach((obj, index) => {
+        const factor = (index % 5) + 1;
+        obj.style.transform = `translateX(${x * 50 * factor - 25 * factor}px) translateY(${y * 50 * factor - 25 * factor}px) translateZ(${factor * 20}px)`;
+      });
+    });
+
+    // Return button 3D effect
+    const returnBtn = document.querySelector('.return-btn');
+    returnBtn.addEventListener('mousemove', (e) => {
+      const rect = returnBtn.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+
+      returnBtn.style.transform = `
+        perspective(500px)
+        scale3d(1.1, 1.1, 1.1)
+        rotateX(${(y - 0.5) * 20}deg)
+        rotateY(${(x - 0.5) * 20}deg)
+        translateZ(20px)
+      `;
+    });
+
+    returnBtn.addEventListener('mouseleave', () => {
+      returnBtn.style.transform = 'translateZ(0px)';
+    });
+
+    // Add keyframe animation for floating objects
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes float {
+        0% {
+          transform: translateY(0) translateX(0) rotate(0deg) scale(1);
+        }
+        25% {
+          transform: translateY(-20px) translateX(10px) rotate(5deg) scale(1.05);
+        }
+        50% {
+          transform: translateY(10px) translateX(-15px) rotate(-5deg) scale(0.95);
+        }
+        75% {
+          transform: translateY(15px) translateX(5px) rotate(10deg) scale(1.05);
+        }
+        100% {
+          transform: translateY(0) translateX(0) rotate(0deg) scale(1);
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Add glitch on hover
+    const glitchText = document.querySelector('.glitch-text');
+    glitchText.addEventListener('mouseenter', () => {
+      glitchText.style.animation = 'glitch-skew 0.5s infinite linear alternate-reverse';
+    });
+
+    glitchText.addEventListener('mouseleave', () => {
+      glitchText.style.animation = 'glitch-skew 2s infinite linear alternate-reverse';
+    });
+
+    // Custom cursor
+    const cursor = document.createElement('div');
+    cursor.style.cssText = `
+      position: fixed;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,30,86,0.8) 0%, rgba(255,30,86,0.4) 70%, rgba(255,30,86,0) 100%);
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 9999;
+      box-shadow: 0 0 10px rgba(255,30,86,0.8), 0 0 20px rgba(255,30,86,0.4);
+      mix-blend-mode: screen;
+    `;
+    document.body.appendChild(cursor);
+
+    const cursorOuter = document.createElement('div');
+    cursorOuter.style.cssText = `
+      position: fixed;
+      width: 50px;
+      height: 50px;
+      border: 2px solid rgba(255,30,86,0.3);
+      border-radius: 50%;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 9998;
+      transition: all 0.1s ease;
+    `;
+    document.body.appendChild(cursorOuter);
+
+    document.addEventListener('mousemove', (e) => {
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top = e.clientY + 'px';
+
+      cursorOuter.style.left = e.clientX + 'px';
+      cursorOuter.style.top = e.clientY + 'px';
+    });
+
+    // Add cursor effects on interactive elements
+    const interactiveElements = document.querySelectorAll('a, button, .glitch-text');
+    interactiveElements.forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        cursorOuter.style.width = '80px';
+        cursorOuter.style.height = '80px';
+        cursorOuter.style.borderColor = 'rgba(255,30,86,0.6)';
+      });
+
+      el.addEventListener('mouseleave', () => {
+        cursorOuter.style.width = '50px';
+        cursorOuter.style.height = '50px';
+        cursorOuter.style.borderColor = 'rgba(255,30,86,0.3)';
+      });
+    });
+
+    // Add some randomness to the background
+    setInterval(() => {
+      const randomObject = document.createElement('div');
+      randomObject.classList.add('floating-object');
+
+      const size = Math.random() * 10 + 5;
+      randomObject.style.width = `${size}px`;
+      randomObject.style.height = `${size}px`;
+      randomObject.style.left = `${Math.random() * 100}%`;
+      randomObject.style.top = `${Math.random() * 100}%`;
+      randomObject.style.opacity = '0.3';
+
+      document.body.appendChild(randomObject);
+
+      setTimeout(() => {
+        randomObject.style.opacity = '0';
+        setTimeout(() => {
+          randomObject.remove();
+        }, 1000);
+      }, 3000);
+    }, 500);
+  </script>
+</body>
+</html>
