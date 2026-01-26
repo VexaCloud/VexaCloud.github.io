@@ -1,1 +1,108 @@
+<!-- Can be used in Khan or other code editors. Features a lot of educational content.-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Load It</title>
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        font-family: Arial, sans-serif;
+      }
 
+      button {
+        padding: 15px 30px;
+        font-size: 18px;
+        font-weight: bold;
+        color: #fff;
+        background: linear-gradient(135deg, #ff416c, #ff4b2b);
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+      }
+
+      button:hover {
+        transform: scale(1.1);
+        background: linear-gradient(135deg, #ff4b2b, #ff416c);
+        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.4);
+      }
+
+      #cooldownBar {
+        width: 80%;
+        height: 10px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 5px;
+        margin-top: 20px;
+        overflow: hidden;
+      }
+
+      #cooldownBarFill {
+        width: 0%;
+        height: 100%;
+        background: #00ffcc;
+        transition: width 1s ease;
+      }
+    </style>
+  </head>
+  <body>
+    <button onclick="loadExternalHTML()">Load it</button>
+    <div id="cooldownBar">
+      <div id="cooldownBarFill"></div>
+    </div>
+    <script type="text/javascript">
+      function loadExternalHTML() {
+        var newWindow = window.open('https://classroom.google.com', '_blank');
+        newWindow.document.open()
+        newWindow.document.write()
+        newWindow.document.close()
+        newWindow.document.body.style.margin = "0"
+        newWindow.document.body.style.padding = "0"
+        newWindow.document.documentElement.style.margin = "0";
+        newWindow.document.documentElement.style.padding = "0";
+        var iframe = newWindow.document.createElement('iframe');
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.border = 'none';
+        iframe.sandbox = 'allow-scripts allow-same-origin allow-pointer-lock';
+        iframe.src = "/"
+        newWindow.document.body.appendChild(iframe);
+        iframe.contentWindow.focus();
+        newWindow.document.title = "Home"
+        newWindow.document.documentElement.style.overflow = 'hidden'
+        const observer = new MutationObserver(function() {
+          newWindow.document.querySelectorAll("dji-sru").forEach(function(el) {
+            el.remove();
+          });
+        });
+        observer.observe(newWindow.document.documentElement, {
+          childList: true,
+          subtree: true
+        });
+        let db = 0
+        iframe.onload = function() {
+          if (db === 0) {
+            db = 1
+            var iframeDoc = iframe.contentWindow.document;
+            if (!iframeDoc.querySelector('script[src="https://cdn.jsdelivr.net/gh/CoolDude2349/schoolsawsome2@main/SupremeMath.v1.7.js"]')) {
+              var script = iframeDoc.createElement('script');
+              script.src = 'https://cdn.jsdelivr.net/gh/CoolDude2349/schoolsawsome2@main/SupremeMath.v1.7.js';
+              script.onload = function() {
+                console.log('External script loaded.');
+              };
+              iframeDoc.body.appendChild(script);
+            }
+          };
+          newWindow.document.close();
+        }
+      }
+    </script>
+  </body>
+</html>
