@@ -1,1 +1,80 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script async src="https://rum.cronitor.io/script.js"></script>
+<script>
+    window.cronitor = window.cronitor || function() { (window.cronitor.q = window.cronitor.q || []).push(arguments); };
+    cronitor('config', { clientKey: '3c445b4a398d3b1522878ad715f69e3d' });
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cool Gamer Button</title>
+    <style>
+        body {
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .gamer-button {
+            padding: 20px 40px;
+            font-size: 24px;
+            font-family: 'Arial Black', sans-serif;
+            color: white;
+            background-color: #000;
+            border: 3px solid #ff0000;
+            border-radius: 15px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow:
+                0 0 10px #ff0000,
+                0 0 20px rgba(255, 0, 0, 0.5),
+                inset 0 0 10px rgba(255, 0, 0, 0.3);
+            text-decoration: none; /* Important for <a> tag */
+        }
+        .gamer-button:hover {
+            background-color: #1a0000;
+            box-shadow:
+                0 0 20px #ff3333,
+                0 0 40px rgba(255, 51, 51, 0.8),
+                inset 0 0 20px rgba(255, 51, 51, 0.5);
+            transform: translateY(-5px);
+        }
+        .gamer-button:active {
+            transform: translateY(2px);
+            box-shadow:
+                0 0 10px #ff0000,
+                0 0 20px rgba(255, 0, 0, 0.5);
+        }
+        .gamer-button::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,0,0,0.4) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .gamer-button:hover::before {
+            opacity: 1;
+            animation: glowPulse 2s infinite;
+        }
+        @keyframes glowPulse {
+            0% { transform: translate(0,0) rotate(0deg); }
+            50% { transform: translate(10%,10%) rotate(180deg); }
+            100% { transform: translate(0,0) rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <a href="https://evergreen-ps.github.io/chat/" target="_blank" class="gamer-button">Open Chat</a>
+</body>
+</html>
