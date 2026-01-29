@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data URL Generator</title>
+    <link rel="icon" type="image/x-icon" href="../../images/favicon.png">
+    <style>
+        body{margin:0;padding:0;font-family:Arial,sans-serif;background:#000;color:#fff;overflow:hidden;height:100vh}
+        .header{display:flex;justify-content:space-between;align-items:center;padding:0 20px;background:#111;border-bottom:3px solid #f00;position:relative;z-index:10;height:56px}
+        .title{color:#f00;font-weight:bold;font-size:20px;letter-spacing:1px}
+        .made-by{position:absolute;right:20px;top:50%;transform:translateY(-50%);color:#f00;font-weight:bold;font-size:14px}
+        .main-content{display:flex;height:calc(100vh - 56px)}
+        .input-panel{width:50%;padding:20px;background:#111;overflow-y:auto;border-right:2px solid #f00;box-sizing:border-box;display:flex;flex-direction:column;align-items:center}
+        .output-panel{width:50%;position:relative;background:#000;display:flex;flex-direction:column}
+        .fetch-header{padding:30px 0;width:100%;display:flex;flex-direction:column;align-items:center;gap:20px;border-bottom:2px solid #f00}
+        #url-input{width:80%;max-width:600px;padding:18px;background:#222;border:2px solid #f00;color:#fff;border-radius:8px;font-size:18px;outline:none}
+        #url-input:focus{border-color:#ff3333;box-shadow:0 0 15px rgba(255,0,0,.4)}
+        #generate-btn{padding:18px 50px;background:#f00;border:none;color:#fff;font-weight:bold;border-radius:8px;cursor:pointer;transition:.3s;font-size:18px}
+        #generate-btn:hover{background:#c00;box-shadow:0 0 20px rgba(255,0,0,.6)}
+        #status{padding:15px;background:#300;color:#f66;text-align:center;border-radius:8px;margin:10px 0;font-weight:bold;font-size:16px;width:80%;max-width:600px;display:none}
+        .warning{background:rgba(255,0,0,.1);border:1px dashed #f00;border-radius:8px;padding:20px;margin:30px 0;text-align:center;color:#ff8888;font-size:15px;line-height:1.6;width:80%;max-width:600px}
+        .dataurl-section{margin:30px 40px;background:#111;padding:25px;border-radius:12px;border:1px solid #f00;box-shadow:0 0 20px rgba(255,0,0,.3);flex:1;display:none;flex-direction:column}
+        .dataurl-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;flex-wrap:wrap;gap:10px}
+        .dataurl-name{padding:12px 20px;background:#222;border:1px solid #f00;color:#ff3333;border-radius:6px;font-weight:bold;font-size:16px}
+        .copy-btn{padding:12px 30px;background:#f00;border:none;color:#fff;font-weight:bold;border-radius:6px;cursor:pointer;transition:.3s}
+        .copy-btn:hover{background:#ff3333}
+        #dataurl-content{flex:1;background:#000;border:1px solid #f00;color:#0f0;padding:15px;border-radius:8px;font-family:'Courier New',monospace;font-size:14px;overflow:auto;resize:none;white-space:pre}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">DATA URL GENERATOR</div>
+        <div class="made-by">Made by Hacker114</div>
+    </div>
+
+    <div class="main-content">
+        <!-- Left Panel: Input -->
+        <div class="input-panel">
+            <div class="fetch-header">
+                <input type="text" id="url-input" placeholder="https://example.com">
+                <button id="generate-btn">GENERATE DATA URL</button>
+                <div id="status"></div>
+            </div>
+
+            <div class="warning">
+                Data URLs have browser size limits (typically 2–4 MB).<br>
+                Large or complex sites may exceed this and load incompletely.<br>
+                All resources are proxied through a public CORS proxy.
+            </div>
+        </div>
+
+        <!-- Right Panel: Output -->
+        <div class="output-panel">
+            <div class="dataurl-section" id="dataurl-section">
+                <div class="dataurl-header">
+                    <div class="dataurl-name">data-url.txt</div>
+                    <button class="copy-btn" id="copy-btn">COPY TO CLIPBOARD</button>
+                </div>
+                <pre id="dataurl-content"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function generateDataURL() {
+            const input = document.getElementById('url-input').value.trim();
+            if (!input) {
+                alert('Please enter a URL');
+                return;
+            }
+            let url = input;
+            if (!url.startsWith('http')) url = 'https://' + url;
+
+            const status = document.getElementById('status');
+            const section = document.getElementById('dataurl-section');
+            const output = document.getElementById('dataurl-content');
+            const copyBtn = document.getElementById('copy-btn');
+
+            status.style.display = 'block';
+            status.textContent = 'Fetching page via proxy...';
+            status.style.background = '#330';
+            section.style.display = 'none';
+
+            try {
+                const proxy = 'https://corsproxy.io/?';
+                const response = await fetch(proxy + encodeURIComponent(url));
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                let html = await response.text();
+
+                const makeProxied = (url) => {
+                    if (!url || url.startsWith('data:') || url.startsWith('javascript:') || url.startsWith('#')) return url;
+                    try {
+                        const absolute = new URL(url, input).href;
+                        return proxy + encodeURIComponent(absolute);
+                    } catch { return url; }
+                };
+
+                const attrRegex = /\b(src|href|action|background|poster|data-src)=["']([^"']+)["']/gi;
+                html = html.replace(attrRegex, (match, attr, val) => `${attr}="${makeProxied(val)}"`);
+
+                html = html.replace(/url\((['"]?)([^'")]+)\1\)/gi, (match, quote, val) => {
+                    return `url(${quote}${makeProxied(val.trim())}${quote})`;
+                });
+
+                html = html.replace(/style=["']([^"']*)["']/gi, (match, styles) => {
+                    const rewritten = styles.replace(/url\(([^'")]+)\)/gi, (m, u) => `url(${makeProxied(u.trim())})`);
+                    return `style="${rewritten}"`;
+                });
+
+                const dataUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
+
+                output.textContent = dataUrl;
+                section.style.display = 'flex';
+                status.textContent = `Success! Length: ${dataUrl.length.toLocaleString()} characters`;
+                status.style.background = '#030';
+            } catch (error) {
+                status.textContent = 'Error: ' + error.message;
+                status.style.background = '#500';
+                console.error(error);
+            }
+        }
+
+        document.getElementById('generate-btn').onclick = generateDataURL;
+
+        document.getElementById('copy-btn').onclick = () => {
+            const text = document.getElementById('dataurl-content').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Data URL copied to clipboard!');
+            }).catch(() => {
+                alert('Copy failed — select and copy manually');
+            });
+        };
+    </script>
+</body>
+</html>
