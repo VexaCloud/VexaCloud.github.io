@@ -1,1 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>IPTV Guide</title>
+<link href="https://vjs.zencdn.net/7.17.0/video-js.css" rel="stylesheet">
+<style>
+body {
+  font-family: sans-serif;
+  display: flex;
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+}
 
+#guide {
+  width: 250px;
+  background-color: #333;
+  color: white;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+#search-bar {
+  padding: 10px;
+  background-color: #444;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+#search-bar input {
+  width: calc(100% - 22px);
+  padding: 8px;
+  background-color: #555;
+  border: none;
+  color: white;
+}
+
+#guide ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto;
+}
+
+#guide li {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #555;
+}
+
+#guide li:hover {
+  background-color: #555;
+}
+
+#player {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.video-js {
+  width: 100%;
+  height: 100%;
+}
+
+#error-message {
+  display: none;
+  background-color: #fdd;
+  padding: 10px;
+  border: 1px solid red;
+  margin: 10px;
+}
+</style>
+</head>
+<body>
+<div id="guide">
+  <div id="search-bar">
+    <input type="text" id="channel-search" placeholder="Search channels...">
+  </div>
+  <ul></ul>
+</div>
+<div id="player">
+  <div id="error-message"></div>
+  <video id="my-video" class="video-js vjs-default-skin" controls preload="auto" data-setup="{}"></video>
+</div>
+
+<script src="https://vjs.zencdn.net/7.17.0/video.js"></script>
+<script>
+const guideList = document.querySelector('#guide ul');
+const videoPlayer = videojs('my-video');
+const errorMessage = document.getElementById('error-message');
+const searchInput = document.getElementById('channel-search');
+let allChannels = [];
+
+async function loadM3U(m3uUrl) {
+  try {
+    const response = await fetch(m3uUrl);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.text();
+    parseM3U(data);
+  } catch (error) {
+    console.error('Error loading M3U:', error);
+    errorMessage.textContent = 'Error loading M3U: ' + error.message;
+    errorMessage.style.display = 'block';
+  }
+}
+
+function parseM3U(data) {
+  const lines = data.split('\n');
+  const channels = [];
+  let currentChannel = null;
+
+  lines.forEach(line => {
+    if (line.startsWith('#EXTINF:')) {
+      const nameMatch = line.match(/tvg-name="([^"]+)"|,(.+?)(?:$|#)/);
+      if (nameMatch) {
+        const name = nameMatch[1] || nameMatch[2];
+        currentChannel = { name: name.trim() };
+      }
+    } else if (line.startsWith('http')) {
+      if (currentChannel) {
+        currentChannel.url = line.trim();
+        channels.push(currentChannel);
+        currentChannel = null;
+      }
+    }
+  });
+
+  allChannels = channels;
+  displayChannels(channels);
+}
+
+function displayChannels(channels) {
+  guideList.innerHTML = '';
+  channels.forEach(channel => {
+    const li = document.createElement('li');
+    li.textContent = channel.name;
+    li.addEventListener('click', () => {
+      let streamUrl = channel.url;
+      if (streamUrl.startsWith('http://')) {
+          streamUrl = streamUrl.replace('http://', 'https://');
+      }
+      playStream(streamUrl);
+    });
+    guideList.appendChild(li);
+  });
+}
+
+function playStream(streamUrl) {
+  let type = 'application/x-mpegURL'; // Default to m3u8
+
+  const lowerUrl = streamUrl.toLowerCase();
+  if (lowerUrl.includes('.mpd')) {
+    type = 'application/dash+xml';
+  } else if (lowerUrl.includes('.ts') || lowerUrl.includes('.ctv')) {
+    type = 'video/mp2t';
+  } else if (lowerUrl.includes('.mp4')) {
+      type = 'video/mp4'
+  }
+
+  videoPlayer.src({ type: type, src: streamUrl });
+  videoPlayer.play();
+
+  videoPlayer.on('error', function(event) {
+    console.error('Video playback error:', videoPlayer.error());
+    errorMessage.textContent = 'Video playback error: ' + videoPlayer.error().message;
+    errorMessage.style.display = 'block';
+  });
+}
+
+searchInput.addEventListener('input', () => {
+  const searchTerm = searchInput.value.toLowerCase();
+  const filteredChannels = allChannels.filter(channel =>
+    channel.name.toLowerCase().includes(searchTerm)
+  );
+  displayChannels(filteredChannels);
+});
+
+// Replace with your M3U URL here:
+const m3uUrl = 'best-playlist.m3u';
+
+loadM3U(m3uUrl);
+</script>
+</body>
+</html>
