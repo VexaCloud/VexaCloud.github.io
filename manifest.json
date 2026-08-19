@@ -1,0 +1,24 @@
+{
+  "name": "VexaCloud",
+  "short_name": "VexaCloud",
+  "description": "VexaCloud chat",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#0b0b12",
+  "theme_color": "#0b0b12",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "240x240",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "favicon.png",
+      "sizes": "240x240",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
