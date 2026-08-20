@@ -5261,6 +5261,24 @@
       return !!(m && m.is_banned);
     }
 
+    // Mirrors the backend's checkAdminProtection (and the DB trigger it's
+    // paired with): who's allowed to ban/demote/kick whom. Used to
+    // hide/disable actions that would just come back as a 403, rather than
+    // enforcing anything on its own — the server is the source of truth.
+    function isServerOwner(server) {
+      return !!(server && currentProfile && server.owner_id === currentProfile.id);
+    }
+
+    function canActOnAdminTarget(server, targetMember, action) {
+      if (!targetMember) return false;
+      if (isAdmin(currentProfile)) return true;
+      if (action === "ban" && isAdmin(targetMember.user)) return false;
+      if (targetMember.role === "admin" && targetMember.user.id !== currentProfile.id) {
+        if (!isServerOwner(server)) return false;
+      }
+      return true;
+    }
+
     async function getIsUserBanned(userId) {
       const known = currentServerMembers.find((m) => m.user && m.user.id === userId);
       if (known && known.user.is_banned !== undefined) {
@@ -8755,11 +8773,12 @@ el.innerHTML = `
 
       if (message.user_id && currentUser && message.user_id !== currentUser.id && currentServer && (admin || canManageCurrentServer())) {
         const serverBanned = isServerBanned(message.user_id);
-        items.push(
-          serverBanned
-            ? { label: "Unban from server", action: () => handleUnbanFromServer(currentServer.id, message.user_id) }
-            : { label: "Ban from server", action: () => handleBanFromServer(currentServer.id, message.user_id), danger: true }
-        );
+        const targetMember = findServerMember(message.user_id);
+        if (serverBanned) {
+          items.push({ label: "Unban from server", action: () => handleUnbanFromServer(currentServer.id, message.user_id) });
+        } else if (canActOnAdminTarget(currentServer, targetMember, "ban")) {
+          items.push({ label: "Ban from server", action: () => handleBanFromServer(currentServer.id, message.user_id), danger: true });
+        }
       }
 
       if (!items.length) return;
@@ -8816,20 +8835,23 @@ el.innerHTML = `
         }
       } else if (currentServer && currentServerMembership && currentServerMembership.role === "admin") {
 
-        items.push({
-          label: "Kick from server",
-          action: () => handleKickFromServer(currentServer.id, user.id),
-          danger: true,
-        });
+        if (canActOnAdminTarget(currentServer, findServerMember(user.id), "kick")) {
+          items.push({
+            label: "Kick from server",
+            action: () => handleKickFromServer(currentServer.id, user.id),
+            danger: true,
+          });
+        }
       }
 
       if (currentServer && (isAdmin(currentProfile) || (currentServerMembership && currentServerMembership.role === "admin"))) {
         const serverBanned = isServerBanned(user.id);
-        items.push(
-          serverBanned
-            ? { label: "Unban from server", action: () => handleUnbanFromServer(currentServer.id, user.id) }
-            : { label: "Ban from server", action: () => handleBanFromServer(currentServer.id, user.id), danger: true }
-        );
+        const targetMember = findServerMember(user.id);
+        if (serverBanned) {
+          items.push({ label: "Unban from server", action: () => handleUnbanFromServer(currentServer.id, user.id) });
+        } else if (canActOnAdminTarget(currentServer, targetMember, "ban")) {
+          items.push({ label: "Ban from server", action: () => handleBanFromServer(currentServer.id, user.id), danger: true });
+        }
       }
       userContextMenu.innerHTML = items
         .map(
@@ -10166,18 +10188,30 @@ async function handleCreateServer() {
       }
 
       serverAdminMembersPanel.innerHTML = members
-        .map(
-          (m) => `
+        .map((m) => {
+          const targetIsSiteAdmin = isAdmin(m.user);
+          const canBan = !m.is_banned && canActOnAdminTarget(serverAdminTarget, m, "ban");
+          const canKick = canActOnAdminTarget(serverAdminTarget, m, "kick");
+          const roleLocked = m.role === "admin" && !canActOnAdminTarget(serverAdminTarget, m, "demote");
+          const banTitle = targetIsSiteAdmin ? "Can't ban a system-wide admin or superadmin" : "Only the server owner can ban another admin";
+          const kickTitle = "Only the server owner can kick another admin";
+          const roleTitle = "Only the server owner can demote another admin";
+
+          return `
         <div class="admin-row">
           <div class="admin-row-main">
             <div class="user-avatar" style="width:32px;height:32px;">${avatarHTML(m.user)}</div>
             <div>
-              <div class="admin-row-name">${escapeHtml(m.user.username || "")} ${m.is_banned ? `<span class="user-role-pill" style="background:var(--danger-subtle); color:var(--danger);">Banned</span>` : ""}</div>
+              <div class="admin-row-name">
+                ${escapeHtml(m.user.username || "")}
+                ${m.is_banned ? `<span class="user-role-pill" style="background:var(--danger-subtle); color:var(--danger);">Banned</span>` : ""}
+                ${targetIsSiteAdmin ? `<span class="user-role-pill">Site admin</span>` : ""}
+              </div>
               <div class="admin-row-meta">${escapeHtml(m.role)}</div>
             </div>
           </div>
           <div class="admin-row-actions" data-user-id="${m.user.id}">
-            <select class="settings-input server-admin-role-select" data-action="role" style="padding:4px 8px; font-size:11px;">
+            <select class="settings-input server-admin-role-select" data-action="role" style="padding:4px 8px; font-size:11px;" ${roleLocked ? `disabled title="${roleTitle}"` : ""}>
               <option value="member" ${m.role === "member" ? "selected" : ""}>Member</option>
               <option value="moderator" ${m.role === "moderator" ? "selected" : ""}>Moderator</option>
               <option value="admin" ${m.role === "admin" ? "selected" : ""}>Admin</option>
@@ -10185,13 +10219,13 @@ async function handleCreateServer() {
             ${
               m.is_banned
                 ? `<button class="identity-action-button" data-action="unban">Unban</button>`
-                : `<button class="identity-action-button identity-action-button-danger" data-action="ban">Ban</button>`
+                : `<button class="identity-action-button identity-action-button-danger" data-action="ban" ${!canBan ? `disabled title="${banTitle}"` : ""}>Ban</button>`
             }
-            <button class="identity-action-button identity-action-button-danger" data-action="kick">Kick</button>
+            <button class="identity-action-button identity-action-button-danger" data-action="kick" ${!canKick ? `disabled title="${kickTitle}"` : ""}>Kick</button>
           </div>
         </div>
-      `
-        )
+      `;
+        })
         .join("");
 
       serverAdminMembersPanel.querySelectorAll("[data-action='role']").forEach((el) => {
