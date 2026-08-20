@@ -20,7 +20,7 @@
   <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
   <style>
     :root {
-      /* Surfaces */
+
       --bg-canvas: #0a0b0e;
       --surface: #131418;
       --surface-2: #1a1c22;
@@ -28,19 +28,16 @@
       --border: rgba(255, 255, 255, 0.09);
       --border-strong: rgba(255, 255, 255, 0.16);
 
-      /* Text */
       --text: #f0f1f3;
       --text-secondary: #9a9ca8;
       --text-tertiary: #63656f;
 
-      /* Accent */
       --accent: #6366f1;
       --accent-hover: #7880f5;
       --accent-strong: #4f46e5;
       --accent-subtle: rgba(99, 102, 241, 0.14);
       --accent-text: #ffffff;
 
-      /* Functional */
       --danger: #f0475f;
       --danger-subtle: rgba(240, 71, 95, 0.14);
       --success: #2dc26b;
@@ -48,7 +45,6 @@
       --warning: #eab308;
       --warning-subtle: rgba(234, 179, 8, 0.14);
 
-      /* Radius */
       --r-xs: 6px;
       --r-sm: 8px;
       --r-md: 10px;
@@ -56,17 +52,14 @@
       --r-xl: 20px;
       --r-full: 999px;
 
-      /* Shadow — restrained, neutral, no color glow */
       --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
       --shadow-2: 0 6px 16px rgba(0, 0, 0, 0.32);
       --shadow-3: 0 20px 48px rgba(0, 0, 0, 0.5);
 
-      /* Inputs */
       --input-bg: var(--surface-2);
       --input-border: var(--border);
       --input-border-focus: var(--accent);
 
-      /* Legacy aliases kept so existing rules below don't need renaming */
       --bg: var(--bg-canvas);
       --bg-elevated: var(--surface);
       --bg-elevated-strong: var(--surface-2);
@@ -188,8 +181,6 @@
       --warning-subtle: rgba(246, 193, 119, 0.14);
     }
 
-    /* Pure black, minimal — structurally different from "Dark" (which is
-       navy-black), not just a different accent color. AMOLED-friendly. */
     [data-theme="midnight"] {
       --bg-canvas: #000000;
       --surface: #0d0d0d;
@@ -213,8 +204,6 @@
       --warning-subtle: rgba(251, 191, 36, 0.14);
     }
 
-    /* Warm cream/paper light theme — structurally different from "Light"
-       (which is cool gray/white), like a reading mode. */
     [data-theme="sepia"] {
       --bg-canvas: #f1e7d3;
       --surface: #fbf3e3;
@@ -238,8 +227,6 @@
       --warning-subtle: rgba(161, 114, 10, 0.13);
     }
 
-    /* Earthy, warm-toned dark theme — olive/brown undertones instead of
-       the blue/navy undertone every other dark theme here shares. */
     [data-theme="forest"] {
       --bg-canvas: #14140f;
       --surface: #1c1b14;
@@ -263,8 +250,6 @@
       --warning-subtle: rgba(209, 162, 58, 0.15);
     }
 
-    /* Deep, saturated teal — cooler and more vivid than Nord's muted
-       blue-gray, so the two don't read as near-duplicates. */
     [data-theme="ocean"] {
       --bg-canvas: #05161e;
       --surface: #0a212c;
@@ -288,25 +273,12 @@
       --warning-subtle: rgba(242, 177, 52, 0.15);
     }
 
-    /* User-chosen accent color overrides whatever the active theme set,
-       applied inline via --accent-user on <html> from the settings panel. */
     html[style*="--accent-user"] {
       --accent: var(--accent-user);
       --accent-hover: var(--accent-user);
       --accent-strong: var(--accent-user);
     }
 
-    /* === Chat background (Settings → Appearance only, never at sign-up) ===
-       Design: the image sits behind the whole chat body with just a light
-       dimming scrim (for overall polish, not for text contrast). Each
-       message row gets its own translucent "glass" card — that's what
-       actually guarantees legible text, because the row's text-color
-       variables and its own background/hover are defined together, in the
-       same selector scope. Previously the text-color override lived on
-       .message-list while the hover highlight came from the theme's
-       unrelated --surface-2 — the two could land on nearly the same color
-       (e.g. a light theme's pale --surface-2 plus auto-detected light
-       text), making hovered message text disappear. */
     .chat-body {
       position: relative;
     }
@@ -342,18 +314,11 @@
       background: transparent;
     }
 
-    /* Keep the input bar's own opaque surface so it stays legible
-       regardless of what's behind the image — the background is meant to
-       show through only where messages are. */
     .chat-body.has-custom-bg .chat-input-area {
       position: relative;
       z-index: 1;
     }
 
-    /* Default / "light text" mode: dark frosted glass card, light text.
-       Used when the picked image is dark, or the person explicitly chose
-       "Light text". Blur kept light on purpose — enough to lift text off
-       a busy photo, not so much it turns the background into mush. */
     .chat-body.has-custom-bg .message-row {
       background: rgba(12, 13, 16, 0.58);
       backdrop-filter: blur(3px);
@@ -381,8 +346,6 @@
       background: rgba(12, 13, 16, 0.6);
     }
 
-    /* "Dark text" mode: light frosted glass card, dark text. Used when the
-       picked image is light, or the person explicitly chose "Dark text". */
     .chat-body.has-custom-bg[data-chat-text-mode="dark"] .message-row {
       background: rgba(255, 255, 255, 0.66);
       --text: #16171c;
@@ -405,9 +368,6 @@
       background: rgba(255, 255, 255, 0.7);
     }
 
-    /* "Custom color" mode: keep the dark glass card (reliable base
-       contrast against almost any photo) but swap in the chosen text
-       color instead of picking light vs dark for you. */
     .chat-body.has-custom-bg[data-chat-text-mode="custom"] .message-row,
     .chat-body.has-custom-bg[data-chat-text-mode="custom"] .message-reply-thread-item {
       --text: var(--chat-custom-text-color, #f5f6f8);
@@ -415,7 +375,6 @@
       --text-tertiary: var(--chat-custom-text-color, #b0b3bd);
     }
 
-    /* Extra customization: compact density + sharp corners, both settings-only */
     [data-density="compact"] .message-row {
       padding: 2px 10px;
       gap: 10px;
@@ -498,25 +457,11 @@
       outline-offset: 2px;
     }
 
-    /* === Shell layout === */
-
     .app-shell {
       position: relative;
       display: flex;
       flex-direction: column;
-      /* 100vh is the *largest possible* viewport height on mobile/ChromeOS
-         browsers — it doesn't shrink when the on-screen keyboard, browser
-         address bar, or (on a Chromebook in tablet mode) the OS's own
-         chrome takes up space, and it also doesn't update on a rotation
-         where the browser hasn't finished reflowing yet. That mismatch is
-         exactly what makes everything look "screwed up" after rotating:
-         html/body has overflow:hidden (by design, so nothing page-level
-         scrolls), so anything 100vh claims but the real viewport doesn't
-         have gets silently clipped instead of scrolling into view. 100dvh
-         tracks the actual, current visual viewport instead, so the shell
-         always matches what's really on screen. Keep 100vh first as a
-         fallback for the handful of browsers without dvh support — the
-         later declaration wins wherever both are understood. */
+
       height: 100vh;
       height: 100dvh;
       width: 100vw;
@@ -651,7 +596,7 @@
 .app-frame {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);   /* only one column now */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
   gap: 12px;
   position: relative;
@@ -720,8 +665,6 @@
       flex: 1;
     }
 
-    /* === Drawers (Channels / Members overlay the chat) === */
-
     .drawer-backdrop {
       position: absolute;
       inset: 0;
@@ -766,8 +709,6 @@
     .drawer-right.open {
       transform: translateX(0);
     }
-    
-    /* === Buttons === */
 
     .icon-button {
       width: 32px;
@@ -946,8 +887,6 @@
       color: #fff;
     }
 
-    /* === Inputs === */
-
     .auth-input-shell,
     .chat-input-shell {
       display: flex;
@@ -1075,8 +1014,6 @@
       opacity: 0.7;
     }
 
-    /* === Servers rail === */
-
     .server-list {
       align-items: center;
       padding: 10px 0;
@@ -1168,8 +1105,6 @@
       transform: translateY(-50%) scale(1);
     }
 
-    /* === Channels === */
-
     .channel-list-header {
       display: flex;
       align-items: center;
@@ -1231,7 +1166,6 @@
       border-radius: var(--r-sm);
     }
 
-    /* === Unread indicators === */
     .unread-dot {
       display: none;
       position: absolute;
@@ -1350,7 +1284,6 @@
       right: 6px;
     }
 
-    /* === Incoming call popup === */
     .incoming-call-popup {
       position: fixed;
       top: 16px;
@@ -1685,8 +1618,6 @@
       flex-shrink: 0;
     }
 
-    /* === Chat === */
-
     .chat-panel {
       display: flex;
       flex-direction: column;
@@ -1978,12 +1909,7 @@
     .message-list {
       flex: 1;
       overflow-y: auto;
-      /* Reserve the scrollbar's width even before it's needed — without
-         this, sending a message that first pushes the list into overflow
-         makes the scrollbar appear and every row's content column
-         (grid-template-columns: 36px minmax(0, 1fr)) shrinks by the
-         scrollbar's width at that exact moment, reading as messages
-         "getting slightly smaller" the instant you send. */
+
       scrollbar-gutter: stable;
       padding: 16px 18px 12px;
       display: flex;
@@ -2001,11 +1927,6 @@
       animation: message-in 0.15s ease-out;
     }
 
-    /* Used when a row is being replaced with fresh data for a message
-       that's already visible (our own local echo getting reconciled with
-       the server copy, an edit landing via poll, etc.) — the entrance
-       animation already played once for this message; replaying it again
-       just looks like a glitch/double-send. */
     .message-row.no-entrance-anim {
       animation: none;
     }
@@ -2327,8 +2248,6 @@
       color: var(--danger);
     }
 
-    /* === Members === */
-
     .user-list {
       display: flex;
       flex-direction: column;
@@ -2411,8 +2330,6 @@
       color: var(--text-tertiary);
       text-transform: capitalize;
     }
-
-    /* === Auth screens === */
 
     .auth-overlay {
       position: fixed;
@@ -2714,8 +2631,6 @@
       align-self: flex-start;
     }
 
-    /* === Settings rows === */
-
     .settings-row-avatar {
       align-items: center;
       gap: 8px;
@@ -2755,8 +2670,6 @@
       gap: 6px;
     }
 
-    /* === Push notification status === */
-
     .push-status-row {
       display: flex;
       align-items: center;
@@ -2785,8 +2698,6 @@
       background: var(--warning);
     }
 
-    /* === Modals === */
-
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -2797,10 +2708,6 @@
       z-index: 400;
     }
 
-    /* Modals that must be reachable from the signed-out auth screen
-       (support, forgot/reset password) need to render ABOVE .auth-overlay
-       (z-index 500) — otherwise they open but sit invisibly behind it and
-       nothing appears to happen when the button is clicked. */
     #support-modal,
     #forgot-password-modal,
     #recovery-password-modal {
@@ -2817,11 +2724,6 @@
       to { opacity: 1; }
     }
 
-    /* Scoped to .visible (not a bare .modal rule) so this only plays once,
-       right when the backdrop's display flips from none → flex — it
-       won't replay just because something inside the modal re-renders
-       (e.g. switching Settings tabs, which toggles .settings-panel.active
-       but never touches .modal-backdrop's own visible class). */
     .modal-backdrop.visible .modal {
       animation: modal-in 0.16s cubic-bezier(0.16, 1, 0.3, 1);
     }
@@ -2895,8 +2797,6 @@
     .modal-body {
       padding: 18px 20px;
     }
-
-    /* === Settings modal (sidebar layout) === */
 
     .settings-modal-inner {
       width: 680px;
@@ -2976,14 +2876,6 @@
       padding: 20px 22px;
     }
 
-    /* .settings-row / .settings-actions carry their own 20px horizontal
-       padding by default (needed in modals like forgot-password/view-
-       profile, where they sit directly under .modal-body with no other
-       padding). Inside the settings modal specifically, .settings-panels
-       ABOVE already supplies that padding, so the rows were getting it
-       twice — a 40px-deep left indent that made every field look cramped
-       and off-center. Zero it out here instead of on the shared classes,
-       so this doesn't affect their padding anywhere else in the app. */
     .settings-panels .settings-row,
     .settings-panels .settings-actions {
       padding-left: 0;
@@ -3432,8 +3324,6 @@
       font-size: 10px;
     }
 
-    /* === DMs === */
-
     .dm-modal-inner {
       width: 720px;
     }
@@ -3453,12 +3343,6 @@
       flex-direction: column;
     }
 
-    /* Below this, the fixed 220px conversation-list column would leave
-       the chat pane squeezed into a sliver next to it. Stack them
-       instead — conversation list on top (its own scroll area, capped
-       height) with the open conversation below — same pattern as the
-       settings modal's sidebar-to-tabs collapse. Nothing here changes
-       which elements exist, so no JS changes are needed. */
     @media (max-width: 640px) {
       .dm-modal-inner {
         width: calc(100vw - 24px);
@@ -3659,8 +3543,6 @@
       border-radius: var(--r-full);
     }
 
-    /* === Context menus & popovers === */
-
     .context-menu {
       position: fixed;
       min-width: 180px;
@@ -3791,10 +3673,6 @@
       margin-top: 2px;
     }
 
-    /* === Own-message indicator ===
-       A thin accent bar next to anything the signed-in user sent, in both
-       the main feed and reply threads, so your own messages are easy to
-       pick out at a glance while scrolling. */
     .message-row.own-message,
     .message-reply-thread-item.own-message {
       padding-left: 13px;
@@ -4025,8 +3903,7 @@
       border-bottom: 1px solid var(--border-strong);
       overflow-x: auto;
       overflow-y: hidden;
-      /* Firefox / thin scrollbars where supported — a full-width scrollbar
-         under a single row of tabs would look heavier than it needs to. */
+
       scrollbar-width: thin;
     }
 
@@ -4076,13 +3953,7 @@
 
     .emoji-picker-grid {
       display: grid;
-      /* minmax(0, 1fr), not just 1fr — a plain 1fr column still has an
-         implicit min-width equal to its widest item's content size, so a
-         handful of wider glyphs (flag/skin-tone/ZWJ emoji) could blow the
-         grid past its container width and force a horizontal scrollbar
-         alongside the vertical one. Clamping the minimum to 0 makes every
-         column actually share the row evenly and only ever overflow (and
-         scroll) vertically. */
+
       grid-template-columns: repeat(8, minmax(0, 1fr));
       gap: 2px;
       overflow-y: auto;
@@ -4101,8 +3972,6 @@
     .emoji-picker-grid .empty-state-small {
       grid-column: 1 / -1;
     }
-
-    /* === Toasts === */
 
     .toast-container {
       position: fixed;
@@ -4157,8 +4026,6 @@
       color: var(--text);
     }
 
-    /* === Misc === */
-
     .empty-state-small {
       padding: 24px 8px;
       text-align: center;
@@ -4211,9 +4078,6 @@
     .hidden {
       display: none !important;
     }
-
-        /* === Responsive === */
-
 
     @media (max-width: 900px) {
       .app-shell {
@@ -4365,8 +4229,7 @@
         width: calc(100vw - 24px);
       }
     }
-    /* === Autofill fix (Chrome forces its own black-on-white styling via an
-       internal UA stylesheet; this is the standard override) === */
+
     input:-webkit-autofill,
     input:-webkit-autofill:hover,
     input:-webkit-autofill:focus,
@@ -4384,8 +4247,6 @@
       border-color: var(--input-border) !important;
     }
 
-    /* Firefox doesn't support :-webkit-autofill at all — it applies its own
-       autofill color scheme instead, controllable per color-scheme. */
     input:autofill {
       -webkit-text-fill-color: var(--text) !important;
       caret-color: var(--text) !important;
@@ -5298,8 +5159,7 @@
   <div class="toast-container" id="toast-container"></div>
 
   <script>
-    // Surface any uncaught error on the auth card instead of failing silently,
-    // so problems are visible in the UI even before the toast system exists.
+
     function showInitError(message) {
       const el = document.getElementById("auth-init-error");
       if (el) {
@@ -5313,17 +5173,6 @@
       showInitError("Script error: " + (e.error && e.error.message ? e.error.message : e.message));
     });
 
-    // getSession() is safe to call concurrently on its own (supabase-js
-    // internally queues concurrent calls behind a single in-flight token
-    // refresh), but a *fresh page load* used to be able to race a request
-    // fired the instant a click handler ran against the auth client's own
-    // one-time localStorage restore, occasionally handing apiFetch a
-    // request with no token yet even though the person WAS signed in —
-    // which read back from the server as a plain 401 "Unauthorized" until
-    // a reload (or enough retries) happened to land after restore
-    // finished. authReadyPromise (resolved from onAuthStateChange's
-    // initial fire, below) makes every apiFetch call wait for that
-    // one-time restore before it ever reads a session.
     let resolveAuthReady;
     const authReadyPromise = new Promise((resolve) => {
       resolveAuthReady = resolve;
@@ -5339,10 +5188,7 @@
       }
       supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
       supabaseClient.auth.onAuthStateChange((_event, session) => {
-        // The very first callback fires once supabase-js has finished
-        // restoring (or failing to restore) whatever session was in
-        // localStorage — that's the signal apiFetch() waits on before
-        // ever attaching a token, so no request goes out half-initialized.
+
         if (!authReadyResolved) {
           authReadyResolved = true;
           resolveAuthReady();
@@ -5350,10 +5196,7 @@
         if (session && session.access_token) {
           supabaseClient.realtime.setAuth(session.access_token);
         }
-        // Fired when the user arrives via the "reset password" email link.
-        // They're technically signed in at this point (Supabase issues a
-        // recovery session), but the intent is to set a new password, not
-        // to drop them straight into the app.
+
         if (_event === "PASSWORD_RECOVERY") {
           recoveryPasswordError.textContent = "";
           recoveryPasswordNew.value = "";
@@ -5361,12 +5204,7 @@
           recoveryPasswordModal.style.display = "flex";
         }
       });
-      // Safety net: onAuthStateChange's initial callback should fire
-      // almost immediately, but if something upstream (network, a slow
-      // localStorage read on some browsers) delays it, don't leave
-      // apiFetch hanging forever waiting on a promise that may never
-      // resolve — fall through after a short timeout so requests can at
-      // least attempt to go out (with no token if none is available yet).
+
       setTimeout(() => {
         if (!authReadyResolved) {
           authReadyResolved = true;
@@ -5375,8 +5213,7 @@
       }, 3000);
     } catch (err) {
       showInitError(err.message || "Failed to initialize Supabase client.");
-      // supabaseClient stays undefined; apiFetch/auth calls will fail loudly
-      // instead of the whole page silently doing nothing.
+
       if (!authReadyResolved) {
         authReadyResolved = true;
         resolveAuthReady();
@@ -5389,12 +5226,6 @@
     let currentChannel = null;
     let currentServerMembers = [];
 
-    // Cache of userId -> is_banned, used so the right-click "Ban/Unban"
-    // menu item can show the correct label. Populated from whatever we
-    // already have on hand (the currently-loaded server member list, which
-    // includes is_banned for admins/mods) and, failing that, from the
-    // admin users list endpoint. Only ever consulted for admins, since
-    // that's the only audience that ever sees the ban menu item.
     const userBanStatusCache = new Map();
 
     async function getIsUserBanned(userId) {
@@ -5413,13 +5244,6 @@
       return userBanStatusCache.get(userId) || false;
     }
 
-    // Every realtime channel in the app reports its status through here.
-    // Open devtools and watch the console: "SUBSCRIBED" means it's actually
-    // live; "CHANNEL_ERROR" usually means the table isn't in the
-    // supabase_realtime publication (Database → Replication) or an RLS
-    // policy is blocking the connecting user from SELECTing the row;
-    // "TIMED_OUT" usually means a network/proxy issue reaching the realtime
-    // websocket.
     function logRealtimeStatus(label, status, err) {
       if (status === "SUBSCRIBED") {
         console.info(`[realtime] ${label}: connected`);
@@ -5430,12 +5254,8 @@
     let currentServerMembership = null;
     let undoTimers = new Map();
 
-    // --- Unread tracking + global DM/call notifications ---
-    const unreadChannelCounts = new Map(); // channelId -> count
+    const unreadChannelCounts = new Map();
 
-    // -------------------------
-    // Notification preferences
-    // -------------------------
     let notificationSettings = {
       dms_enabled: true,
       calls_enabled: true,
@@ -5499,14 +5319,14 @@
       }
     }
 
-    const unreadDmCounts = new Map(); // conversationId -> count
+    const unreadDmCounts = new Map();
     const channelIdToServerId = new Map();
     let dmConversationsCache = [];
     let globalActivityChannel = null;
     let incomingCallPopupEl = null;
     let incomingCallPopupCallId = null;
-    const activeVoiceRoomIds = new Set(); // server voice channel ids with >0 LiveKit participants
-    const activeCallConversationIds = new Set(); // DM conversation ids with an ongoing call
+    const activeVoiceRoomIds = new Set();
+    const activeCallConversationIds = new Set();
     let voiceActivityPollTimer = null;
 
     function serverHasVoiceActivity(serverId) {
@@ -5537,7 +5357,7 @@
         });
         refreshVoiceActivityUI();
       } catch (err) {
-        // Non-fatal — the indicator just won't be perfectly fresh this cycle.
+
         console.error("Failed to poll active voice rooms", err);
       }
     }
@@ -5553,15 +5373,6 @@
       voiceActivityPollTimer = null;
     }
 
-    // -------------------------
-    // Sync polling — the primary, realtime-independent update mechanism.
-    // Every few seconds the client asks the server "what's new since X",
-    // and the server answers by actually querying the tables. This works
-    // regardless of whether Realtime/RLS/publications are configured
-    // correctly, at the cost of being "every N seconds" instead of
-    // instant. Any realtime channels that DO work just make things feel a
-    // little snappier on top of this.
-    // -------------------------
     let syncPollTimer = null;
     let lastSyncAt = null;
     const seenIncomingCallIds = new Set();
@@ -5595,8 +5406,6 @@
       }
     }
 
-    // Cheap signature of a list so we can skip re-rendering when nothing
-    // actually changed (avoids flickering the sidebar every 3 seconds).
     function listSignature(list, fields) {
       return list.map((item) => fields.map((f) => item[f]).join(":")).join("|");
     }
@@ -5607,10 +5416,6 @@
       const sig = listSignature(servers, ["id", "name", "icon_url", "is_public"]);
       if (sig === lastServersSignature) return;
 
-      // Diff against the previous poll's server IDs so we can toast about
-      // genuine creations/deletions (not just renames) — this is what
-      // makes "a server was created/deleted" show up as a notification
-      // instead of the sidebar just silently changing on the next poll.
       const newIds = new Set(servers.map((s) => s.id));
       if (lastServersSignature) {
         servers.forEach((s) => {
@@ -5646,12 +5451,7 @@
     let lastMembersSignature = "";
     let lastMemberProfilesById = new Map();
     function reconcileMembersFromSync(members) {
-      // Push live username/avatar changes to anything already on screen
-      // (open channel's messages, DM list, etc.) as soon as they're
-      // visible in a member list poll — this is the "profile updates"
-      // half of realtime; previously nothing compared old vs new member
-      // profile fields, so an avatar/username change only ever showed up
-      // after a manual reload.
+
       members.forEach((m) => {
         if (!m.user) return;
         const prev = lastMemberProfilesById.get(m.user.id);
@@ -5677,42 +5477,21 @@
     }
 
     function handleSyncedMessage(message, since) {
-      // A row can land here because it's new, edited, or soft-deleted —
-      // the /api/sync query now matches on created_at, edited_at, AND
-      // deleted_at (see server.js) so edits actually reach polling clients
-      // instead of being silently invisible until a reload. But that means
-      // this can now fire for an *edit* of an old message in a channel
-      // the user isn't currently looking at, which should NOT flip that
-      // channel to "unread" — only a genuinely new message should. Use
-      // created_at vs. the poll's `since` cutoff to tell the two apart.
+
       const isNewMessage = !since || new Date(message.created_at) > new Date(since);
 
       if (message.channel_id) {
         if (currentChannel && currentChannel.id === message.channel_id) {
           const existingRow = messageListEl.querySelector(`[data-message-id="${message.id}"]`);
-          // Whenever the row is already on screen — whether this is our
-          // own local echo being reconciled, an edit, a reaction change,
-          // or a deletion — update it in place. Previously this only
-          // happened when !isNewMessage, so a poll landing right after our
-          // own send (isNewMessage is true for that) fell through to
-          // renderMessage() below, which removes + recreates the row and
-          // replayed the "message just arrived" entrance animation a
-          // second time for a message that had already animated in.
+
           if (existingRow) {
-            // An edit, reaction change, or deletion of a message already
-            // on screen. Update it in place instead of going through
-            // renderMessage(), which always re-appends at the end of the
-            // list — that would visually yank an edited older message down
-            // to the bottom of the channel every time a poll picked it up.
+
             if (message.deleted_at) {
               existingRow.remove();
             } else {
               const contentEl = existingRow.querySelector(".message-content");
               if (contentEl) contentEl.innerHTML = formatMessageContent(message.content);
-              // Reactions have their own change detector server-side
-              // (reactions_synced_at) independent of content edits, so
-              // always resync the reaction pills here too — this is what
-              // makes someone else's reaction show up without a reload.
+
               const reactionsEl = existingRow.querySelector(".message-reactions");
               if (reactionsEl) {
                 reactionsEl.innerHTML = reactionSummaryHTML(message.reactions);
@@ -5722,7 +5501,7 @@
               }
             }
           } else {
-            // Genuinely new message (or one we don't have on screen yet).
+
             renderMessage(message, messageListEl);
             messageListEl.scrollTop = messageListEl.scrollHeight;
           }
@@ -5748,14 +5527,7 @@
         if (known) {
           showDmNotification(message, known.other_user);
         } else {
-          // First message of a conversation we haven't cached yet (or the
-          // cache just hasn't loaded). Previously this showed the popup
-          // immediately with `other = null`, which always fell back to
-          // the generic default avatar — even though we already know
-          // exactly who sent it (message.user_id, guaranteed to be the
-          // other person: our own messages were filtered out above).
-          // Fetch that profile so the popup shows their real picture,
-          // same as every other DM notification does.
+
           apiFetch(`/api/profiles/${message.user_id}`)
             .then(({ profile }) => showDmNotification(message, profile))
             .catch(() => showDmNotification(message, null));
@@ -5772,9 +5544,6 @@
       calls.forEach((c) => activeCallConversationIds.add(c.conversation_id));
       refreshVoiceActivityUI();
 
-      // Our own active call, if any — keep the persistent bar's
-      // participant list in sync, and detect if it ended from the other
-      // side (the row is simply gone from this snapshot).
       if (activeDmCallId) {
         const mine = calls.find((c) => c.id === activeDmCallId);
         if (mine) {
@@ -5782,12 +5551,7 @@
           renderDmCallBar();
           updateDmCallButton();
         } else if (voiceRoom && voiceContext === "dm") {
-          // This snapshot is a picture of the world as of whenever the
-          // server received THIS particular request — if that was
-          // before we started our own call (requestedSince missing, or
-          // older than activeDmCallStartedAt), it simply predates the
-          // call and can't be trusted to say the call is gone. Wait for
-          // a fresher poll instead of disconnecting on stale info.
+
           const snapshotIsFreshEnough =
             requestedSince && activeDmCallStartedAt && new Date(requestedSince).getTime() >= activeDmCallStartedAt;
           if (snapshotIsFreshEnough) {
@@ -5797,7 +5561,6 @@
         }
       }
 
-      // New calls we haven't already popped up for — someone calling us.
       calls.forEach((call) => {
         if (seenIncomingCallIds.has(call.id)) return;
         seenIncomingCallIds.add(call.id);
@@ -5810,9 +5573,6 @@
         showIncomingCallPopup(call);
       });
 
-      // Forget calls that ended so a brand new call reusing... (call ids are
-      // UUIDs, this never actually recurs, but keep the set from growing
-      // forever across a long session).
       seenIncomingCallIds.forEach((id) => {
         if (!currentIds.has(id)) seenIncomingCallIds.delete(id);
       });
@@ -5832,31 +5592,19 @@
       seenIncomingCallIds.clear();
     }
 
-    // Reads the server-persisted read state (see /api/unreads) so the blue
-    // unread dot is correct immediately on load/reload — previously
-    // unreadChannelCounts/unreadDmCounts only lived in memory for the
-    // current tab session, so a message that arrived while you weren't in
-    // the app (or before a reload) never showed a dot at all.
     async function seedUnreadState() {
       try {
         const { channels, conversations, channelServers } = await apiFetch("/api/unreads");
         (channelServers || []).forEach((c) => channelIdToServerId.set(c.id, c.server_id));
         (channels || []).forEach((id) => markChannelUnread(id));
         (conversations || []).forEach((id) => markDmUnread(id));
-        // Re-render the server rail now that channelIdToServerId knows
-        // about channels in servers we haven't opened yet this session —
-        // otherwise a server you haven't clicked into never shows its
-        // unread dot until you visit it once.
+
         if ((channels || []).length) loadServers();
       } catch (err) {
         console.error("Failed to load unread state", err);
       }
     }
 
-    // A dot is easy to miss / ambiguous about whether it means "unread" or
-    // "someone's talking". Render an actual count badge instead — "3" is
-    // unambiguous. Falls back to a small dot only when the count is
-    // (rarely) not meaningful, e.g. more than 99.
     function badgeHTML(count) {
       if (!count) return "";
       return `<span class="unread-badge">${count > 99 ? "99+" : count}</span>`;
@@ -5943,12 +5691,7 @@
         if (badgeEl) badgeEl.remove();
       }
       refreshDmButtonDot();
-      // Persist read state server-side so it survives logout/login — see
-      // /api/unreads, which is what seeds the dot on load. Previously only
-      // openDmConversation() did this itself; markDmRead() (used by the
-      // notification popup's "Dismiss" button, the global-activity toast,
-      // and DM search selection) only ever cleared the LOCAL unread count,
-      // so a dot cleared that way came right back after a fresh sign-in.
+
       apiFetch(`/api/dms/${conversationId}/read`, { method: "POST", body: JSON.stringify({}) }).catch(() => {});
     }
 
@@ -6014,8 +5757,7 @@
     }
 
     async function showIncomingCallPopup(call) {
-      // Only show one at a time — a second incoming call while one is
-      // already showing just replaces it.
+
       if (incomingCallPopupEl) incomingCallPopupEl.remove();
       const cached = dmConversationsCache.find((c) => c.id === call.conversation_id);
       const other = (cached && cached.other_user) || (await resolveProfile(call.started_by));
@@ -6067,7 +5809,6 @@
         }
       });
 
-      // Auto-dismiss after 30s if nobody answers, matching a typical ring timeout.
       setTimeout(() => {
         if (incomingCallPopupCallId === call.id) dismiss();
       }, 30000);
@@ -6102,7 +5843,7 @@
 
             if (row.channel_id) {
               const isOpenChannel = currentChannel && currentChannel.id === row.channel_id;
-              if (isOpenChannel) return; // already handled by the per-channel subscription
+              if (isOpenChannel) return;
               markChannelUnread(row.channel_id);
               return;
             }
@@ -6110,13 +5851,11 @@
             if (row.conversation_id) {
               const isOpenDm =
                 dmModal.classList.contains("visible") && currentDmConversationId === row.conversation_id;
-              if (isOpenDm) return; // already handled by the per-conversation subscription
+              if (isOpenDm) return;
               markDmUnread(row.conversation_id);
               const known = dmConversationsCache.find((c) => c.id === row.conversation_id);
               const other = known ? known.other_user : await resolveProfile(row.user_id);
-              // Refresh the conversation list in the background so a
-              // brand-new (previously unknown) conversation shows up next
-              // time the DM modal is opened.
+
               if (!known) loadDmConversations();
               showToast(
                 `💬 ${escapeHtml(other ? other.username : "Someone")}: ${escapeHtml((row.content || "").slice(0, 80))}`,
@@ -6165,8 +5904,7 @@
           async (payload) => {
             const server = payload.new;
             if (!server) return;
-            // RLS only delivers this row if we can actually see the server
-            // (member or public), so it's always relevant to us here.
+
             await loadServers();
             showToast(`🆕 New server: ${escapeHtml(server.name || "Untitled")}`, { variant: "accent" });
           }
@@ -6219,8 +5957,6 @@
         .subscribe((status, err) => logRealtimeStatus("global-activity", status, err));
     }
 
-    // Keeps usernames/avatars fresh anywhere they're already on screen when
-    // someone else edits their profile, instead of waiting for a reload.
     function applyLiveProfileUpdate(profile) {
       if (extraKnownProfiles.has(profile.id)) extraKnownProfiles.set(profile.id, profile);
 
@@ -6262,7 +5998,7 @@
           try {
             renderMemberList();
           } catch (e) {
-            /* member list may not be rendered right now — safe to skip */
+
           }
         }
       }
@@ -6278,11 +6014,6 @@ function showAuthOverlay() {
   authOverlay.classList.remove("hidden");
 }
 
-    // -------------------------
-    // Push notifications (Web Push / VAPID)
-    // -------------------------
-    // Converts the base64url VAPID public key into the Uint8Array format
-    // pushManager.subscribe() expects for applicationServerKey.
     function urlBase64ToUint8Array(base64String) {
       const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
       const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -6293,10 +6024,7 @@ function showAuthOverlay() {
     }
 
     let pushServiceWorkerRegistration = null;
-    // Cached, synchronously-readable mirror of "does this browser actually
-    // have push notifications on" — updatePushStatusUI() keeps it current.
-    // Render functions use it to decide whether mute buttons make sense at
-    // all (muting is meaningless if you get no notifications to mute).
+
     let pushNotificationsActive = false;
     function refreshMuteButtonsVisibility() {
       if (currentServer) loadChannels(currentServer.id);
@@ -6304,20 +6032,6 @@ function showAuthOverlay() {
       if (typeof renderNotificationBell === "function") renderNotificationBell();
     }
 
-    // Tells the service worker which chat is currently open, and whether
-    // this tab is the one the person is actually looking at right now, so
-    // an incoming push doesn't also pop a redundant system notification on
-    // top of the in-app UI — see sw.js.
-    //
-    // "Looking at it right now" needs BOTH document.visibilityState and
-    // document.hasFocus(): visibilityState alone isn't enough, because a
-    // background browser *window* that still has this tab as its frontmost
-    // tab reports "visible" even while the person is focused on a totally
-    // different application. That was suppressing pushes any time the site
-    // was merely open in some window, not just when it was actually being
-    // looked at. Requiring hasFocus() too means pushes correctly fire the
-    // moment the person switches to another tab, another app, or closes
-    // the site — and stay suppressed only while this exact tab is focused.
     function reportFocusStateToServiceWorker() {
       if (!("serviceWorker" in navigator)) return;
       const state = {
@@ -6332,43 +6046,19 @@ function showAuthOverlay() {
         .catch(() => {});
     }
     document.addEventListener("visibilitychange", reportFocusStateToServiceWorker);
-    // visibilitychange alone misses the "still the frontmost tab, but the
-    // browser window itself lost focus" case (and its reverse) — window
-    // focus/blur cover exactly that gap.
+
     window.addEventListener("focus", reportFocusStateToServiceWorker);
     window.addEventListener("blur", reportFocusStateToServiceWorker);
 
     async function getPushServiceWorkerRegistration() {
       if (pushServiceWorkerRegistration) return pushServiceWorkerRegistration;
       if (!("serviceWorker" in navigator)) return null;
-      // register() resolves as soon as a registration exists, which can
-      // still be "installing" rather than "active". pushManager.subscribe()
-      // on some browsers fails on an installing-but-not-yet-active worker
-      // (e.g. "Subscription failed - no active Service Worker") — which is
-      // exactly the case the very first time a user grants permission on a
-      // fresh registration. Waiting on `.ready` (which resolves only once
-      // the worker is active) makes the very first subscribe attempt
-      // reliable instead of only the second one (by which point the worker
-      // from the first attempt has since activated).
-      // Relative, not "/sw.js" — an absolute path always resolves against
-      // the domain root, which breaks on GitHub Pages *project* pages
-      // (username.github.io/reponame/): "/sw.js" would try to fetch
-      // https://username.github.io/sw.js, a totally different location
-      // that 404s, so registration silently fails and push notifications
-      // don't work at all. A relative path resolves against this page's
-      // own URL instead, so it lands at .../reponame/sw.js regardless of
-      // subpath — and the default scope that comes from that ("./") is
-      // exactly the app's own root, which is what we want either way.
+
       await navigator.serviceWorker.register("sw.js", { scope: "./" });
       pushServiceWorkerRegistration = await navigator.serviceWorker.ready;
       return pushServiceWorkerRegistration;
     }
 
-    // Whether THIS browser currently has an active push subscription. This
-    // is different from Notification.permission: permission can be granted
-    // while no subscription exists yet (e.g. the user granted permission but
-    // never finished subscribing, or unsubscribed later without revoking
-    // permission).
     async function getCurrentPushSubscription() {
       try {
         const registration = await getPushServiceWorkerRegistration();
@@ -6400,9 +6090,6 @@ function showAuthOverlay() {
         });
     }
 
-    // Subscribes this browser to push via the native Push API, then sends
-    // the resulting subscription (endpoint + keys) to our server so it can
-    // be targeted later.
     async function subscribeToPush(isRetry) {
       try {
         if (!window.VAPID_PUBLIC_KEY) {
@@ -6421,16 +6108,7 @@ function showAuthOverlay() {
             applicationServerKey: urlBase64ToUint8Array(window.VAPID_PUBLIC_KEY),
           });
         } catch (subscribeErr) {
-          // The most common cause of the very first subscribe attempt
-          // failing right after permission is granted: the browser
-          // already has a leftover push subscription for this origin
-          // (e.g. from an earlier deploy that used a different VAPID
-          // key). subscribe() throws in that case instead of replacing
-          // it. Previously this left the user stuck — permission was
-          // granted but no subscription existed, and clicking "Enable"
-          // again just hit the same error. Clear the stale subscription
-          // and retry once automatically instead of requiring the user
-          // to notice and work around it themselves.
+
           if (!isRetry) {
             const existing = await registration.pushManager.getSubscription().catch(() => null);
             if (existing) {
@@ -6474,19 +6152,9 @@ function showAuthOverlay() {
       }
     }
 
-    // Single entry point for the modal's push button — decides whether a
-    // click should ask for permission, subscribe, or unsubscribe based on
-    // the CURRENT state, so the same button doubles as Enable/Disable.
-    // Every branch is awaited all the way through (including the bell
-    // toggle's own click handler awaiting this) — none of them used to be,
-    // which is what caused the bell switch to visibly turn on (native
-    // checkbox default), then snap back off a moment later (the caller's
-    // re-render running against a pushNotificationsActive that hadn't
-    // been updated yet), then finally turn on again once the real
-    // permission/subscribe work actually finished in the background.
     async function handlePushButtonClick() {
       const permission = ("Notification" in window) ? Notification.permission : null;
-      if (permission === "denied") return; // button is disabled in this state anyway
+      if (permission === "denied") return;
 
       if (permission === "granted") {
         const subscription = await getCurrentPushSubscription();
@@ -6498,12 +6166,9 @@ function showAuthOverlay() {
         return;
       }
 
-      // permission is "default" — ask the browser directly.
       await requestNativePermissionAndSubscribe();
     }
 
-    // Reflects the real, current browser permission + subscription state in
-    // the Notification Settings modal.
     async function updatePushStatusUI() {
       const dot = document.getElementById("notification-push-status-dot");
       const text = document.getElementById("notification-push-status-text");
@@ -6538,7 +6203,7 @@ function showAuthOverlay() {
         return;
       }
 
-      const permission = Notification.permission; // 'granted' | 'denied' | 'default'
+      const permission = Notification.permission;
       button.style.display = "block";
 
       if (permission === "denied") {
@@ -6572,7 +6237,6 @@ function showAuthOverlay() {
         return;
       }
 
-      // permission === "default": not yet granted or denied.
       dot.className = "push-status-dot is-default";
       text.textContent = "Push notifications aren't enabled yet on this device.";
       button.textContent = "\ud83d\udd14 Enable push notifications";
@@ -6581,7 +6245,6 @@ function showAuthOverlay() {
       setPushActive(false);
     }
     window.updatePushStatusUI = updatePushStatusUI;
-
 
     const authTabSignin = document.getElementById("auth-tab-signin");
     const authTabSignup = document.getElementById("auth-tab-signup");
@@ -6842,10 +6505,6 @@ function showAuthOverlay() {
 
     const toastContainer = document.getElementById("toast-container");
 
-    /* -------------------------
-   CHANGE PASSWORD LOGIC (inline in the Account settings panel)
--------------------------- */
-
 const passwordSave = document.getElementById("password-save");
 
 passwordSave.onclick = async () => {
@@ -6859,32 +6518,12 @@ passwordSave.onclick = async () => {
   }
 
   try {
-    // Fixed: this was using a bare fetch() with no Authorization header, so
-    // the backend's authMiddleware always rejected it (no way to tell who
-    // the request was even from) and every attempt failed with the generic
-    // "Password change failed" message regardless of the actual passwords
-    // entered. apiFetch() is what every other authenticated call in this
-    // app uses — it attaches the current Supabase session's access token
-    // as a Bearer header and surfaces the real server-side error message
-    // (e.g. "Current password is incorrect") instead of a generic one.
+
     await apiFetch("/api/auth/change-password", {
       method: "POST",
       body: JSON.stringify({ current, next })
     });
 
-    // Fixed: changing the password via Supabase's admin API
-    // (admin.updateUserById on the backend) revokes the account's existing
-    // sessions as a security measure — so right after this succeeds, the
-    // access token still held by this tab is dead. Every request after
-    // that (sending a message, loading channels, etc.) silently started
-    // failing with 401s and nothing told the user why, because nothing
-    // re-established a session afterward. Signing back in immediately with
-    // the new password gets a fresh, valid session with no visible gap —
-    // apiFetch() reads whatever session supabaseClient currently holds, so
-    // this alone is enough to make every subsequent call work again. If
-    // this re-sign-in itself fails for some reason, fall back to showing
-    // the sign-in screen instead of leaving the app in a half-broken state
-    // where the user looks logged in but nothing works.
     const { error: reSignInError } = await supabaseClient.auth.signInWithPassword({
       email: currentUser?.email,
       password: next,
@@ -6991,9 +6630,6 @@ async function openNotificationSettingsTab() {
   updatePushStatusUI();
 }
 
-// -------------------------
-// Notification bell (top-right quick toggle)
-// -------------------------
 const notificationBellButton = document.getElementById("notification-bell-button");
 const notificationBellPopover = document.getElementById("notification-bell-popover");
 const notificationBellToggle = document.getElementById("notification-bell-toggle");
@@ -7016,7 +6652,7 @@ function renderNotificationBell() {
 
 notificationBellButton.addEventListener("click", (e) => {
   e.stopPropagation();
-  if (isMobileDevice()) return; // blurred + non-interactive on mobile
+  if (isMobileDevice()) return;
   const isOpen = notificationBellPopover.style.display === "block";
   if (isOpen) {
     notificationBellPopover.style.display = "none";
@@ -7037,16 +6673,11 @@ document.addEventListener("click", (e) => {
 });
 
 notificationBellToggle.addEventListener("click", async (e) => {
-      // Let the click flip the checkbox visually, then reconcile with the
-      // real async permission/subscription flow (updatePushStatusUI corrects
-      // it if the browser denies permission, etc). Disabled while in
-      // flight so a second click can't overlap the first and produce two
-      // competing subscribe/unsubscribe calls.
+
       notificationBellToggle.disabled = true;
       try {
         await handlePushButtonClick();
-        // If turning on for the first time, also reset notification-settings to
-        // their sane defaults, per "turn it on using the default settings".
+
         if (pushNotificationsActive) {
           try {
             const { settings } = await apiFetch("/api/notification-settings", {
@@ -7074,10 +6705,6 @@ notificationBellMoreLink.addEventListener("click", () => {
   openNotificationSettingsTab();
 });
 
-// notificationEnablePushButton's onclick is (re)assigned inside
-// updatePushStatusUI on every render, since the same button toggles between
-// Enable and Disable depending on current subscription state.
-
 notificationSettingsSave.onclick = async () => {
   try {
     const { settings } = await apiFetch("/api/notification-settings", {
@@ -7096,7 +6723,6 @@ notificationSettingsSave.onclick = async () => {
     showToast("Failed to save notification settings", { variant: "danger" });
   }
 };
-
 
     function showToast(message, options = {}) {
       const toast = document.createElement("div");
@@ -7136,13 +6762,6 @@ notificationSettingsSave.onclick = async () => {
       setTheme(profile.theme);
     }
 
-    // ---------------------------------------------------------------
-    // Appearance: accent color override, chat background image + text
-    // color, density, and corner style. All settings-only (never shown
-    // at sign-up) and all applied on top of whatever theme is active.
-    // (chatBodyEl is already declared above, near voice-bar toggling.)
-    // ---------------------------------------------------------------
-
     function applyAccentColor(hex) {
       if (hex) {
         document.documentElement.style.setProperty("--accent-user", hex);
@@ -7151,10 +6770,6 @@ notificationSettingsSave.onclick = async () => {
       }
     }
 
-    // Samples a downscaled copy of the image on a canvas and returns
-    // "light" (use light text — the image is dark) or "dark" (use dark
-    // text — the image is light), so a background someone drags in just
-    // works without them having to think about contrast themselves.
     function detectImageTextMode(imgUrl) {
       return new Promise((resolve) => {
         const img = new Image();
@@ -7175,9 +6790,7 @@ notificationSettingsSave.onclick = async () => {
             const avg = total / (data.length / 4);
             resolve(avg < 130 ? "light" : "dark");
           } catch (err) {
-            // Canvas can throw on a tainted/cross-origin image without
-            // CORS headers — fall back to light text, the safer default
-            // against most photos, rather than leaving it undecided.
+
             resolve("light");
           }
         };
@@ -7220,7 +6833,7 @@ notificationSettingsSave.onclick = async () => {
       } else if (mode === "light" || mode === "dark") {
         chatBodyEl.setAttribute("data-chat-text-mode", mode);
       } else {
-        // Auto — detect from the image itself.
+
         const detected = await detectImageTextMode(url);
         chatBodyEl.setAttribute("data-chat-text-mode", detected);
       }
@@ -7256,10 +6869,6 @@ notificationSettingsSave.onclick = async () => {
       return (parts[0][0] + parts[1][0]).toUpperCase();
     }
 
-    // Generic default avatar (a plain silhouette on a soft gradient), shown
-    // whenever a user hasn't uploaded a profile picture. Using a real default
-    // image/icon instead of bare initials keeps every avatar slot visually
-    // consistent, the way Discord/Slack-style apps look "finished".
     const DEFAULT_AVATAR_SVG = `
       <svg viewBox="0 0 40 40" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Default avatar">
         <defs>
@@ -7274,33 +6883,17 @@ notificationSettingsSave.onclick = async () => {
       </svg>
     `;
 
-    // Highlights @username tokens in already-escaped message text. Doesn't
-    // try to verify the username exists (that's resolved server-side into
-    // message.mentions for notifications) — this is just the visual
-    // highlight, including a distinct style when it's you. Clickable (see
-    // the delegated "mention-token" click handler below) — resolves the
-    // handle against whatever member list is on hand at click time and
-    // opens the view-profile modal (Message button included) from there.
     function formatMessageContent(content) {
       const escaped = escapeHtml(content || "");
       return escaped.replace(/@([a-zA-Z0-9_]{2,32})/g, (match, handle) => {
         const isMe = currentProfile && handle.toLowerCase() === (currentProfile.username || "").toLowerCase();
-        // Same pill-with-avatar look as the @mention autocomplete
-        // suggestions (see .mention-suggestion-item) — a known user (in
-        // whatever member/DM/suggestion lists we already have in memory)
-        // gets their real avatar; an unresolved handle still gets a pill,
-        // just with the generic default avatar, so posted mentions always
-        // look consistent instead of falling back to plain highlighted text.
+
         const known = findKnownUserByUsername(handle);
         const avatar = known ? avatarHTML(known) : DEFAULT_AVATAR_SVG;
         return `<span class="mention-token${isMe ? " mention-token-me" : ""}" data-mention-handle="${escapeHtml(handle)}">${avatar}<span class="mention-token-name">@${handle}</span></span>`;
       });
     }
 
-    // Best-effort lookup across whatever member/user lists we already have
-    // in memory (server members, current DM partner, mention-suggestion
-    // cache) — avoids a network round trip for the common case of
-    // clicking a mention of someone visible in the current context.
     function findKnownUserByUsername(handle) {
       const needle = handle.toLowerCase();
       const pools = [
@@ -7321,9 +6914,7 @@ notificationSettingsSave.onclick = async () => {
         openViewProfileModal(known);
         return;
       }
-      // Not in any list we already have — ask the server to resolve the
-      // username so the mention is still clickable from, e.g., a DM
-      // history with someone no longer in a shared server.
+
       try {
         const { user } = await apiFetch(`/api/users/by-username/${encodeURIComponent(handle)}`);
         if (user) openViewProfileModal(user);
@@ -7340,9 +6931,6 @@ notificationSettingsSave.onclick = async () => {
       }
     });
 
-    // -------------------------
-    // @Mention autocomplete
-    // -------------------------
     let mentionDropdownEl = null;
     let mentionSuggestions = [];
     let mentionActiveIndex = 0;
@@ -7356,10 +6944,6 @@ notificationSettingsSave.onclick = async () => {
       mentionSuggestions = [];
     }
 
-    // Finds an "@partial" token immediately before the cursor, if any —
-    // e.g. typing "hey @al" with the cursor at the end returns
-    // { start: 4, query: "al" }. No match if there's whitespace between
-    // the @ and the cursor, or no @ at all.
     function getMentionQuery(inputEl) {
       const cursor = inputEl.selectionStart;
       const value = inputEl.value.slice(0, cursor);
@@ -7368,7 +6952,7 @@ notificationSettingsSave.onclick = async () => {
       const between = value.slice(at + 1);
       if (/\s/.test(between)) return null;
       if (at > 0 && /\S/.test(value[at - 1]) && value[at - 1] !== " ") {
-        // "@" glued to the middle of another word (e.g. an email) — not a mention.
+
         if (!/^[\s(]|^$/.test(value[at - 1])) return null;
       }
       return { start: at, query: between };
@@ -7384,11 +6968,9 @@ notificationSettingsSave.onclick = async () => {
       const candidates = (getMembersFn() || []).filter(
         (u) => u && u.username && u.username.toLowerCase().startsWith(query) && (!currentUser || u.id !== currentUser.id)
       );
-      // Dedup by id (server member list / DM partner lookups can repeat).
+
       const seen = new Set();
-      // Cap the candidate pool generously (dropdown itself is
-      // height-limited to ~5 visible rows via CSS, with scroll for the
-      // rest — see .mention-suggestions's max-height/overflow-y).
+
       mentionSuggestions = candidates.filter((u) => (seen.has(u.id) ? false : (seen.add(u.id), true))).slice(0, 30);
 
       if (!mentionSuggestions.length) {
@@ -7409,9 +6991,7 @@ notificationSettingsSave.onclick = async () => {
         document.body.appendChild(mentionDropdownEl);
       }
       const rect = inputEl.getBoundingClientRect();
-      // Only ever 5 rows tall (scroll for the rest) — the height no
-      // longer grows with the suggestion count, so the popup doesn't
-      // creep further and further up the screen as more matches appear.
+
       const visibleRows = Math.min(mentionSuggestions.length, 5);
 
       mentionDropdownEl.innerHTML = mentionSuggestions
@@ -7425,14 +7005,11 @@ notificationSettingsSave.onclick = async () => {
         )
         .join("");
 
-      // Clamp after the content is in, so offsetWidth/offsetHeight (which
-      // clampToViewport reads) reflect this render's actual size instead
-      // of whatever was left over from the dropdown's previous position.
       clampToViewport(mentionDropdownEl, rect.left, rect.top - visibleRows * 32 - 8);
 
       mentionDropdownEl.querySelectorAll(".mention-suggestion-item").forEach((el) => {
         el.addEventListener("mousedown", (e) => {
-          e.preventDefault(); // keep focus on the input instead of the dropdown
+          e.preventDefault();
           selectMentionSuggestion(mentionSuggestions[Number(el.dataset.index)]);
         });
       });
@@ -7452,8 +7029,6 @@ notificationSettingsSave.onclick = async () => {
       closeMentionDropdown();
     }
 
-    // Returns true if it handled the keydown itself (so the caller — the
-    // Enter-to-send handler — should stop, not send the message).
     function handleMentionKeydown(e, inputEl) {
       if (!mentionDropdownEl || mentionTargetInput !== inputEl || !mentionSuggestions.length) return false;
 
@@ -7495,26 +7070,11 @@ notificationSettingsSave.onclick = async () => {
       return DEFAULT_AVATAR_SVG;
     }
 
-    // window.location.origin is only the scheme+host (e.g.
-    // "https://vexacloud.github.io"). On a GitHub Pages *project* page the
-    // app actually lives at a subpath (e.g. "/chat-static/"), so anything
-    // that needs a full URL back to this app — OAuth redirectTo, password
-    // reset redirectTo, invite links — must include that subpath too, or
-    // the callback lands at the domain root instead of the app. This
-    // derives "<origin><subpath>/" from the current page URL, which works
-    // whether the app is served from a root domain or a project subpath.
     function getAppBaseUrl() {
       const dir = window.location.pathname.replace(/[^/]*$/, "");
       return `${window.location.origin}${dir}`;
     }
 
-    // -------------------------
-    // Mobile detection — browser push notifications are unreliable/
-    // unsupported on most mobile browsers (no Notification API on iOS
-    // Safari outside an installed PWA, spotty support elsewhere), so the
-    // notification controls are visually disabled on phones instead of
-    // pretending they work.
-    // -------------------------
     function isMobileDevice() {
       return (
         window.matchMedia("(max-width: 680px)").matches ||
@@ -7558,17 +7118,6 @@ notificationSettingsSave.onclick = async () => {
         .replace(/'/g, "&#39;");
     }
 
-    // Floating UI (context menus, the emoji picker, the @mention dropdown)
-    // all position themselves at a raw click/anchor coordinate with no
-    // regard for viewport edges. That's invisible on a wide desktop
-    // window, but on a narrow phone screen — or when the anchor is near
-    // the right/bottom edge, which is normal on mobile since panels are
-    // narrower — the popup routinely rendered partially or fully
-    // off-screen with no way to reach the cut-off part (nothing here
-    // scrolls). Call this right after the element is in the DOM (and has
-    // real dimensions via offsetWidth/offsetHeight) with the *desired*
-    // left/top to have it slide back onscreen, with a small margin, only
-    // when it would otherwise overflow.
     function clampToViewport(el, left, top, margin = 8) {
       const w = el.offsetWidth;
       const h = el.offsetHeight;
@@ -7578,15 +7127,6 @@ notificationSettingsSave.onclick = async () => {
       el.style.top = `${Math.min(Math.max(top, margin), maxTop)}px`;
     }
 
-    // -------------------------
-    // Reactions
-    // -------------------------
-
-    // Emoji organized into browsable categories (à la Discord/Slack) so
-    // the picker isn't just a search box — each category has an icon used
-    // as its tab glyph. "Recent" and "Custom" start empty and are filled
-    // in at render time: Recent from recentEmojiList() (see below), Custom
-    // once the app supports server-uploaded emoji.
     const EMOJI_CATEGORIES = [
       { name: "Recent", icon: "🕐", emojis: [] },
       {
@@ -7696,14 +7236,6 @@ notificationSettingsSave.onclick = async () => {
       { name: "Custom", icon: "⭐", emojis: [] },
     ];
 
-    // A separate emoji -> "space separated keywords" lookup, used only to
-    // power the search box (searching by the emoji glyph itself never
-    // matches typed text). Not every emoji in EMOJI_CATEGORIES has an
-    // entry here — those are still reachable by browsing their category
-    // tab, just not by keyword search. Anyone on a device with its own
-    // emoji panel can still type or paste any emoji straight into the
-    // search box to react with something outside this set — see
-    // EMOJI_CHAR_RE below.
     const EMOJI_KEYWORDS = new Map([
       ["😀","grinning happy smile"], ["😁","grin happy smile"], ["😂","laugh cry funny lol"],
       ["🤣","rofl laugh funny"], ["😊","smile blush happy"], ["😇","angel innocent halo"],
@@ -7792,17 +7324,10 @@ notificationSettingsSave.onclick = async () => {
       ["🦖","dinosaur trex"], ["🐳","whale"], ["🐬","dolphin"], ["🦈","shark"], ["🐙","octopus"],
     ]);
 
-    // Every emoji across every static category, flattened once, for
-    // keyword search to run against (Recent/Custom are excluded — Recent
-    // is always a subset of the other categories already, and Custom is
-    // empty until server-uploaded emoji exist).
     const EMOJI_SEARCH_POOL = EMOJI_CATEGORIES.filter(
       (c) => c.name !== "Recent" && c.name !== "Custom"
     ).flatMap((c) => c.emojis);
 
-    // Recently-used reaction emoji, newest first, persisted locally so the
-    // Recent tab survives a reload. Purely a client-side convenience list
-    // — never synced anywhere.
     const RECENT_EMOJI_STORAGE_KEY = "vexacloud-recent-emoji";
     const MAX_RECENT_EMOJI = 32;
 
@@ -7822,19 +7347,10 @@ notificationSettingsSave.onclick = async () => {
         list.unshift(emoji);
         localStorage.setItem(RECENT_EMOJI_STORAGE_KEY, JSON.stringify(list.slice(0, MAX_RECENT_EMOJI)));
       } catch (err) {
-        // Storage unavailable (private browsing, full quota, etc.) — the
-        // Recent tab just stays empty. Not worth surfacing to the user.
+
       }
     }
 
-    // On some platforms, typing/pasting an actual emoji into a text input
-    // works via a system-level emoji keyboard (macOS Ctrl+Cmd+Space,
-    // Windows Win+., mobile OS keyboards) — no JS API can *summon* that
-    // picker on demand across browsers, but any plain <input> already
-    // accepts whatever it inserts. This lets someone use their device's
-    // full emoji set (accents, skin tones, flags, anything not in our
-    // curated grid above) to react, by just typing the emoji itself into
-    // the search box instead of a keyword.
     const EMOJI_CHAR_RE =
       /\p{Extended_Pictographic}(?:\u200d\p{Extended_Pictographic}|[\u{1F3FB}-\u{1F3FF}]|\uFE0F)*/u;
 
@@ -7861,9 +7377,7 @@ notificationSettingsSave.onclick = async () => {
       const mine =
         currentUser &&
         (message.reactions || []).some((r) => r.emoji === emoji && r.user_id === currentUser.id);
-      // Optimistic local update so it feels instant; corrected on next load
-      // or by anyone else's realtime view naturally converging since the
-      // server is the source of truth for subsequent fetches.
+
       if (!message.reactions) message.reactions = [];
       if (mine) {
         message.reactions = message.reactions.filter(
@@ -7987,10 +7501,7 @@ notificationSettingsSave.onclick = async () => {
       });
 
       searchInput.addEventListener("input", () => {
-        // If an actual emoji character landed in the box — typed or
-        // pasted straight from the device's own emoji panel — react with
-        // it directly instead of keyword-searching for it. That's still
-        // the escape hatch to anything outside this curated set.
+
         const typed = EMOJI_CHAR_RE.exec(searchInput.value);
         if (typed) {
           pickEmoji(typed[0]);
@@ -8037,9 +7548,6 @@ notificationSettingsSave.onclick = async () => {
       return now - createdAt <= 60 * 1000 && !message.deleted_at;
     }
 
-    // Builds the actual request URL for an "/api/..." path against the
-    // "api" edge function (see window.EDGE_FUNCTIONS_BASE above). Absolute
-    // URLs are passed through unchanged.
     function apiUrl(path) {
       if (path.startsWith("http")) return path;
       return `${window.EDGE_FUNCTIONS_BASE || ""}${path}`;
@@ -8063,11 +7571,7 @@ notificationSettingsSave.onclick = async () => {
             headers,
           }).then(async (res) => {
             if (!res.ok) {
-              // A 401 with a token already on hand almost always means that
-              // token was stale (e.g. it expired between getSession()
-              // resolving and the request landing). Try exactly one silent
-              // refresh-and-retry before surfacing the error, instead of
-              // making the person notice and reload the page themselves.
+
               if (res.status === 401 && token && !_isRetry) {
                 const { data: refreshed } = await supabaseClient.auth
                   .refreshSession()
@@ -8102,16 +7606,7 @@ notificationSettingsSave.onclick = async () => {
         return;
       }
       const { data } = await supabaseClient.auth.getSession();
-      // getSession() reads the already-restored session from local
-      // storage — no network round trip. getUser() used to be called
-      // here instead, which re-validates the token against the Auth
-      // server on every single page load before anything else could even
-      // start; that one extra round trip was a big chunk of the "up to 5
-      // seconds before you're auto-signed-in" delay. It's safe to skip:
-      // every subsequent apiFetch() call sends this token to our own API,
-      // which verifies it server-side on every request anyway (and
-      // apiFetch already silently refreshes-and-retries on a 401), so
-      // nothing here was actually adding security — just latency.
+
       currentUser = data.session?.user || null;
       if (!currentUser) {
         showAuthOverlay();
@@ -8121,13 +7616,7 @@ notificationSettingsSave.onclick = async () => {
         return;
       }
       try {
-        // Kick this off immediately, in parallel with /api/auth/me below —
-        // loadServers() only needs a valid session token (already have
-        // one from getSession() above), not the profile data /api/auth/me
-        // returns, so there's no real reason to make it wait in line
-        // behind that request. This alone removes a full network
-        // round-trip from the critical path between sign-in and the
-        // channel list appearing.
+
         const serversPromise = loadServers();
         const me = await apiFetch("/api/auth/me");
         currentProfile = me.user;
@@ -8140,27 +7629,14 @@ notificationSettingsSave.onclick = async () => {
         hideAuthOverlay();
         applyProfileTheme(currentProfile);
         applyProfileAppearance(currentProfile);
-        // Web Push subscriptions are tied to a user server-side at the
-        // moment they're created (POST /api/push/subscribe uses the signed-
-        // in session), so there's no separate "login" call needed here the
-        // way OneSignal required — just refresh the settings-modal UI in
-        // case it's open.
+
         if (typeof window.updatePushStatusUI === "function") window.updatePushStatusUI();
         await tryApplyPendingAvatar();
-        // autoSelectDefaultServerAndChannel() (below) reads allServers,
-        // which loadServers() sets — so it needs to actually be done by
-        // now, but it's very likely already finished during the two
-        // awaits above.
+
         await serversPromise;
         loadDmConversations();
         loadNotificationSettings();
-        // Not calling subscribeGlobalActivity() here on purpose — the sync
-        // poll below is now the single source of truth for unread counts,
-        // DM notifications, and incoming-call popups. Running both would
-        // double-count/double-fire anything realtime actually managed to
-        // deliver. Per-channel and per-conversation realtime subscriptions
-        // (elsewhere) are still used as a snappier supplement since they
-        // just refresh already-idempotent renders.
+
         startVoiceActivityPolling();
         startSyncPolling();
         startAccountStatusWatch();
@@ -8180,10 +7656,6 @@ notificationSettingsSave.onclick = async () => {
       }
     }
 
-    // -------------------------
-    // Drawers (one screen at a time — Channels/Members overlay instead of
-    // permanent columns)
-    // -------------------------
     function openChannelsDrawer() {
       channelsDrawer.classList.add("open");
       drawerBackdrop.classList.add("visible");
@@ -8216,39 +7688,41 @@ notificationSettingsSave.onclick = async () => {
 
     let allServers = [];
 
-    // Requested default landing spot on login.
     const DEFAULT_SERVER_ID = "afd99627-f642-4a98-9ea5-743d873e1064";
     const DEFAULT_CHANNEL_ID = "b305cfc6-4c85-4301-9232-981788126142";
 
     async function autoSelectDefaultServerAndChannel() {
-      const server = allServers.find((s) => s.id === DEFAULT_SERVER_ID) || allServers[0];
-      if (!server) return; // genuinely no servers at all yet
+      let server = allServers.find((s) => s.id === DEFAULT_SERVER_ID);
+
+      if (!server) {
+
+        try {
+          await apiFetch(`/api/servers/${DEFAULT_SERVER_ID}/join`, { method: "POST" });
+          await loadServers();
+          server = allServers.find((s) => s.id === DEFAULT_SERVER_ID);
+        } catch (err) {
+          console.error("Failed to auto-join default server", err);
+        }
+      }
+
+      server = server || allServers[0];
+      if (!server) return;
+
       await selectServer(server);
-      // selectChannel dispatch (text vs. voice) lives on the rendered
-      // channel-item's click handler — reuse it directly instead of
-      // duplicating the text/voice branching logic here.
+
       const channelEl =
         channelListEl.querySelector(`[data-channel-id="${DEFAULT_CHANNEL_ID}"]`) ||
         channelListEl.querySelector('.channel-item[data-channel-type="text"]');
       if (channelEl) channelEl.click();
     }
 
-    // Bumped on every call so an in-flight, now-stale call can tell it's
-    // been superseded and bail instead of appending its results on top of
-    // whatever a newer call already rendered. Without this, the several
-    // independent things that all call loadServers() — the initial
-    // sign-in, the very first sync-poll tick, and seedUnreadState(), all
-    // of which can legitimately fire within milliseconds of each other on
-    // a fresh load — would each clear the list at their own start, then
-    // each append their own full copy of it whenever their own request
-    // resolved, visibly duplicating every server.
     let serversLoadToken = 0;
 
     async function loadServers() {
       const loadToken = ++serversLoadToken;
       try {
         const { servers } = await apiFetch("/api/servers");
-        if (loadToken !== serversLoadToken) return; // superseded — don't render
+        if (loadToken !== serversLoadToken) return;
         allServers = servers;
         serverListEl.innerHTML = "";
         if (!servers.length) {
@@ -8314,10 +7788,7 @@ el.innerHTML = `
       } catch (err) {
         console.error(err);
       }
-      // Channels and members are independent reads — run them together
-      // instead of one after another so switching servers (and the very
-      // first server auto-selected on sign-in) takes as long as the
-      // slower of the two requests, not the sum of both.
+
       await Promise.all([loadChannels(server.id), loadServerMembers(server.id)]);
       openChannelsDrawer();
     }
@@ -8327,16 +7798,13 @@ el.innerHTML = `
       return t === "voice" ? "voice" : t === "announcement" ? "announcement" : "text";
     }
 
-    // Same overlapping-call problem as loadServers() above: switching
-    // servers quickly, or a sync-poll tick landing mid-switch, can start a
-    // second loadChannels() before the first has resolved.
     let channelsLoadToken = 0;
 
     async function loadChannels(serverId) {
       const loadToken = ++channelsLoadToken;
       try {
         const { channels } = await apiFetch(`/api/servers/${serverId}/channels`);
-        if (loadToken !== channelsLoadToken) return; // superseded — don't render
+        if (loadToken !== channelsLoadToken) return;
         channelListEl.innerHTML = "";
         const textChannels = channels.filter((c) => normalizedChannelType(c.type) === "text");
         const voiceChannels = channels.filter((c) => normalizedChannelType(c.type) === "voice");
@@ -8385,12 +7853,7 @@ el.innerHTML = `
               <span class="channel-item-meta">${ch.is_private ? "Private" : ""}</span>
             `;
             const muteBtn = el.querySelector(".channel-mute-toggle");
-            // Capture the button via the closure (muteBtn) rather than
-            // e.currentTarget: currentTarget is reset to null once the
-            // (synchronous) event-dispatch phase ends, which happens as
-            // soon as this async handler hits its first await — reading it
-            // afterward throws, and the bell silently never updates until
-            // the sidebar next re-renders (e.g. a full page reload).
+
             if (muteBtn) muteBtn.addEventListener("click", async (e) => {
               e.stopPropagation();
               await toggleMuteChannel(ch.id, !mutedChannelIds.has(ch.id));
@@ -8422,15 +7885,6 @@ el.innerHTML = `
       }
     }
 
-    // Bumped on every call so an in-flight, now-stale call can tell it's
-    // been superseded and bail instead of appending its (older/wrong-
-    // account) results on top of whatever a newer call already rendered.
-    // Without this, two overlapping calls — e.g. one kicked off while
-    // switching servers/channels and another from an admin signing out
-    // and back in as a different user without a page reload — would both
-    // clear `userListEl` up front, then both append their own rows after
-    // their `await`s resolved in whatever order they landed, visibly
-    // duplicating the member list.
     let serverMembersLoadToken = 0;
 
     async function loadServerMembers(serverId) {
@@ -8448,15 +7902,8 @@ el.innerHTML = `
       }
     }
 
-    // Renders currentServerMembers into the sidebar, optionally filtered by
-    // username. Kept separate from the fetch above so typing in the
-    // search box re-renders instantly against the already-loaded list
-    // instead of re-hitting the API on every keystroke.
     function renderMemberList(filterText) {
-      // Clear right before rendering (not just at the top of
-      // loadServerMembers) so a stale in-flight call's render — see the
-      // loadToken guard above — can never land on top of a newer one,
-      // whichever order their network responses arrive in.
+
       userListEl.innerHTML = "";
       const q = (filterText || "").trim().toLowerCase();
       const members = q
@@ -8538,12 +7985,6 @@ el.innerHTML = `
       unsubscribeRealtimeMessages();
       if (!supabaseClient) return;
 
-      // This matches the actual trigger set up on the `messages` table
-      // (messages_realtime_broadcast_trigger), which publishes to topic
-      // `channel:<channel_id>` via realtime.broadcast_changes. The trigger
-      // passes coalesce(new, old) for both the record and old_record
-      // params, so `record` is reliable for INSERT/UPDATE and, for DELETE,
-      // is the row as it was right before deletion.
       realtimeMessagesChannel = supabaseClient
         .channel(`channel:${channelId}`, { config: { private: true } })
         .on("broadcast", { event: "*" }, async (msg) => {
@@ -8569,8 +8010,6 @@ el.innerHTML = `
             return;
           }
 
-          // INSERT — the broadcast payload doesn't include the joined
-          // user/reactions, so fill those in before rendering.
           if (messageListEl.querySelector(`[data-message-id="${record.id}"]`)) return;
           const user = await resolveProfile(record.user_id);
           renderMessage({ ...record, user });
@@ -8618,11 +8057,7 @@ el.innerHTML = `
 
     function renderMessage(message, container) {
       const target = container || messageListEl;
-      // Replies never get their own row in the main feed — they live in
-      // the collapsible "N replies" dropdown under their parent message
-      // instead (see upsertReplyOnParent). The initial channel load
-      // already excludes them server-side; this guard catches the
-      // realtime/sync-poll/local-echo paths, which don't.
+
       if (message.parent_id) {
         upsertReplyOnParent(target, message);
         return;
@@ -8630,12 +8065,7 @@ el.innerHTML = `
       const emptyState = target.querySelector(".empty-state-small");
       if (emptyState) emptyState.remove();
       const existing = target.querySelector(`[data-message-id="${message.id}"]`);
-      // This message is already on screen (e.g. our own local echo right
-      // after sending, followed moments later by the same message coming
-      // back through the sync poll or a realtime broadcast) — skip the
-      // "new message" entrance animation for the replacement row so it
-      // doesn't visibly play a second time for something that already
-      // animated in once.
+
       const isReRender = !!existing;
       if (existing) existing.remove();
 
@@ -8809,28 +8239,17 @@ el.innerHTML = `
 
       messageListEl.appendChild(row);
 
-      // Show the reply chain by default, iMessage-style, once the row (and
-      // its thread container) actually exists in the DOM — toggleRepliesThread
-      // looks it up via messageListEl.querySelector, so this has to run
-      // after appendChild above, not before. The toggle button still lets
-      // someone collapse a long thread; nobody should have to click
-      // "N replies" just to see replies at all.
       if (repliesToggle) {
         toggleRepliesThread(message.id, repliesToggle);
       }
     }
 
-    // Own-message indicator: a thin accent bar next to anything the
-    // signed-in user sent, in both the main feed and reply threads.
     function applyOwnMessageMarker(el, message) {
       const isOwn = !!(currentUser && message.user_id === currentUser.id);
       el.classList.toggle("own-message", isOwn);
       return isOwn;
     }
 
-    // A small floating menu for the less-common actions (edit/delete/undo/
-    // report), replacing what used to be a row of 4-5 always-visible
-    // buttons crammed under every message.
     function openMessageMoreMenu(anchorEl, message, isOwn) {
       closeContextMenus();
       const items = [];
@@ -8868,22 +8287,12 @@ el.innerHTML = `
       setTimeout(() => document.addEventListener("click", closeContextMenus, { once: true }), 0);
     }
 
-    // Builds a single reply row for the thread dropdown. Deliberately has
-    // NO reply/react/report/more buttons — replies can't themselves be
-    // replied to (see resolveReplyParent server-side), so there's nothing
-    // for those actions to do here.
     function appendReplyThreadItem(threadEl, reply) {
       if (threadEl.querySelector(`[data-reply-id="${reply.id}"]`)) return;
       const el = document.createElement("div");
       el.className = "message-reply-thread-item";
       el.dataset.replyId = reply.id;
-      // Also tag with data-message-id (the same attribute regular message
-      // rows use) so the shared lookups that every edit/delete/undo path
-      // and the realtime/sync-poll handlers use — all of which query for
-      // `[data-message-id="…"]` — find replies too, not just top-level
-      // messages. Previously replies had no data-message-id at all, so
-      // editing/deleting/reacting-to a reply silently updated nothing on
-      // screen even when the API call itself succeeded.
+
       el.dataset.messageId = reply.id;
       el.dataset.userId = reply.user_id || "";
       applyOwnMessageMarker(el, reply);
@@ -8897,11 +8306,7 @@ el.innerHTML = `
           <div class="message-reactions">${reactionSummaryHTML(reply.reactions)}</div>
         </div>
       `;
-      // Right-clicking a reply used to bubble straight up to the parent
-      // row's own contextmenu listener (nothing here stopped it), so admins
-      // right-clicking a reply always got the PARENT message's menu —
-      // no way to edit/delete/ban from the reply itself. stopPropagation
-      // plus building the menu for `reply` (not the parent) fixes that.
+
       el.addEventListener("contextmenu", async (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -8931,9 +8336,6 @@ el.innerHTML = `
       threadEl.appendChild(el);
     }
 
-    // Container-agnostic — works for both the channel message list and
-    // the DM message list, since it locates the thread via the toggle
-    // button's own row rather than a hardcoded messageListEl reference.
     async function toggleRepliesThread(messageId, toggleBtn) {
       const row = toggleBtn.closest(".message-row, .dm-message");
       const threadEl = row ? row.querySelector(`.message-replies-thread[data-thread-for="${messageId}"]`) : null;
@@ -8951,11 +8353,7 @@ el.innerHTML = `
         const { replies } = await apiFetch(`/api/messages/${messageId}/replies`);
         threadEl.innerHTML = "";
         replies.forEach((r) => appendReplyThreadItem(threadEl, r));
-        // The server's reply list is the ground truth — resync the
-        // toggle's count and de-dupe tracking to it every time the
-        // thread is opened, so any stray double-count (e.g. a local echo
-        // racing a realtime broadcast for the same reply) can't leave the
-        // badge permanently out of sync with what's actually in there.
+
         toggleBtn._countedReplyIds = new Set(replies.map((r) => r.id));
         toggleBtn.dataset.count = String(replies.length);
         toggleBtn.textContent = `💬 ${replies.length} repl${replies.length === 1 ? "y" : "ies"} ▴`;
@@ -8965,14 +8363,6 @@ el.innerHTML = `
       }
     }
 
-    // Routes a reply (a message with parent_id set) to its parent's
-    // "N replies" dropdown instead of letting it render as its own row in
-    // the main feed. Used by renderMessage/renderDmMessage's guard for
-    // anything arriving after the initial load: realtime broadcasts, the
-    // sync-poll fallback, and the local echo right after sending a reply.
-    // If the parent isn't currently on screen, the reply is simply
-    // dropped (nothing to attach it to) — it'll show up correctly the
-    // next time that parent's thread is loaded/opened.
     function upsertReplyOnParent(container, replyMsg) {
       if (!replyMsg.parent_id) return false;
       const row =
@@ -8983,16 +8373,6 @@ el.innerHTML = `
       let toggleBtn = row.querySelector(".message-replies-toggle");
       let threadEl = row.querySelector(".message-replies-thread");
 
-      // A soft-deleted reply can land here — e.g. the sync-poll fallback
-      // (or a realtime reconciliation) delivering the row again after
-      // handleDeleteMessage already removed it locally, or a delete on a
-      // reply this client hasn't rendered yet. Unlike renderMessage's
-      // top-level guard (`if (message.deleted_at) return`), that check
-      // never runs for replies since renderMessage routes parent_id
-      // messages here before reaching it — so a deleted reply used to get
-      // re-inserted with blank content (its content/attachments are wiped
-      // by the soft delete) until the next full reload. Make sure it's
-      // gone from the thread and the count instead of (re)adding it.
       if (replyMsg.deleted_at) {
         if (threadEl) {
           const existingItem = threadEl.querySelector(`[data-reply-id="${replyMsg.id}"]`);
@@ -9024,12 +8404,6 @@ el.innerHTML = `
 
       if (!threadEl || !toggleBtn) return true;
 
-      // The same reply can legitimately reach this function more than
-      // once — a local echo right after sending it, plus a realtime
-      // broadcast and/or sync-poll echoing the same row back — and each
-      // call used to bump the counter blindly, so a single reply could
-      // read "2 replies". Track which reply IDs have already been
-      // counted (per toggle button) so a repeat arrival is a no-op.
       if (!toggleBtn._countedReplyIds) {
         toggleBtn._countedReplyIds = new Set();
         const startingCount = parseInt(toggleBtn.dataset.count || "0", 10);
@@ -9047,8 +8421,7 @@ el.innerHTML = `
       if (isOpen) {
         appendReplyThreadItem(threadEl, replyMsg);
       } else if (currentUser && replyMsg.user_id === currentUser.id) {
-        // Auto-expand when it's your own reply landing, so you see it
-        // land immediately instead of having to click the toggle.
+
         toggleRepliesThread(replyMsg.parent_id, toggleBtn);
       }
       return true;
@@ -9118,13 +8491,6 @@ el.innerHTML = `
       setTimeout(() => row.classList.remove("highlight-flash"), 1500);
     }
 
-    // Guards against the Enter key (or the send button) firing a second
-    // send while the first one is still in flight — without this, a slow
-    // network round-trip made it look like the first press didn't
-    // register, so pressing Enter again queued up a duplicate message.
-    // chatSendButton is also disabled for the same window, so the button
-    // visibly registers the click (dims immediately) instead of just
-    // silently sitting there until the request resolves.
     let isSendingMessage = false;
 
     async function handleSendMessage() {
@@ -9184,9 +8550,7 @@ el.innerHTML = `
         });
         chatInputEl.value = "";
         clearReplyTarget();
-        // The insert response doesn't include the joined profile (username/
-        // avatar) — attach our own profile directly since we already know
-        // who just sent it, rather than showing "Unknown" until a reload.
+
         renderMessage({ ...message, user: currentProfile });
         messageListEl.scrollTop = messageListEl.scrollHeight;
       } catch (err) {
@@ -9203,9 +8567,7 @@ el.innerHTML = `
           method: "PUT",
           body: JSON.stringify({ content: newContent }),
         });
-        // Update the existing row in place rather than re-rendering from
-        // `updated` — the PUT response doesn't include the joined user
-        // (username/avatar), so a full re-render would blank those out.
+
         const row = messageListEl.querySelector(`[data-message-id="${message.id}"]`);
         if (row) {
           const contentEl = row.querySelector(".message-content");
@@ -9226,8 +8588,7 @@ el.innerHTML = `
         });
         const row = messageListEl.querySelector(`[data-message-id="${message.id}"]`);
         if (row) {
-          // If this was a reply row, also shrink its parent's "N replies"
-          // toggle so the count doesn't stay stale after removal.
+
           const threadEl = row.closest(".message-replies-thread");
           if (threadEl) {
             const parentRow = threadEl.closest(".message-row, .dm-message");
@@ -9251,12 +8612,7 @@ el.innerHTML = `
     async function handleUndoMessage(message) {
       const row = messageListEl.querySelector(`[data-message-id="${message.id}"]`);
       const undoBtn = row ? row.querySelector(".message-undo-pill") : null;
-      // Disable + relabel the instant the click happens (whether it came
-      // from the inline pill or the "..." context menu) rather than
-      // leaving the button looking untouched for however long the
-      // request takes — that silence was what made it seem broken. The
-      // disabled check also blocks a second click from firing a second
-      // undo while the first is still in flight.
+
       if (undoBtn) {
         if (undoBtn.disabled) return;
         undoBtn.disabled = true;
@@ -9323,8 +8679,6 @@ el.innerHTML = `
       const canModerate = canModerateMessages();
       const items = [];
 
-      // Replies can't themselves be replied to (see resolveReplyParent
-      // server-side), so there's no "Reply" action for a reply's own menu.
       if (!isReply) {
         items.push({ label: "Reply", action: () => setReplyTarget(message) });
       }
@@ -9383,9 +8737,6 @@ el.innerHTML = `
         });
       });
 
-      // Needs to be visible (display: block, not the default none) before
-      // clampToViewport reads its offsetWidth/offsetHeight — otherwise
-      // the hidden element measures as 0x0 and the clamp is a no-op.
       messageContextMenu.classList.add("visible");
       clampToViewport(messageContextMenu, x, y);
     }
@@ -9401,9 +8752,7 @@ el.innerHTML = `
       items.push({ label: "Report user", action: () => handleReportUser(user.id), danger: true });
 
       if (isAdmin(currentProfile)) {
-        // Prefer the is_banned flag already on this user object (present
-        // when this came from the server member list, which admins can
-        // see) so we don't do an extra round-trip on every right-click.
+
         const banned = user.is_banned !== undefined ? user.is_banned : await getIsUserBanned(user.id);
         items.push(
           banned
@@ -9422,9 +8771,7 @@ el.innerHTML = `
           });
         }
       } else if (currentServer && currentServerMembership && currentServerMembership.role === "admin") {
-        // Server (not site-wide) admins get a plain kick — no ban, the
-        // user can rejoin with a new invite — without needing global
-        // admin rights.
+
         items.push({
           label: "Kick from server",
           action: () => handleKickFromServer(currentServer.id, user.id),
@@ -9505,16 +8852,10 @@ el.innerHTML = `
       }
     }
 
-    // -------------------------
-    // View-profile modal (username, bio, avatar, role — deliberately
-    // never email; see GET /api/profiles/:userId, which doesn't select it)
-    // -------------------------
     let viewProfileTargetUser = null;
 
     async function openViewProfileModal(user) {
-      // Clicking your own profile anywhere in the app should take you to
-      // Settings (where you can actually edit things), not the read-only
-      // "view someone else's profile" card.
+
       if (currentUser && user && user.id === currentUser.id) {
         closeViewProfileModal();
         handleSettingsOpen();
@@ -9531,16 +8872,12 @@ el.innerHTML = `
       viewProfileBanButton.style.display = "none";
       viewProfileModal.classList.add("visible");
 
-      // Admins get a Ban/Unban button right on the profile card. Label
-      // reflects the user's current ban status, resolved the same way the
-      // right-click context menu does (cheap cache first, admin list as a
-      // fallback) so it doesn't require its own dedicated endpoint.
       if (isAdmin(currentProfile) && currentUser && user.id !== currentUser.id) {
         viewProfileBanButton.style.display = "inline-flex";
         viewProfileBanButton.disabled = true;
         viewProfileBanButton.textContent = "…";
         getIsUserBanned(user.id).then((banned) => {
-          if (viewProfileTargetUser !== user) return; // superseded by another click
+          if (viewProfileTargetUser !== user) return;
           viewProfileBanButton.disabled = false;
           viewProfileBanButton.textContent = banned ? "Unban user" : "Ban user";
           viewProfileBanButton.onclick = async () => {
@@ -9556,7 +8893,7 @@ el.innerHTML = `
 
       try {
         const { profile } = await apiFetch(`/api/profiles/${user.id}`);
-        if (viewProfileTargetUser !== user) return; // superseded by another click
+        if (viewProfileTargetUser !== user) return;
         viewProfileUsernameEl.textContent = profile.username || "Unknown user";
         viewProfileRoleEl.textContent = profile.global_role || "member";
         viewProfileBioEl.textContent = profile.bio || "No bio yet.";
@@ -9569,10 +8906,7 @@ el.innerHTML = `
             day: "numeric",
           });
         }
-        // Ban reason is admin-only (see /api/admin/users) — reuse the
-        // is_banned/banned_reason already on the passed-in user object
-        // when it came from the admin user list rather than a second call
-        // an ordinary member wouldn't be allowed to make anyway.
+
         if (isAdmin(currentProfile) && user.is_banned && user.banned_reason) {
           viewProfileBanRow.style.display = "";
           viewProfileBanReasonEl.textContent = user.banned_reason;
@@ -9615,9 +8949,6 @@ el.innerHTML = `
       }
     }
 
-    // -------------------------
-    // Generic form modal
-    // -------------------------
     let formModalSubmitHandler = null;
 
     function closeFormModal() {
@@ -10067,14 +9398,10 @@ async function handleCreateServer() {
       }
     }
 
-    // -------------------------
-    // Server invites
-    // -------------------------
     let invitesModalServer = null;
 
     function inviteUrl(code) {
-      // Must include the app's subpath (see getAppBaseUrl), not just the
-      // origin, or the link 404s on a GitHub Pages project page.
+
       return `${getAppBaseUrl()}?invite=${code}`;
     }
 
@@ -10170,9 +9497,6 @@ async function handleCreateServer() {
       const code = params.get("invite");
       if (!code) return;
 
-      // Strip the param immediately so a refresh doesn't re-trigger a
-      // redemption attempt (and so a failed/expired invite doesn't get
-      // retried forever on every load).
       params.delete("invite");
       const cleanUrl =
         window.location.pathname + (params.toString() ? `?${params.toString()}` : "");
@@ -10194,9 +9518,6 @@ async function handleCreateServer() {
       }
     }
 
-    // -------------------------
-    // Direct messages
-    // -------------------------
     let currentDmConversationId = null;
     let dmRealtimeChannel = null;
 
@@ -10208,18 +9529,12 @@ async function handleCreateServer() {
     }
 
     function renderDmMessage(message) {
-      // Same as renderMessage() in the channel view — a reply belongs in
-      // its parent's "N replies" dropdown, not as its own row in the
-      // main thread.
+
       if (message.parent_id) {
         upsertReplyOnParent(dmMessageList, message);
         return;
       }
 
-      // Clear the "No messages yet" placeholder the moment a real message
-      // shows up — previously this only got cleared by re-fetching the
-      // whole conversation, so sending the first message in a DM kept
-      // showing "No messages yet" underneath it until the page reloaded.
       const emptyState = dmMessageList.querySelector(".empty-state-small");
       if (emptyState) emptyState.remove();
 
@@ -10229,9 +9544,7 @@ async function handleCreateServer() {
         return;
       }
       if (existing) {
-        // An edit of a message already on screen — update its text in
-        // place rather than removing + re-appending, which would yank an
-        // edited older message down to the bottom of the thread.
+
         const contentEl = existing.querySelector(".dm-message-content");
         if (contentEl) contentEl.innerHTML = formatMessageContent(message.content);
         return;
@@ -10279,8 +9592,7 @@ async function handleCreateServer() {
         repliesToggle.addEventListener("click", () => toggleRepliesThread(message.id, repliesToggle));
       }
       dmMessageList.appendChild(el);
-      // Show the reply chain by default, matching the channel view — see
-      // renderMessage()'s equivalent comment.
+
       if (repliesToggle) {
         toggleRepliesThread(message.id, repliesToggle);
       }
@@ -10337,13 +9649,7 @@ async function handleCreateServer() {
                 if (record.deleted_at) {
                   row.remove();
                 } else {
-                  // DM message rows use the "dm-message-content" class
-                  // (see renderDmMessage), not "message-content" (that's
-                  // the channel-message class). This selector was looking
-                  // for the wrong class, so contentEl was always null and
-                  // DM message edits never actually applied here — this
-                  // handler ran, found nothing to update, and silently
-                  // did nothing every time.
+
                   const contentEl = row.querySelector(".dm-message-content");
                   if (contentEl) contentEl.innerHTML = formatMessageContent(record.content || "");
                 }
@@ -10480,11 +9786,7 @@ async function handleCreateServer() {
     function handleOpenDmModal() {
       dmModal.classList.add("visible");
       loadDmConversations();
-      // loadDmConversations() rebuilds the sidebar from scratch and, on
-      // its own, has no way to know which conversation (if any) is still
-      // "open" from before — reapply the highlight here so the two sides
-      // of the DM pane agree on what's selected instead of the right pane
-      // silently showing stale content next to an unhighlighted sidebar.
+
       if (currentDmConversationId) {
         Array.from(dmConversationList.querySelectorAll(".dm-conversation-item")).forEach((el) => {
           el.classList.toggle("active", el.dataset.conversationId === currentDmConversationId);
@@ -10492,11 +9794,6 @@ async function handleCreateServer() {
       }
     }
 
-    // Full teardown for the DM modal — used by both the explicit "Close"
-    // button and a backdrop click, so however the person leaves Messages
-    // they come back to a clean slate rather than a chat pane that still
-    // shows a conversation's messages/header with no live subscription or
-    // working send/call behind it.
     function closeDmModal() {
       dmModal.classList.remove("visible");
       unsubscribeDmRealtime();
@@ -10536,11 +9833,6 @@ async function handleCreateServer() {
       setTimeout(() => row.classList.remove("highlight-flash"), 1500);
     }
 
-    // Keeps the DM sidebar's last-message preview in sync the moment we
-    // send something, instead of only updating on the next full
-    // loadDmConversations() call (previously: sending the first message in
-    // a conversation kept showing "No messages yet" in the sidebar until a
-    // reload, because nothing here touched dmConversationsCache).
     function updateDmConversationPreview(conversationId, message) {
       const convo = dmConversationsCache.find((c) => c.id === conversationId);
       if (convo) {
@@ -10586,9 +9878,6 @@ async function handleCreateServer() {
       }
     }
 
-    // -------------------------
-    // Admin dashboard
-    // -------------------------
     function switchAdminTab(tab) {
       adminTabs.forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === tab));
       adminUsersPanel.style.display = tab === "users" ? "flex" : "none";
@@ -10607,9 +9896,6 @@ async function handleCreateServer() {
       switchAdminTab("users");
     }
 
-    // -------------------------
-    // Server admin panel (per-server: channels, members, filtering)
-    // -------------------------
     function switchServerAdminTab(tab) {
       serverAdminTabs.forEach((btn) => btn.classList.toggle("active", btn.dataset.serverAdminTab === tab));
       serverAdminChannelsPanel.style.display = tab === "channels" ? "flex" : "none";
@@ -10951,11 +10237,7 @@ async function handleCreateServer() {
           const badges = [];
           if (u.global_role !== "user") badges.push(`<span class="admin-row-badge">${escapeHtml(u.global_role)}</span>`);
           if (u.is_banned) badges.push(`<span class="admin-row-badge admin-row-badge-danger">Banned</span>`);
-          // A superadmin can't change another superadmin's role (equal
-          // rank), and only superadmins can change roles at all — instead
-          // of letting the click through to a 403 toast, blur/disable the
-          // control up front so it's clear at a glance it's not available
-          // rather than something that looks clickable but silently fails.
+
           const roleChangeBlocked = u.global_role === "superadmin" && u.id !== currentProfile.id;
           return `
             <div class="admin-row">
@@ -11287,29 +10569,15 @@ async function handleCreateServer() {
       }
     }
 
-    // -------------------------
-    // Voice chat (LiveKit) — shared by server voice channels and DM calls
-    // -------------------------
     let voiceRoom = null;
     let voiceChannelId = null;
     let voiceMuted = false;
-    let voiceContext = null; // "server" | "dm"
+    let voiceContext = null;
     let activeDmCallId = null;
-    // Timestamp (ms) of when we most recently started/joined a DM call.
-    // A /api/sync poll response is a snapshot as of some earlier moment
-    // in time (whenever the server received that specific request) — if
-    // that moment is before we started this call, the snapshot simply
-    // can't know about it yet, and "our call isn't in this snapshot"
-    // does NOT mean the call ended. Without this guard, an in-flight
-    // sync poll sent just before we hit "Call" can resolve just after,
-    // see no matching call, and immediately disconnect us — which we
-    // then have to manually rejoin ("Join call"), even though the call
-    // itself is still live. This raced far more visibly on the
-    // static/Supabase deployment, where edge-function cold starts make
-    // a poll's round trip slow enough to regularly overlap a call start.
+
     let activeDmCallStartedAt = null;
     let currentDmOtherUser = null;
-    let dmCallParticipants = []; // [{user_id, joined_at}] from voice_calls.participants
+    let dmCallParticipants = [];
     let dmCallRealtimeChannel = null;
     let dmCallBarEl = null;
     const extraKnownProfiles = new Map();
@@ -11382,10 +10650,7 @@ async function handleCreateServer() {
     function resolveVoiceProfile(identity, isLocal) {
       const profile = findMemberProfile(identity);
       if (!profile && !isLocal) {
-        // Don't know their profile yet — resolve it in the background (this
-        // also happens for DM calls, which have no member list at all to
-        // pull from) and re-render once we do, instead of ever showing the
-        // raw user id.
+
         resolveProfile(identity).then((resolved) => {
           if (resolved) {
             extraKnownProfiles.set(identity, resolved);
@@ -11451,11 +10716,6 @@ async function handleCreateServer() {
       });
     }
 
-    // Autoplay can be blocked until there's been a user gesture on the page.
-    // Rather than attaching a one-off retry listener per audio element (which
-    // gets noisy/glitchy when many people join in a burst and every track
-    // hits the same block at once), keep a single pending set and one shared
-    // "click anywhere" listener that flushes all of them together.
     const _pendingAudioEls = new Set();
     let _audioResumeToastShown = false;
     function tryPlayAudioEl(el) {
@@ -11477,18 +10737,6 @@ async function handleCreateServer() {
       });
     }
 
-    // `descriptor` needs { id, name }. `context` is "server" (a voice
-    // channel) or "dm" (a DM call, using the voice_calls row id as the
-    // LiveKit room name so multiple participants land in the same room).
-    // Bumped every time a connect or disconnect is initiated. connectVoice()
-    // captures the value at the start and checks it again after each async
-    // step — if it no longer matches (because the user hit "hang up" or
-    // switched channels while the connect was still in flight), the
-    // in-flight attempt tears itself down instead of adopting the room as
-    // the active call. Previously a hang-up mid-connect only reset the UI
-    // (leaveVoiceCleanup) while the connect() promise kept running in the
-    // background — it would then finish, set voiceRoom, and silently
-    // "revive" a call the user had just tried to end.
     let voiceConnectGeneration = 0;
 
     async function connectVoice(descriptor, context) {
@@ -11520,7 +10768,7 @@ async function handleCreateServer() {
         return;
       }
 
-      if (myGeneration !== voiceConnectGeneration) return; // superseded while awaiting the token
+      if (myGeneration !== voiceConnectGeneration) return;
 
       const token = data.token || data.accessToken;
       const url = data.url || data.serverUrl || data.wsUrl || data.livekitUrl;
@@ -11547,8 +10795,7 @@ async function handleCreateServer() {
               const el = track.attach();
               el.id = `voice-audio-${participant.identity}-${track.sid}`;
               el.autoplay = true;
-              // playsInline avoids some mobile browsers trying to take over
-              // fullscreen/media-session handling for what's just voice audio.
+
               el.setAttribute("playsinline", "true");
               getVoiceAudioContainer().appendChild(el);
               tryPlayAudioEl(el);
@@ -11571,9 +10818,7 @@ async function handleCreateServer() {
         await room.connect(url, token);
 
         if (myGeneration !== voiceConnectGeneration) {
-          // The user hung up (or switched channels) while we were still
-          // connecting. Don't adopt this room as the active call — just
-          // tear down the connection we just opened.
+
           try {
             await room.disconnect();
           } catch (err) {
@@ -11639,18 +10884,14 @@ async function handleCreateServer() {
     }
 
     async function disconnectVoice() {
-      // Invalidate any connectVoice() call that's still in flight so it
-      // can't silently finish and re-establish a call after this hang-up.
+
       voiceConnectGeneration++;
       const wasDm = voiceContext === "dm";
       const callId = activeDmCallId;
       const room = voiceRoom;
       if (room) {
         try {
-          // room.disconnect() fires RoomEvent.Disconnected, which already
-          // runs leaveVoiceCleanup() — don't call it a second time here
-          // (harmless on its own, but redundant and easy to get out of
-          // sync with the state this function still needs below).
+
           await room.disconnect();
         } catch (err) {
           console.error(err);
@@ -11677,9 +10918,6 @@ async function handleCreateServer() {
       showToast(voiceMuted ? "Microphone muted" : "Microphone unmuted", { duration: 1500 });
     }
 
-    // Clicking a voice channel in the sidebar joins it directly — click it
-    // again (or hit Leave in the voice bar) to disconnect. No separate
-    // "join" button to find.
     async function toggleVoiceChannel(channel) {
       if (voiceRoom && voiceChannelId === channel.id) {
         await disconnectVoice();
@@ -11691,9 +10929,6 @@ async function handleCreateServer() {
       await connectVoice(channel, "server");
     }
 
-    // -------------------------
-    // DM calls
-    // -------------------------
     async function updateDmCallButton() {
       if (!currentDmConversationId) {
         dmCallButton.style.display = "none";
@@ -11716,7 +10951,6 @@ async function handleCreateServer() {
     async function handleDmCallButtonClick() {
       if (!currentDmConversationId) return;
 
-      // Already on this call — the button doubles as "leave"/"end"
       if (voiceRoom && voiceContext === "dm" && activeDmCallId) {
         await disconnectVoice();
         return;
@@ -11771,9 +11005,7 @@ async function handleCreateServer() {
           if (!record || !activeDmCallId || record.id !== activeDmCallId) return;
 
           if (operation === "DELETE") {
-            // The call row is gone — either we ended it ourselves (in
-            // which case we're already cleaning up) or the other side hung
-            // up while we were still connected.
+
             if (voiceRoom) {
               showToast("Call ended", { duration: 2000 });
               disconnectVoice();
@@ -11869,7 +11101,6 @@ async function handleCreateServer() {
       document.getElementById("password-new").value = "";
       document.getElementById("password-confirm").value = "";
 
-      // Appearance tab fields
       const appearance = currentProfile.appearance || {};
       pendingSettingsBackgroundFile = null;
       pendingSettingsBackgroundRemoved = false;
@@ -11889,24 +11120,15 @@ async function handleCreateServer() {
       renderIdentitySection();
     }
 
-    // The <input type="color"> needs a concrete hex value even when the
-    // person hasn't picked a custom accent — seed it from whatever the
-    // active theme's --accent currently resolves to, so "Reset to theme"
-    // and the picker start in a sensible place instead of defaulting to
-    // black.
     function getComputedThemeAccentHex() {
-      // Read the THEME's own accent, ignoring any custom --accent-user
-      // override that might currently be active — otherwise, opening
-      // Settings with a custom accent already applied would make this
-      // return the override itself, breaking both the color picker's
-      // starting value and the "same as theme default" check on save.
+
       const root = document.documentElement;
       const activeOverride = root.style.getPropertyValue("--accent-user");
       if (activeOverride) root.style.removeProperty("--accent-user");
       const raw = getComputedStyle(root).getPropertyValue("--accent").trim();
       if (activeOverride) root.style.setProperty("--accent-user", activeOverride);
       if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(raw)) return raw;
-      // rgb()/rgba() → hex fallback via a throwaway element.
+
       const probe = document.createElement("div");
       probe.style.color = raw || "#6366f1";
       document.body.appendChild(probe);
@@ -11917,9 +11139,7 @@ async function handleCreateServer() {
       const toHex = (n) => Number(n).toString(16).padStart(2, "0");
       return `#${toHex(m[0])}${toHex(m[1])}${toHex(m[2])}`;
     }
-    // Alias used by places that just want the modal open on a specific
-    // tab (notification bell "more" link, deep links, etc.) without
-    // re-triggering the full profile-field reset every time.
+
     function openSettingsModal(tab) {
       if (settingsModal.classList.contains("visible")) {
         switchSettingsTab(tab || "general");
@@ -11953,8 +11173,7 @@ async function handleCreateServer() {
         btn.textContent = `Connect ${provider === "google" ? "Google" : "GitHub"}`;
         btn.addEventListener("click", async () => {
           try {
-            // Manual identity linking must be enabled in the Supabase
-            // dashboard (Authentication → Providers) for this to succeed.
+
             const { error: linkError } = await supabaseClient.auth.linkIdentity({
               provider,
               options: { redirectTo: getAppBaseUrl() },
@@ -11986,11 +11205,7 @@ async function handleCreateServer() {
       settingsUpdateEmailButton.disabled = true;
       settingsUpdateEmailButton.textContent = "Sending confirmation...";
       try {
-        // Supabase sends a confirmation link to the NEW address (and, if
-        // "Secure email change" is on in the dashboard, one to the old
-        // address too). The email on the account doesn't actually change
-        // until that link is clicked. emailRedirectTo keeps that link
-        // pointed at this app instead of the project's default Site URL.
+
         const { error } = await supabaseClient.auth.updateUser(
           { email: nextEmail },
           { emailRedirectTo: getAppBaseUrl() }
@@ -12018,12 +11233,7 @@ async function handleCreateServer() {
         return;
       }
       try {
-        // The account already has a verified email from its OAuth provider,
-        // so setting a password here is just adding a credential — no
-        // additional email confirmation step is needed. (If the user later
-        // changes their email address itself, Supabase's updateUser({email})
-        // does send a confirmation link automatically — that's a separate
-        // flow from this one.)
+
         const { error } = await supabaseClient.auth.updateUser({ password: next });
         if (error) throw error;
         identityNewPassword.value = "";
@@ -12057,15 +11267,6 @@ async function handleCreateServer() {
       return url;
     }
 
-    // -------------------------
-    // Pending signup avatar (survives the "confirm your email" gap)
-    // -------------------------
-    // If email confirmation is required, signUp() returns with no session,
-    // so there's no authenticated request we can make yet to upload the
-    // avatar the person picked on the signup form — it would otherwise be
-    // silently discarded and they'd have to set it again later in Settings.
-    // Stash it in localStorage instead and apply it automatically the first
-    // time they successfully load their profile after confirming.
     function pendingAvatarKey(email) {
       return `pendingAvatar:${(email || "").trim().toLowerCase()}`;
     }
@@ -12083,7 +11284,7 @@ async function handleCreateServer() {
         const raw = localStorage.getItem(pendingAvatarKey(email));
         if (!raw) return null;
         const parsed = JSON.parse(raw);
-        // Don't hang onto this forever if it never gets claimed.
+
         if (!parsed.savedAt || Date.now() - parsed.savedAt > 7 * 24 * 60 * 60 * 1000) {
           localStorage.removeItem(pendingAvatarKey(email));
           return null;
@@ -12118,7 +11319,7 @@ async function handleCreateServer() {
         await loadCurrentUser();
       } catch (err) {
         console.error("Failed to apply pending avatar", err);
-        // Leave it stashed — we'll retry on the next login.
+
       }
     }
 
@@ -12245,9 +11446,6 @@ async function handleCreateServer() {
       }
     }
 
-    // -------------------------
-    // Forgot / reset password
-    // -------------------------
     function openForgotPasswordModal() {
       forgotPasswordError.textContent = "";
       forgotPasswordConfirm.classList.remove("visible");
@@ -12271,10 +11469,7 @@ async function handleCreateServer() {
       forgotPasswordSend.disabled = true;
       forgotPasswordSend.textContent = "Sending...";
       try {
-        // Supabase's own password-reset flow: it emails a link containing a
-        // recovery token; following it redirects back here and fires a
-        // PASSWORD_RECOVERY auth event (handled below), which is what
-        // triggers the "set a new password" modal.
+
         const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
           redirectTo: getAppBaseUrl(),
         });
@@ -12321,9 +11516,6 @@ async function handleCreateServer() {
       }
     }
 
-    // -------------------------
-    // Support
-    // -------------------------
     function openSupportModalFn() {
       supportError.textContent = "";
       supportConfirm.classList.remove("visible");
@@ -12350,8 +11542,7 @@ async function handleCreateServer() {
       supportSend.disabled = true;
       supportSend.textContent = "Sending...";
       try {
-        // Uses a plain fetch (not apiFetch) since this must also work for
-        // signed-out users on the auth screen, who have no session token.
+
         const res = await fetch(apiUrl("/api/support"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -12397,18 +11588,12 @@ async function handleCreateServer() {
       signupSubmit.textContent = "Creating account...";
 
       try {
-        // Check the username before calling signUp at all: if it collides,
-        // the DB trigger that creates the profile row will throw a raw
-        // unique-constraint error and take down the entire signup rather
-        // than a clean "taken" message.
+
         const { available } = await apiFetch(`/api/usernames/${encodeURIComponent(username)}/available`);
         if (!available) {
           throw new Error("That username is already taken. Try another one.");
         }
 
-        // Stash the picked avatar (if any) before we know whether email
-        // confirmation will leave us without a session — cheap, and means
-        // we never have to discard it outright.
         if (signupAvatar.files.length) {
           try {
             const dataUrl = await fileToDataUrl(signupAvatar.files[0]);
@@ -12422,17 +11607,9 @@ async function handleCreateServer() {
           email,
           password,
           options: {
-            // Exposed to Postgres as NEW.raw_user_meta_data->>'username' so a
-            // trigger on auth.users can create the profiles row with the
-            // right username immediately — this works even when email
-            // confirmation is required and there's no session yet to call
-            // our own authenticated API with.
+
             data: { username },
-            // Without this, Supabase falls back to the project's Site URL
-            // (Auth → URL Configuration), which defaults to "/" and drops
-            // the confirmation click at the wrong place entirely if this
-            // app is hosted at a subpath (e.g. a GitHub Pages project
-            // page). getAppBaseUrl() points it back at this exact app.
+
             emailRedirectTo: getAppBaseUrl(),
           },
         });
@@ -12443,9 +11620,7 @@ async function handleCreateServer() {
           if (/already registered|already exists|user_already_exists/i.test(msg)) {
             throw new Error("An account with that email already exists. Try signing in instead.");
           }
-          // A trigger on auth.users that errors (e.g. it references a column
-          // that no longer exists) surfaces here as an opaque database/500
-          // error instead of a real validation message.
+
           if (!msg || /database error|unexpected_failure|500/i.test(msg)) {
             throw new Error(
               "Sign up failed on the server side — this isn't a bad email or password. It usually means the Postgres trigger that creates your profile row is erroring (commonly because it still references a column, like display_name, that was removed). Check the trigger function on auth.users in the Supabase SQL editor."
@@ -12454,20 +11629,12 @@ async function handleCreateServer() {
           throw error;
         }
 
-        // Supabase's email-enumeration protection: when "Confirm email" is
-        // on, signing up with an email that's already registered returns a
-        // 200 with a fake user object instead of an error, to avoid leaking
-        // which emails exist. The documented tell is an empty `identities`
-        // array on the returned user.
         if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
           throw new Error("An account with that email already exists. Try signing in instead.");
         }
 
         if (!data.session) {
-          // Email confirmation is required. There's no session yet, so we
-          // can't upload the avatar yet — but we already stashed it above,
-          // and it'll be applied automatically the first time they log in
-          // after confirming (see tryApplyPendingAvatar).
+
           signupEmail.value = "";
           signupPassword.value = "";
           signupUsername.value = "";
@@ -12479,14 +11646,8 @@ async function handleCreateServer() {
           return;
         }
 
-        // Confirmation is disabled (or already satisfied) — signUp already
-        // returned a live session. loadCurrentUser() applies the avatar we
-        // stashed above via tryApplyPendingAvatar() now that we have an
-        // authenticated session to upload it with.
         await loadCurrentUser();
 
-        // Fallback safety net: make sure the username matches even if the
-        // DB trigger didn't pick up the metadata for some reason.
         if (currentProfile && currentProfile.username !== username) {
           await apiFetch("/api/profile", {
             method: "PUT",
@@ -12522,13 +11683,7 @@ async function handleCreateServer() {
     }
 
     async function handleLogout() {
-      // Deliberately NOT unsubscribing this device from push here — the
-      // subscription just stops being useful (nothing looks it up for a
-      // logged-out user) until someone logs back in on this device, at
-      // which point it can be resubscribed if needed. Unsubscribing on
-      // every logout would mean re-granting the browser permission prompt
-      // on every login, which is worse UX for the common case of the same
-      // person logging back in.
+
       try {
         await disconnectVoice();
       } catch (err) {
@@ -12670,14 +11825,11 @@ async function handleCreateServer() {
         settingsAccentColor.value = getComputedThemeAccentHex();
       });
 
-      // Live-preview the theme pick while the Appearance tab is open, same
-      // as the top-bar quick switcher — reverts automatically if Cancel is
-      // clicked, since Cancel just closes the modal without saving.
       settingsTheme.addEventListener("change", () => setTheme(settingsTheme.value));
 
       settingsAppearanceCancel.addEventListener("click", () => {
         settingsModal.classList.remove("visible");
-        // Undo any live-preview theme change that wasn't saved.
+
         applyProfileTheme(currentProfile);
       });
       settingsAppearanceSave.addEventListener("click", handleAppearanceSave);
@@ -12713,10 +11865,6 @@ async function handleCreateServer() {
       });
       drawerBackdrop.addEventListener("click", closeAllDrawers);
 
-      // Close any open context menu when clicking/tapping outside of it,
-      // pressing Escape, scrolling, or resizing the window. Use a capture-phase
-      // mousedown listener so this fires before other click handlers (e.g. one
-      // that might immediately reopen a menu) and works for touch as well.
       document.addEventListener(
         "mousedown",
         (e) => {
@@ -12734,11 +11882,7 @@ async function handleCreateServer() {
       window.addEventListener(
         "scroll",
         (e) => {
-          // Scrolling *within* the emoji grid itself (it has its own
-          // internal scrollbar) used to bubble up to this same
-          // page-wide "close popups on scroll" listener and close the
-          // picker out from under you. Only treat it as an outside
-          // scroll if it didn't originate inside the open picker.
+
           if (openEmojiPickerEl && openEmojiPickerEl.contains(e.target)) return;
           closeContextMenus();
         },
@@ -12811,13 +11955,7 @@ async function handleCreateServer() {
       document.querySelectorAll(".modal-backdrop").forEach((backdrop) => {
         backdrop.addEventListener("click", (e) => {
           if (e.target !== backdrop) return;
-          // dm-modal needs its own teardown (unsubscribe realtime, clear
-          // the selected conversation, reset the chat pane) — closing it
-          // via the backdrop used to skip all of that (only the explicit
-          // "Close" button ran it), which is what left the DM pane looking
-          // like a conversation was still open — active-looking, but with
-          // a dead realtime subscription and a stale selection underneath
-          // — after leaving and reopening Messages.
+
           if (backdrop === dmModal) {
             closeDmModal();
             return;
@@ -12876,15 +12014,7 @@ async function handleCreateServer() {
       logoutButton.addEventListener("click", handleLogout);
 
       document.addEventListener("click", (e) => {
-        // The "⋯" (more) button opens messageContextMenu via a plain
-        // click handler on itself — that click then bubbles up to this
-        // same document listener within the same synchronous dispatch,
-        // so without this exclusion it closed the menu the instant it
-        // opened (target is the button, which is outside the menu
-        // element, so "clicked outside" looked true even though nothing
-        // had actually been clicked outside yet). Right-click-opened
-        // menus (context menu, user list) don't hit this at all since
-        // "contextmenu" is a different event from "click".
+
         if (e.target.closest(".message-more-button")) return;
         if (!messageContextMenu.contains(e.target)) {
           messageContextMenu.classList.remove("visible");
@@ -12908,15 +12038,6 @@ async function handleCreateServer() {
       await loadCurrentUser();
     }
 
-    // -------------------------
-    // Ban / force-logout: instant reload
-    // -------------------------
-    // Two mechanisms, deliberately redundant: Realtime reacts almost
-    // instantly but depends on Realtime being enabled for the `profiles`
-    // table in the Supabase dashboard (easy to forget); the poll is a
-    // dumb, reliable fallback that works regardless. Either one firing
-    // kicks the tab immediately rather than waiting for the person to
-    // take an action that would 403.
     let accountStatusInterval = null;
     let ownProfileRealtimeChannel = null;
 
@@ -12924,11 +12045,7 @@ async function handleCreateServer() {
       if (window.__forcingSignOut) return;
       window.__forcingSignOut = true;
       showToast(message || "Your session has ended.", { variant: "danger", duration: 5000 });
-      // Graceful in-app transition rather than a hard page reload — reuses
-      // the same teardown as a normal logout (leaves voice, unsubscribes
-      // realtime, clears state, shows the auth screen) so the person just
-      // lands back on the sign-in form instantly instead of the whole tab
-      // flashing/reloading.
+
       await handleLogout();
       window.__forcingSignOut = false;
     }
@@ -12967,8 +12084,7 @@ async function handleCreateServer() {
                   : "You've been signed out by an administrator."
               );
             } else {
-              // Any other change to our own profile (role, username, theme
-              // edited elsewhere) — keep the local copy in sync.
+
               currentProfile = { ...currentProfile, ...payload.new };
             }
           }
@@ -12989,14 +12105,6 @@ async function handleCreateServer() {
       showInitError(err.message || "Failed to initialize the app.");
     });
 
-    // Security: if the browser restores this page from bfcache (e.g. the
-    // person hit the back/forward arrows after signing out, switching
-    // accounts, or being banned on another tab), every variable in memory
-    // — including whatever admin panels/messages were rendered — comes
-    // back exactly as it was, without re-checking whether the session is
-    // still valid. A hard reload forces the normal init()/auth flow to run
-    // again from scratch, so stale privileged UI can never be "glitched"
-    // back into view for a session that's since expired or changed.
     window.addEventListener("pageshow", (event) => {
       if (event.persisted) {
         window.location.reload();
