@@ -5283,6 +5283,10 @@
 
     const userBanStatusCache = new Map();
 
+    // Server-level ban (server_members.is_banned) - separate from the
+    // global site ban above. Always looked up from the currently loaded
+    // member list for currentServer, since that's the only server a
+    // right-click or admin-panel action can ever target.
     function findServerMember(userId) {
       return (currentServerMembers || []).find((m) => m.user && m.user.id === userId) || null;
     }
@@ -5292,6 +5296,10 @@
       return !!(m && m.is_banned);
     }
 
+    // Mirrors the backend's checkAdminProtection (and the DB trigger it's
+    // paired with): who's allowed to ban/demote/kick whom. Used to
+    // hide/disable actions that would just come back as a 403, rather than
+    // enforcing anything on its own — the server is the source of truth.
     function isServerOwner(server) {
       return !!(server && currentProfile && server.owner_id === currentProfile.id);
     }
@@ -8364,7 +8372,6 @@ el.innerHTML = `
       });
       messageContextMenu.classList.add("visible");
       clampToViewport(messageContextMenu, rect.left, rect.bottom + 4);
-      setTimeout(() => document.addEventListener("click", closeContextMenus, { once: true }), 0);
     }
 
     function appendReplyThreadItem(threadEl, reply) {
@@ -11824,7 +11831,13 @@ async function handleCreateServer() {
             method: "PUT",
             body: JSON.stringify({ username }),
           });
-
+          // Don't call loadCurrentUser() again here — it re-runs the whole
+          // server/channel auto-select sequence (including a fire-and-forget
+          // channel click), and firing that a second time races with the
+          // still-in-flight first run and can leave the channel list empty
+          // until the page is reloaded. We only need the corrected
+          // username, so just re-fetch the profile and patch the bits of
+          // the UI that show it.
           const me = await apiFetch("/api/auth/me");
           currentProfile = me.user;
           topBarSubtitle.textContent = currentProfile.username || currentUser.email;
