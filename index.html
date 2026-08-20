@@ -8338,7 +8338,15 @@ el.innerHTML = `
       return isOwn;
     }
 
+    let openMoreMenuAnchor = null;
+
     function openMessageMoreMenu(anchorEl, message, isOwn) {
+      // Toggle: clicking the same "..." button that's currently open should
+      // close it, not immediately reopen it.
+      if (openMoreMenuAnchor === anchorEl && messageContextMenu.classList.contains("visible")) {
+        closeContextMenus();
+        return;
+      }
       closeContextMenus();
       const items = [];
       if (isOwn || canModerateMessages()) {
@@ -8372,6 +8380,7 @@ el.innerHTML = `
       });
       messageContextMenu.classList.add("visible");
       clampToViewport(messageContextMenu, rect.left, rect.bottom + 4);
+      openMoreMenuAnchor = anchorEl;
     }
 
     function appendReplyThreadItem(threadEl, reply) {
@@ -8911,6 +8920,7 @@ el.innerHTML = `
       userContextMenu.classList.remove("visible");
       serverContextMenu.classList.remove("visible");
       closeEmojiPicker();
+      openMoreMenuAnchor = null;
     }
 
     async function handleBanUser(userId) {
@@ -12212,6 +12222,7 @@ async function handleCreateServer() {
         if (e.target.closest(".message-more-button")) return;
         if (!messageContextMenu.contains(e.target)) {
           messageContextMenu.classList.remove("visible");
+          openMoreMenuAnchor = null;
         }
         if (!userContextMenu.contains(e.target)) {
           userContextMenu.classList.remove("visible");
