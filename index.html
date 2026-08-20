@@ -839,6 +839,25 @@
       border-color: var(--danger);
     }
 
+    .identity-action-button:disabled,
+    .server-admin-role-select:disabled {
+      opacity: 0.35;
+      filter: blur(1.5px);
+      pointer-events: none;
+      cursor: not-allowed;
+    }
+
+    .identity-action-button:disabled:hover {
+      background: var(--surface-2);
+      border-color: var(--border);
+      color: var(--text-secondary);
+    }
+
+    .identity-action-button-danger:disabled:hover {
+      color: var(--danger);
+      border-color: rgba(240, 71, 95, 0.3);
+    }
+
     .auth-oauth-row {
       display: flex;
       gap: 8px;
