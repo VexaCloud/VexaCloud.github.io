@@ -2148,6 +2148,16 @@
       opacity: 1;
     }
 
+    /* Touch devices don't have a real hover state - the browser treats the
+       first tap on a hover-revealed element as "hover" and only the
+       second tap as an actual click, which reads as the button randomly
+       not responding. Skip the hover-reveal there and just show it. */
+    @media (hover: none), (pointer: coarse) {
+      .message-actions-inline {
+        opacity: 1;
+      }
+    }
+
     .message-inline-button {
       border: none;
       background: none;
@@ -3653,6 +3663,12 @@
 
     .dm-message:hover .dm-message-actions {
       display: flex;
+    }
+
+    @media (hover: none), (pointer: coarse) {
+      .dm-message-actions {
+        display: flex;
+      }
     }
 
     .message-more-button {
@@ -5267,10 +5283,6 @@
 
     const userBanStatusCache = new Map();
 
-    // Server-level ban (server_members.is_banned) - separate from the
-    // global site ban above. Always looked up from the currently loaded
-    // member list for currentServer, since that's the only server a
-    // right-click or admin-panel action can ever target.
     function findServerMember(userId) {
       return (currentServerMembers || []).find((m) => m.user && m.user.id === userId) || null;
     }
@@ -5280,10 +5292,6 @@
       return !!(m && m.is_banned);
     }
 
-    // Mirrors the backend's checkAdminProtection (and the DB trigger it's
-    // paired with): who's allowed to ban/demote/kick whom. Used to
-    // hide/disable actions that would just come back as a 403, rather than
-    // enforcing anything on its own — the server is the source of truth.
     function isServerOwner(server) {
       return !!(server && currentProfile && server.owner_id === currentProfile.id);
     }
@@ -11816,13 +11824,7 @@ async function handleCreateServer() {
             method: "PUT",
             body: JSON.stringify({ username }),
           });
-          // Don't call loadCurrentUser() again here — it re-runs the whole
-          // server/channel auto-select sequence (including a fire-and-forget
-          // channel click), and firing that a second time races with the
-          // still-in-flight first run and can leave the channel list empty
-          // until the page is reloaded. We only need the corrected
-          // username, so just re-fetch the profile and patch the bits of
-          // the UI that show it.
+
           const me = await apiFetch("/api/auth/me");
           currentProfile = me.user;
           topBarSubtitle.textContent = currentProfile.username || currentUser.email;
