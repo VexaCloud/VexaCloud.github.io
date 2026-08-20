@@ -3108,6 +3108,26 @@
       white-space: nowrap;
     }
 
+    .server-admin-filter-add-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .server-admin-filter-add-row > .form-field {
+      flex: 1 1 160px;
+      min-width: 140px;
+    }
+
+    .server-admin-filter-add-row input.settings-input {
+      width: 100%;
+    }
+
+    .server-admin-filter-add-row .settings-save {
+      flex: 0 0 auto;
+    }
+
     .admin-panel-body {
       overflow-y: auto;
       flex: 1;
@@ -4992,6 +5012,9 @@
         <button class="server-admin-tab" data-server-admin-tab="invites">Invites</button>
         <button class="server-admin-tab" data-server-admin-tab="filtering">Filtering</button>
       </div>
+      <div class="admin-search-bar" id="server-admin-member-search-bar" style="display:none;">
+        <input type="text" id="server-admin-member-search-input" class="settings-input" placeholder="Search members…" />
+      </div>
       <div class="modal-body admin-panel-body" id="server-admin-channels-panel"></div>
       <div class="modal-body admin-panel-body" id="server-admin-members-panel" style="display:none;"></div>
       <div class="modal-body admin-panel-body" id="server-admin-invites-panel" style="display:none;"></div>
@@ -5022,12 +5045,12 @@
         </div>
 
         <div class="settings-panel-heading" style="margin-top:8px;">Custom filters</div>
-        <div class="form-field-row" style="gap:8px; align-items:flex-end;">
-          <div style="flex:1;">
+        <div class="server-admin-filter-add-row">
+          <div class="form-field">
             <div class="settings-label">Word or phrase</div>
             <input type="text" id="server-admin-filter-phrase" class="settings-input" placeholder="e.g. badword" />
           </div>
-          <div style="flex:1;">
+          <div class="form-field">
             <div class="settings-label">Replacement</div>
             <input type="text" id="server-admin-filter-replacement" class="settings-input" placeholder="e.g. ****" />
           </div>
@@ -5224,6 +5247,19 @@
     let currentServerMembers = [];
 
     const userBanStatusCache = new Map();
+
+    // Server-level ban (server_members.is_banned) - separate from the
+    // global site ban above. Always looked up from the currently loaded
+    // member list for currentServer, since that's the only server a
+    // right-click or admin-panel action can ever target.
+    function findServerMember(userId) {
+      return (currentServerMembers || []).find((m) => m.user && m.user.id === userId) || null;
+    }
+
+    function isServerBanned(userId) {
+      const m = findServerMember(userId);
+      return !!(m && m.is_banned);
+    }
 
     async function getIsUserBanned(userId) {
       const known = currentServerMembers.find((m) => m.user && m.user.id === userId);
@@ -6462,6 +6498,8 @@ function showAuthOverlay() {
     const serverAdminTabs = document.querySelectorAll(".server-admin-tab");
     const serverAdminChannelsPanel = document.getElementById("server-admin-channels-panel");
     const serverAdminMembersPanel = document.getElementById("server-admin-members-panel");
+    const serverAdminMemberSearchBar = document.getElementById("server-admin-member-search-bar");
+    const serverAdminMemberSearchInput = document.getElementById("server-admin-member-search-input");
     const serverAdminFilteringPanel = document.getElementById("server-admin-filtering-panel");
     const serverAdminFilterEnabled = document.getElementById("server-admin-filter-enabled");
     const serverAdminFilterUseBasic = document.getElementById("server-admin-filter-use-basic");
@@ -8715,6 +8753,15 @@ el.innerHTML = `
         }
       }
 
+      if (message.user_id && currentUser && message.user_id !== currentUser.id && currentServer && (admin || canManageCurrentServer())) {
+        const serverBanned = isServerBanned(message.user_id);
+        items.push(
+          serverBanned
+            ? { label: "Unban from server", action: () => handleUnbanFromServer(currentServer.id, message.user_id) }
+            : { label: "Ban from server", action: () => handleBanFromServer(currentServer.id, message.user_id), danger: true }
+        );
+      }
+
       if (!items.length) return;
 
       messageContextMenu.innerHTML = items
@@ -8774,6 +8821,15 @@ el.innerHTML = `
           action: () => handleKickFromServer(currentServer.id, user.id),
           danger: true,
         });
+      }
+
+      if (currentServer && (isAdmin(currentProfile) || (currentServerMembership && currentServerMembership.role === "admin"))) {
+        const serverBanned = isServerBanned(user.id);
+        items.push(
+          serverBanned
+            ? { label: "Unban from server", action: () => handleUnbanFromServer(currentServer.id, user.id) }
+            : { label: "Ban from server", action: () => handleBanFromServer(currentServer.id, user.id), danger: true }
+        );
       }
       userContextMenu.innerHTML = items
         .map(
@@ -8943,6 +8999,35 @@ el.innerHTML = `
       } catch (err) {
         console.error(err);
         showToast(err.message || "Failed to kick member", { variant: "danger" });
+      }
+    }
+
+    async function handleBanFromServer(serverId, userId) {
+      const reason = prompt("Reason for server ban (optional)");
+      if (reason === null) return;
+      try {
+        await apiFetch(`/api/servers/${serverId}/members/${userId}/ban`, {
+          method: "POST",
+          body: JSON.stringify({ reason }),
+        });
+        showToast("Member banned from server", { variant: "accent" });
+        await loadServerMembers(serverId);
+        if (serverAdminTarget && serverAdminTarget.id === serverId) loadServerAdminMembers();
+      } catch (err) {
+        console.error(err);
+        showToast(err.message || "Failed to ban member", { variant: "danger" });
+      }
+    }
+
+    async function handleUnbanFromServer(serverId, userId) {
+      try {
+        await apiFetch(`/api/servers/${serverId}/members/${userId}/unban`, { method: "POST" });
+        showToast("Member unbanned from server", { variant: "accent" });
+        await loadServerMembers(serverId);
+        if (serverAdminTarget && serverAdminTarget.id === serverId) loadServerAdminMembers();
+      } catch (err) {
+        console.error(err);
+        showToast(err.message || "Failed to unban member", { variant: "danger" });
       }
     }
 
@@ -9897,6 +9982,7 @@ async function handleCreateServer() {
       serverAdminTabs.forEach((btn) => btn.classList.toggle("active", btn.dataset.serverAdminTab === tab));
       serverAdminChannelsPanel.style.display = tab === "channels" ? "flex" : "none";
       serverAdminMembersPanel.style.display = tab === "members" ? "flex" : "none";
+      if (serverAdminMemberSearchBar) serverAdminMemberSearchBar.style.display = tab === "members" ? "block" : "none";
       const invitesPanel = document.getElementById("server-admin-invites-panel");
       if (invitesPanel) invitesPanel.style.display = tab === "invites" ? "flex" : "none";
       serverAdminFilteringPanel.style.display = tab === "filtering" ? "flex" : "none";
@@ -10001,6 +10087,7 @@ async function handleCreateServer() {
     function openServerAdminPanel(server) {
       serverAdminTarget = server;
       serverAdminSubtitle.textContent = server.name;
+      if (serverAdminMemberSearchInput) serverAdminMemberSearchInput.value = "";
       serverAdminModal.classList.add("visible");
       switchServerAdminTab("channels");
     }
@@ -10054,77 +10141,103 @@ async function handleCreateServer() {
       }
     }
 
+    let serverAdminMembersCache = [];
+
     async function loadServerAdminMembers() {
       if (!serverAdminTarget) return;
       serverAdminMembersPanel.innerHTML = `<div class="empty-state-small"><span class="spinner"></span>Loading...</div>`;
       try {
         const { members } = await apiFetch(`/api/servers/${serverAdminTarget.id}/users`);
-        if (!members.length) {
-          serverAdminMembersPanel.innerHTML = `<div class="empty-state-small">No members.</div>`;
-          return;
-        }
-        serverAdminMembersPanel.innerHTML = members
-          .map(
-            (m) => `
-          <div class="admin-row">
-            <div class="admin-row-main">
-              <div class="user-avatar" style="width:32px;height:32px;">${avatarHTML(m.user)}</div>
-              <div>
-                <div class="admin-row-name">${escapeHtml(m.user.username || "")}</div>
-                <div class="admin-row-meta">${escapeHtml(m.role)}</div>
-              </div>
-            </div>
-            <div class="admin-row-actions" data-user-id="${m.user.id}">
-              <select class="settings-input server-admin-role-select" data-action="role" style="padding:4px 8px; font-size:11px;">
-                <option value="member" ${m.role === "member" ? "selected" : ""}>Member</option>
-                <option value="moderator" ${m.role === "moderator" ? "selected" : ""}>Moderator</option>
-                <option value="admin" ${m.role === "admin" ? "selected" : ""}>Admin</option>
-              </select>
-              <button class="identity-action-button identity-action-button-danger" data-action="kick">Kick</button>
-            </div>
-          </div>
-        `
-          )
-          .join("");
-
-        serverAdminMembersPanel.querySelectorAll("[data-action='role']").forEach((el) => {
-          const userId = el.closest(".admin-row-actions").dataset.userId;
-          el.addEventListener("change", async () => {
-            try {
-              await apiFetch(`/api/servers/${serverAdminTarget.id}/members/${userId}`, {
-                method: "PATCH",
-                body: JSON.stringify({ role: el.value }),
-              });
-              showToast("Member role updated", { variant: "accent" });
-              if (currentServer && currentServer.id === serverAdminTarget.id) loadServerMembers(currentServer.id);
-            } catch (err) {
-              console.error(err);
-              showToast(err.message || "Failed to update role", { variant: "danger" });
-              loadServerAdminMembers();
-            }
-          });
-        });
-
-        serverAdminMembersPanel.querySelectorAll("[data-action='kick']").forEach((el) => {
-          const userId = el.closest(".admin-row-actions").dataset.userId;
-          const member = members.find((m) => m.user.id === userId);
-          el.addEventListener("click", async () => {
-            if (!confirm(`Kick ${member.user.username} from this server? They can rejoin with a new invite.`)) return;
-            try {
-              await apiFetch(`/api/servers/${serverAdminTarget.id}/members/${userId}/kick`, { method: "POST" });
-              showToast("Member kicked", { variant: "accent" });
-              loadServerAdminMembers();
-              if (currentServer && currentServer.id === serverAdminTarget.id) loadServerMembers(currentServer.id);
-            } catch (err) {
-              console.error(err);
-              showToast(err.message || "Failed to kick member", { variant: "danger" });
-            }
-          });
-        });
+        serverAdminMembersCache = members || [];
+        renderServerAdminMembers(serverAdminMemberSearchInput ? serverAdminMemberSearchInput.value : "");
       } catch (err) {
         console.error(err);
         serverAdminMembersPanel.innerHTML = `<div class="empty-state-small">Failed to load members.</div>`;
       }
+    }
+
+    function renderServerAdminMembers(filterText) {
+      const q = (filterText || "").trim().toLowerCase();
+      const members = q ? serverAdminMembersCache.filter((m) => (m.user.username || "").toLowerCase().includes(q)) : serverAdminMembersCache;
+
+      if (!members.length) {
+        serverAdminMembersPanel.innerHTML = `<div class="empty-state-small">${q ? "No members match that search." : "No members."}</div>`;
+        return;
+      }
+
+      serverAdminMembersPanel.innerHTML = members
+        .map(
+          (m) => `
+        <div class="admin-row">
+          <div class="admin-row-main">
+            <div class="user-avatar" style="width:32px;height:32px;">${avatarHTML(m.user)}</div>
+            <div>
+              <div class="admin-row-name">${escapeHtml(m.user.username || "")} ${m.is_banned ? `<span class="user-role-pill" style="background:var(--danger-subtle); color:var(--danger);">Banned</span>` : ""}</div>
+              <div class="admin-row-meta">${escapeHtml(m.role)}</div>
+            </div>
+          </div>
+          <div class="admin-row-actions" data-user-id="${m.user.id}">
+            <select class="settings-input server-admin-role-select" data-action="role" style="padding:4px 8px; font-size:11px;">
+              <option value="member" ${m.role === "member" ? "selected" : ""}>Member</option>
+              <option value="moderator" ${m.role === "moderator" ? "selected" : ""}>Moderator</option>
+              <option value="admin" ${m.role === "admin" ? "selected" : ""}>Admin</option>
+            </select>
+            ${
+              m.is_banned
+                ? `<button class="identity-action-button" data-action="unban">Unban</button>`
+                : `<button class="identity-action-button identity-action-button-danger" data-action="ban">Ban</button>`
+            }
+            <button class="identity-action-button identity-action-button-danger" data-action="kick">Kick</button>
+          </div>
+        </div>
+      `
+        )
+        .join("");
+
+      serverAdminMembersPanel.querySelectorAll("[data-action='role']").forEach((el) => {
+        const userId = el.closest(".admin-row-actions").dataset.userId;
+        el.addEventListener("change", async () => {
+          try {
+            await apiFetch(`/api/servers/${serverAdminTarget.id}/members/${userId}`, {
+              method: "PATCH",
+              body: JSON.stringify({ role: el.value }),
+            });
+            showToast("Member role updated", { variant: "accent" });
+            if (currentServer && currentServer.id === serverAdminTarget.id) loadServerMembers(currentServer.id);
+          } catch (err) {
+            console.error(err);
+            showToast(err.message || "Failed to update role", { variant: "danger" });
+            loadServerAdminMembers();
+          }
+        });
+      });
+
+      serverAdminMembersPanel.querySelectorAll("[data-action='kick']").forEach((el) => {
+        const userId = el.closest(".admin-row-actions").dataset.userId;
+        const member = members.find((m) => m.user.id === userId);
+        el.addEventListener("click", async () => {
+          if (!confirm(`Kick ${member.user.username} from this server? They can rejoin with a new invite.`)) return;
+          try {
+            await apiFetch(`/api/servers/${serverAdminTarget.id}/members/${userId}/kick`, { method: "POST" });
+            showToast("Member kicked", { variant: "accent" });
+            loadServerAdminMembers();
+            if (currentServer && currentServer.id === serverAdminTarget.id) loadServerMembers(currentServer.id);
+          } catch (err) {
+            console.error(err);
+            showToast(err.message || "Failed to kick member", { variant: "danger" });
+          }
+        });
+      });
+
+      serverAdminMembersPanel.querySelectorAll("[data-action='ban']").forEach((el) => {
+        const userId = el.closest(".admin-row-actions").dataset.userId;
+        el.addEventListener("click", () => handleBanFromServer(serverAdminTarget.id, userId));
+      });
+
+      serverAdminMembersPanel.querySelectorAll("[data-action='unban']").forEach((el) => {
+        const userId = el.closest(".admin-row-actions").dataset.userId;
+        el.addEventListener("click", () => handleUnbanFromServer(serverAdminTarget.id, userId));
+      });
     }
 
     async function loadServerAdminFiltering() {
@@ -11896,6 +12009,11 @@ async function handleCreateServer() {
       adminUserSearchInput.addEventListener("input", () => {
         renderAdminUsers(adminUserSearchInput.value);
       });
+      if (serverAdminMemberSearchInput) {
+        serverAdminMemberSearchInput.addEventListener("input", () => {
+          renderServerAdminMembers(serverAdminMemberSearchInput.value);
+        });
+      }
       viewProfileDmButton.addEventListener("click", () => {
         if (!viewProfileTargetUser) return;
         const user = viewProfileTargetUser;
