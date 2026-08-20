@@ -11816,7 +11816,18 @@ async function handleCreateServer() {
             method: "PUT",
             body: JSON.stringify({ username }),
           });
-          await loadCurrentUser();
+          // Don't call loadCurrentUser() again here — it re-runs the whole
+          // server/channel auto-select sequence (including a fire-and-forget
+          // channel click), and firing that a second time races with the
+          // still-in-flight first run and can leave the channel list empty
+          // until the page is reloaded. We only need the corrected
+          // username, so just re-fetch the profile and patch the bits of
+          // the UI that show it.
+          const me = await apiFetch("/api/auth/me");
+          currentProfile = me.user;
+          topBarSubtitle.textContent = currentProfile.username || currentUser.email;
+          userPillName.textContent = currentProfile.username || currentUser.email;
+          userPillAvatar.innerHTML = avatarHTML(currentProfile);
         }
       } catch (err) {
         authErrorSignup.textContent = err.message || "Sign up failed";
