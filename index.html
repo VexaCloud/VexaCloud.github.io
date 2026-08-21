@@ -4369,8 +4369,6 @@
 
       <div class="drawer-backdrop" id="drawer-backdrop"></div>
 
-      <!-- Channels (slide-out drawer) -->
-<!-- Unified left drawer (servers + channels) — opened by the ☰ button -->
 <div class="panel drawer drawer-left" id="channels-drawer">
   <div class="panel-header">
     <div class="channel-list-header">
@@ -4388,9 +4386,7 @@
     </div>
   </div>
   <div class="panel-body">
-    <!-- Servers list (horizontal scroll of icons) -->
     <div class="scroll-y server-list" id="server-list" style="flex-direction:row; flex-wrap:wrap; max-height:120px; border-bottom:1px solid var(--border); padding:8px;"></div>
-    <!-- Channels list -->
     <div class="channel-list-subheader">
       <span class="channel-list-subheader-label">Channels</span>
       <button class="icon-button icon-button-sm" id="create-channel-button" title="Create channel" style="display:none;">+</button>
@@ -4398,8 +4394,6 @@
     <div class="scroll-y channel-list" id="channel-list"></div>
   </div>
 </div>
-
-      <!-- Chat (the one main screen) -->
       <div class="panel">
         <div class="chat-panel">
           <div class="chat-header">
@@ -4473,7 +4467,6 @@
         </div>
       </div>
 
-      <!-- Members (slide-out drawer) -->
       <div class="panel drawer drawer-right" id="user-panel">
         <div class="panel-header">
           <div class="panel-title">
@@ -4493,7 +4486,6 @@
     </div>
   </div>
 
-  <!-- Auth overlay -->
   <div class="auth-overlay" id="auth-overlay">
     <div class="auth-card">
       <div class="auth-header">
@@ -4507,8 +4499,6 @@
         </div>
       </div>
 
-      <!-- Shows a visible message if the Supabase client (or anything else in
-           the init flow) fails to load, instead of failing silently. -->
       <div class="auth-init-error" id="auth-init-error"></div>
 
       <div style="text-align:center; margin-bottom:4px;">
@@ -4598,7 +4588,6 @@
     </div>
   </div>
 
-  <!-- Forgot password: request reset email -->
   <div class="modal-backdrop" id="forgot-password-modal" style="display:none;">
     <div class="modal">
       <div class="modal-header">
@@ -4623,9 +4612,6 @@
     </div>
   </div>
 
-  <!-- Password recovery: shown automatically when the user arrives via the
-       reset-password email link (Supabase fires a PASSWORD_RECOVERY auth
-       event once the recovery token in the URL is processed). -->
   <div class="modal-backdrop" id="recovery-password-modal" style="display:none;">
     <div class="modal">
       <div class="modal-header">
@@ -4651,7 +4637,6 @@
     </div>
   </div>
 
-  <!-- Support modal -->
   <div class="modal-backdrop" id="support-modal" style="display:none;">
     <div class="modal">
       <div class="modal-header">
@@ -4684,7 +4669,6 @@
     </div>
   </div>
 
-  <!-- Settings modal -->
   <div class="modal-backdrop" id="settings-modal">
     <div class="modal modal-tall settings-modal-inner">
       <div class="modal-header">
@@ -4705,7 +4689,6 @@
         </div>
         <div class="settings-panels">
 
-          <!-- GENERAL -->
           <div class="settings-panel active" data-settings-panel="general">
             <div class="settings-row settings-row-avatar">
               <div class="avatar-upload" id="settings-avatar-upload" tabindex="0" role="button" aria-label="Change profile picture">
@@ -4731,7 +4714,6 @@
             </div>
           </div>
 
-          <!-- APPEARANCE -->
           <div class="settings-panel" data-settings-panel="appearance">
             <div class="settings-panel-section">
               <div class="settings-panel-heading">Theme</div>
@@ -4811,7 +4793,6 @@
             </div>
           </div>
 
-          <!-- ACCOUNT -->
           <div class="settings-panel" data-settings-panel="account">
             <div class="settings-panel-section">
               <div class="settings-panel-heading">Email</div>
@@ -4859,7 +4840,6 @@
             </div>
           </div>
 
-          <!-- NOTIFICATIONS -->
           <div class="settings-panel" data-settings-panel="notifications">
             <div class="settings-row">
               <div class="push-status-row">
@@ -4937,7 +4917,6 @@
             </div>
           </div>
 
-          <!-- DANGER ZONE -->
           <div class="settings-panel" data-settings-panel="danger">
             <div class="settings-panel-heading">Danger Zone</div>
             <div class="danger-zone-box">
@@ -4960,7 +4939,6 @@
       </div>
     </div>
   </div>
-<!-- VIEW PROFILE MODAL (read-only card for any user — no email, ever) -->
   <div class="modal-backdrop" id="view-profile-modal">
     <div class="modal" style="max-width:380px;">
       <div class="modal-header">
@@ -4996,7 +4974,6 @@
       </div>
     </div>
   </div>
-  <!-- Generic form modal (create/edit channel, create/edit server, etc.) -->
   <div class="modal-backdrop" id="form-modal">
     <div class="modal">
       <div class="modal-header">
@@ -5015,7 +4992,6 @@
     </div>
   </div>
 
-  <!-- Browse public servers modal -->
   <div class="modal-backdrop" id="browse-servers-modal">
     <div class="modal modal-wide">
       <div class="modal-header">
@@ -5025,13 +5001,15 @@
         </div>
         <button class="modal-close" id="browse-servers-close">Close</button>
       </div>
+      <div class="admin-search-bar">
+        <input type="text" id="public-server-search-input" class="settings-input" placeholder="Search servers…" />
+      </div>
       <div class="modal-body public-server-list" id="public-server-list">
         <div class="empty-state-small"><span class="spinner"></span>Loading...</div>
       </div>
     </div>
   </div>
 
-  <!-- Server admin panel -->
   <div class="modal-backdrop" id="server-admin-modal">
     <div class="modal modal-wide modal-tall">
       <div class="modal-header">
@@ -5096,7 +5074,6 @@
     </div>
   </div>
 
-  <!-- Admin dashboard -->
   <div class="modal-backdrop" id="admin-dashboard-modal">
     <div class="modal modal-wide modal-tall">
       <div class="modal-header">
@@ -5115,6 +5092,9 @@
       <div class="admin-search-bar" id="admin-user-search-bar">
         <input type="text" id="admin-user-search-input" class="settings-input" placeholder="Search users…" />
       </div>
+      <div class="admin-search-bar" id="admin-server-search-bar" style="display:none;">
+        <input type="text" id="admin-server-search-input" class="settings-input" placeholder="Search servers…" />
+      </div>
       <div class="modal-body admin-panel-body" id="admin-users-panel"></div>
       <div class="modal-body admin-panel-body" id="admin-servers-panel" style="display:none;"></div>
       <div class="modal-body admin-panel-body" id="admin-reports-panel" style="display:none;"></div>
@@ -5122,7 +5102,6 @@
     </div>
   </div>
 
-  <!-- Server invites -->
   <div class="modal-backdrop" id="invites-modal">
     <div class="modal">
       <div class="modal-header">
@@ -5158,7 +5137,6 @@
     </div>
   </div>
 
-  <!-- Direct messages -->
   <div class="modal-backdrop" id="dm-modal">
     <div class="modal modal-wide modal-tall dm-modal-inner">
       <div class="modal-header">
@@ -5205,12 +5183,10 @@
     </div>
   </div>
 
-  <!-- Context menus -->
   <div class="context-menu" id="message-context-menu"></div>
   <div class="context-menu" id="user-context-menu"></div>
   <div class="context-menu" id="server-context-menu"></div>
 
-  <!-- Toasts -->
   <div class="toast-container" id="toast-container"></div>
 
   <script>
@@ -6399,6 +6375,27 @@ function showAuthOverlay() {
     }
 
     const messageListEl = document.getElementById("message-list");
+
+    let messageListStickToBottom = true;
+
+    function isScrolledNearBottom(el, threshold = 100) {
+      return el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+    }
+
+    messageListEl.addEventListener("scroll", () => {
+      messageListStickToBottom = isScrolledNearBottom(messageListEl);
+    });
+
+    messageListEl.addEventListener(
+      "load",
+      (e) => {
+        if (e.target.tagName === "IMG" && messageListStickToBottom) {
+          messageListEl.scrollTop = messageListEl.scrollHeight;
+        }
+      },
+      true
+    );
+
     const userListEl = document.getElementById("user-list");
     const userPanelEl = document.getElementById("user-panel");
     const memberSearchInput = document.getElementById("member-search-input");
@@ -6525,6 +6522,7 @@ function showAuthOverlay() {
     const browseServersModal = document.getElementById("browse-servers-modal");
     const browseServersClose = document.getElementById("browse-servers-close");
     const publicServerList = document.getElementById("public-server-list");
+    const publicServerSearchInput = document.getElementById("public-server-search-input");
 
     const adminDashboardButton = document.getElementById("admin-dashboard-button");
     const adminDashboardModal = document.getElementById("admin-dashboard-modal");
@@ -6534,6 +6532,8 @@ function showAuthOverlay() {
     const adminUserSearchBar = document.getElementById("admin-user-search-bar");
     const adminUserSearchInput = document.getElementById("admin-user-search-input");
     const adminServersPanel = document.getElementById("admin-servers-panel");
+    const adminServerSearchBar = document.getElementById("admin-server-search-bar");
+    const adminServerSearchInput = document.getElementById("admin-server-search-input");
     const adminReportsPanel = document.getElementById("admin-reports-panel");
     const adminBanRequestsPanel = document.getElementById("admin-ban-requests-panel");
 
@@ -7882,6 +7882,7 @@ el.innerHTML = `
 
     async function loadChannels(serverId) {
       const loadToken = ++channelsLoadToken;
+      channelListEl.innerHTML = `<div class="empty-state-small"><span class="spinner"></span>Loading channels...</div>`;
       try {
         const { channels } = await apiFetch(`/api/servers/${serverId}/channels`);
         if (loadToken !== channelsLoadToken) return;
@@ -7961,6 +7962,7 @@ el.innerHTML = `
       } catch (err) {
         if (loadToken !== channelsLoadToken) return;
         console.error(err);
+        channelListEl.innerHTML = `<div class="empty-state-small">Failed to load channels.</div>`;
         showToast("Failed to load channels", { variant: "danger" });
       }
     }
@@ -7970,7 +7972,7 @@ el.innerHTML = `
     async function loadServerMembers(serverId) {
       const loadToken = ++serverMembersLoadToken;
       userPanelEl.style.display = "flex";
-      userListEl.innerHTML = "";
+      userListEl.innerHTML = `<div class="empty-state-small"><span class="spinner"></span>Loading members...</div>`;
       try {
         const { members } = await apiFetch(`/api/servers/${serverId}/users`);
         if (loadToken !== serverMembersLoadToken) return;
@@ -7978,7 +7980,8 @@ el.innerHTML = `
         renderMemberList(memberSearchInput ? memberSearchInput.value : "");
       } catch (err) {
         console.error(err);
-        userPanelEl.style.display = "none";
+        if (loadToken !== serverMembersLoadToken) return;
+        userListEl.innerHTML = `<div class="empty-state-small">Failed to load members.</div>`;
       }
     }
 
@@ -8113,7 +8116,7 @@ el.innerHTML = `
       chatChannelNameEl.textContent = channel.name;
       chatChannelMetaEl.textContent = channel.type === "announcement" ? "Announcement channel" : "Text channel";
       clearNoChannelSelectedState();
-      messageListEl.innerHTML = "";
+      messageListEl.innerHTML = `<div class="empty-state-small"><span class="spinner"></span>Loading messages...</div>`;
       await loadMessages(channel.id);
       subscribeRealtimeMessages(channel.id);
     }
@@ -8126,11 +8129,13 @@ el.innerHTML = `
         messages.forEach((msg) => {
           renderMessage(msg);
         });
+        messageListStickToBottom = true;
         messageListEl.scrollTop = messageListEl.scrollHeight;
         chatConnectionStatusEl.textContent = "Ready";
       } catch (err) {
         console.error(err);
         chatConnectionStatusEl.textContent = "Error";
+        messageListEl.innerHTML = `<div class="empty-state-small">Failed to load messages.</div>`;
         showToast("Failed to load messages", { variant: "danger" });
       }
     }
@@ -9480,61 +9485,81 @@ async function handleCreateServer() {
       clampToViewport(serverContextMenu, x, y);
     }
 
+    let publicServersCache = [];
+    let myServerIdsCache = new Set();
+
     async function handleBrowseServers() {
       browseServersModal.classList.add("visible");
+      if (publicServerSearchInput) publicServerSearchInput.value = "";
       publicServerList.innerHTML = `<div class="empty-state-small"><span class="spinner"></span>Loading...</div>`;
       try {
         const { servers } = await apiFetch("/api/servers/public");
-        if (!servers.length) {
-          publicServerList.innerHTML = `<div class="empty-state-small">No public servers yet.</div>`;
-          return;
-        }
-        const myServerIds = new Set((await apiFetch("/api/servers")).servers.map((s) => s.id));
-        publicServerList.innerHTML = servers
-          .map(
-            (s) => `
-          <div class="public-server-card">
-            <div class="public-server-card-main">
+        publicServersCache = servers || [];
+        myServerIdsCache = new Set((await apiFetch("/api/servers")).servers.map((s) => s.id));
+        renderPublicServers("");
+      } catch (err) {
+        console.error(err);
+        publicServerList.innerHTML = `<div class="empty-state-small">Failed to load public servers.</div>`;
+      }
+    }
+
+    function renderPublicServers(filterText) {
+      const q = (filterText || "").trim().toLowerCase();
+      const servers = q
+        ? publicServersCache.filter(
+            (s) => (s.name || "").toLowerCase().includes(q) || (s.description || "").toLowerCase().includes(q)
+          )
+        : publicServersCache;
+
+      if (!servers.length) {
+        publicServerList.innerHTML = `<div class="empty-state-small">${
+          publicServersCache.length ? "No servers match that search." : "No public servers yet."
+        }</div>`;
+        return;
+      }
+
+      publicServerList.innerHTML = servers
+        .map(
+          (s) => `
+        <div class="public-server-card">
+          <div class="public-server-card-main">
 <div class="public-server-icon">
   ${s.icon_url
     ? `<img src="${escapeHtml(s.icon_url)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`
     : escapeHtml((s.name || "?").slice(0, 2).toUpperCase())}
 </div>              <div>
-                <div class="public-server-name">${escapeHtml(s.name)}</div>
-                <div class="public-server-desc">${escapeHtml(s.description || "No description")}</div>
-              </div>
-            </div>
-            <button class="public-server-join" data-server-id="${s.id}" ${myServerIds.has(s.id) ? "disabled" : ""}>
-              ${myServerIds.has(s.id) ? "Joined" : "Join"}
-            </button>
+            <div class="public-server-name">${escapeHtml(s.name)}</div>
+            <div class="public-server-desc">${escapeHtml(s.description || "No description")}</div>
           </div>
-        `
-          )
-          .join("");
+        </div>
+        <button class="public-server-join" data-server-id="${s.id}" ${myServerIdsCache.has(s.id) ? "disabled" : ""}>
+          ${myServerIdsCache.has(s.id) ? "Joined" : "Join"}
+        </button>
+      </div>
+    `
+        )
+        .join("");
 
-        publicServerList.querySelectorAll(".public-server-join").forEach((btn) => {
-          btn.addEventListener("click", async () => {
-            if (btn.disabled) return;
-            btn.disabled = true;
-            btn.textContent = "Joining...";
-            try {
-              const server = servers.find((s) => s.id === btn.dataset.serverId);
-              await apiFetch(`/api/servers/${btn.dataset.serverId}/join`, { method: "POST" });
-              showToast(`Joined ${server ? server.name : "server"}`, { variant: "accent" });
-              btn.textContent = "Joined";
-              await loadServers();
-            } catch (err) {
-              console.error(err);
-              btn.disabled = false;
-              btn.textContent = "Join";
-              showToast(err.message || "Failed to join server", { variant: "danger" });
-            }
-          });
+      publicServerList.querySelectorAll(".public-server-join").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          if (btn.disabled) return;
+          btn.disabled = true;
+          btn.textContent = "Joining...";
+          try {
+            const server = servers.find((s) => s.id === btn.dataset.serverId);
+            await apiFetch(`/api/servers/${btn.dataset.serverId}/join`, { method: "POST" });
+            showToast(`Joined ${server ? server.name : "server"}`, { variant: "accent" });
+            btn.textContent = "Joined";
+            myServerIdsCache.add(btn.dataset.serverId);
+            await loadServers();
+          } catch (err) {
+            console.error(err);
+            btn.disabled = false;
+            btn.textContent = "Join";
+            showToast(err.message || "Failed to join server", { variant: "danger" });
+          }
         });
-      } catch (err) {
-        console.error(err);
-        publicServerList.innerHTML = `<div class="empty-state-small">Failed to load public servers.</div>`;
-      }
+      });
     }
 
     let invitesModalServer = null;
@@ -10022,6 +10047,7 @@ async function handleCreateServer() {
       adminUsersPanel.style.display = tab === "users" ? "flex" : "none";
       adminUserSearchBar.style.display = tab === "users" ? "block" : "none";
       adminServersPanel.style.display = tab === "servers" ? "flex" : "none";
+      if (adminServerSearchBar) adminServerSearchBar.style.display = tab === "servers" ? "block" : "none";
       adminReportsPanel.style.display = tab === "reports" ? "flex" : "none";
       adminBanRequestsPanel.style.display = tab === "ban-requests" ? "flex" : "none";
       if (tab === "users") loadAdminUsers();
@@ -10535,81 +10561,96 @@ async function handleCreateServer() {
       });
     }
 
+    let adminServersCache = [];
+
     async function loadAdminServers() {
       adminServersPanel.innerHTML = `<div class="empty-state-small"><span class="spinner"></span>Loading...</div>`;
       try {
         const { servers } = await apiFetch("/api/admin/servers");
-        adminServersPanel.innerHTML = servers
-          .map(
-            (s) => `
-          <div class="admin-row">
-            <div class="admin-row-main">
+        adminServersCache = servers || [];
+        renderAdminServers(adminServerSearchInput ? adminServerSearchInput.value : "");
+      } catch (err) {
+        console.error(err);
+        adminServersPanel.innerHTML = `<div class="empty-state-small">Failed to load servers.</div>`;
+      }
+    }
+
+    function renderAdminServers(filterText) {
+      const q = (filterText || "").trim().toLowerCase();
+      const servers = q ? adminServersCache.filter((s) => (s.name || "").toLowerCase().includes(q)) : adminServersCache;
+
+      if (!servers.length) {
+        adminServersPanel.innerHTML = `<div class="empty-state-small">${q ? "No servers match that search." : "No servers."}</div>`;
+        return;
+      }
+
+      adminServersPanel.innerHTML = servers
+        .map(
+          (s) => `
+        <div class="admin-row">
+          <div class="admin-row-main">
 <div class="public-server-icon">
   ${s.icon_url
     ? `<img src="${escapeHtml(s.icon_url)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`
     : escapeHtml((s.name || "?").slice(0, 2).toUpperCase())}
 </div>              <div>
-                <div class="admin-row-name">
-                  ${escapeHtml(s.name)}
-                  ${s.is_public ? `<span class="admin-row-badge">Public</span>` : ""}
-                </div>
-                <div class="admin-row-meta">Owner: ${escapeHtml(s.owner ? s.owner.username : "Unknown")}</div>
+              <div class="admin-row-name">
+                ${escapeHtml(s.name)}
+                ${s.is_public ? `<span class="admin-row-badge">Public</span>` : ""}
               </div>
-            </div>
-            <div class="admin-row-actions" data-server-id="${s.id}">
-              <button class="identity-action-button" data-action="open">Open</button>
-              <button class="identity-action-button" data-action="toggle-public">${s.is_public ? "Make private" : "Make public"}</button>
-              <button class="identity-action-button identity-action-button-danger" data-action="delete">Delete</button>
+              <div class="admin-row-meta">Owner: ${escapeHtml(s.owner ? s.owner.username : "Unknown")}</div>
             </div>
           </div>
-        `
-          )
-          .join("");
+          <div class="admin-row-actions" data-server-id="${s.id}">
+            <button class="identity-action-button" data-action="open">Open</button>
+            <button class="identity-action-button" data-action="toggle-public">${s.is_public ? "Make private" : "Make public"}</button>
+            <button class="identity-action-button identity-action-button-danger" data-action="delete">Delete</button>
+          </div>
+        </div>
+      `
+        )
+        .join("");
 
-        adminServersPanel.querySelectorAll("[data-action]").forEach((el) => {
-          const serverId = el.closest(".admin-row-actions").dataset.serverId;
-          const server = servers.find((s) => s.id === serverId);
-          const action = el.dataset.action;
-          el.addEventListener("click", async () => {
-            if (action === "open") {
-              adminDashboardModal.classList.remove("visible");
-              await loadServers();
-              selectServer(server);
-              return;
+      adminServersPanel.querySelectorAll("[data-action]").forEach((el) => {
+        const serverId = el.closest(".admin-row-actions").dataset.serverId;
+        const server = servers.find((s) => s.id === serverId);
+        const action = el.dataset.action;
+        el.addEventListener("click", async () => {
+          if (action === "open") {
+            adminDashboardModal.classList.remove("visible");
+            await loadServers();
+            selectServer(server);
+            return;
+          }
+          if (action === "delete") {
+            if (!confirm(`Delete "${server.name}"? This can't be undone.`)) return;
+            try {
+              await apiFetch(`/api/servers/${serverId}`, { method: "DELETE" });
+              showToast("Server deleted", { variant: "accent" });
+              loadAdminServers();
+              loadServers();
+            } catch (err) {
+              console.error(err);
+              showToast(err.message || "Failed to delete server", { variant: "danger" });
             }
-            if (action === "delete") {
-              if (!confirm(`Delete "${server.name}"? This can't be undone.`)) return;
-              try {
-                await apiFetch(`/api/servers/${serverId}`, { method: "DELETE" });
-                showToast("Server deleted", { variant: "accent" });
-                loadAdminServers();
-                loadServers();
-              } catch (err) {
-                console.error(err);
-                showToast(err.message || "Failed to delete server", { variant: "danger" });
-              }
-              return;
+            return;
+          }
+          if (action === "toggle-public") {
+            try {
+              await apiFetch(`/api/servers/${serverId}`, {
+                method: "PATCH",
+                body: JSON.stringify({ is_public: !server.is_public }),
+              });
+              showToast("Server updated", { variant: "accent" });
+              loadAdminServers();
+              loadServers();
+            } catch (err) {
+              console.error(err);
+              showToast(err.message || "Failed to update server", { variant: "danger" });
             }
-            if (action === "toggle-public") {
-              try {
-                await apiFetch(`/api/servers/${serverId}`, {
-                  method: "PATCH",
-                  body: JSON.stringify({ is_public: !server.is_public }),
-                });
-                showToast("Server updated", { variant: "accent" });
-                loadAdminServers();
-                loadServers();
-              } catch (err) {
-                console.error(err);
-                showToast(err.message || "Failed to update server", { variant: "danger" });
-              }
-            }
-          });
+          }
         });
-      } catch (err) {
-        console.error(err);
-        adminServersPanel.innerHTML = `<div class="empty-state-small">Failed to load servers.</div>`;
-      }
+      });
     }
 
     async function loadAdminReports() {
@@ -12086,6 +12127,16 @@ async function handleCreateServer() {
       if (serverAdminMemberSearchInput) {
         serverAdminMemberSearchInput.addEventListener("input", () => {
           renderServerAdminMembers(serverAdminMemberSearchInput.value);
+        });
+      }
+      if (publicServerSearchInput) {
+        publicServerSearchInput.addEventListener("input", () => {
+          renderPublicServers(publicServerSearchInput.value);
+        });
+      }
+      if (adminServerSearchInput) {
+        adminServerSearchInput.addEventListener("input", () => {
+          renderAdminServers(adminServerSearchInput.value);
         });
       }
       viewProfileDmButton.addEventListener("click", () => {
