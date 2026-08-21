@@ -4131,6 +4131,107 @@
       display: none !important;
     }
 
+    .spinner-lg {
+      display: inline-block;
+      width: 34px;
+      height: 34px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: var(--r-full);
+      animation: spin 0.8s linear infinite;
+    }
+
+    /* Full-panel loading state (used for message list, channel list, etc.) */
+    .loading-state-full {
+      height: 100%;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 32px;
+      text-align: center;
+      color: var(--text-secondary);
+      animation: fade-in 0.15s ease;
+    }
+
+    .loading-state-full .spinner-lg {
+      margin-bottom: 2px;
+    }
+
+    .loading-state-full-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.01em;
+    }
+
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Full-screen boot loader shown while checking auth session */
+    #boot-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-canvas);
+      transition: opacity 0.25s ease, visibility 0.25s ease;
+      opacity: 1;
+      visibility: visible;
+    }
+
+    #boot-loader.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      display: flex !important;
+    }
+
+    .boot-loader-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .boot-loader-mark {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--r-lg);
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-2);
+      animation: boot-pulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes boot-pulse {
+      0%, 100% { transform: scale(1); box-shadow: var(--shadow-2); }
+      50% { transform: scale(1.06); box-shadow: var(--shadow-3); }
+    }
+
+    .boot-loader-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+
+    .boot-loader-sub {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text-tertiary);
+    }
+
     @media (max-width: 900px) {
       .app-shell {
         padding: 10px;
@@ -4306,6 +4407,17 @@
 </style>
 </head>
 <body>
+  <div id="boot-loader">
+    <div class="boot-loader-card">
+      <div class="boot-loader-mark">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+        </svg>
+      </div>
+      <div class="boot-loader-title">Hermes</div>
+      <div class="boot-loader-sub"><span class="spinner"></span><span id="boot-loader-status">Checking your session…</span></div>
+    </div>
+  </div>
   <div class="app-shell">
     <div class="top-bar">
       <div class="top-bar-left">
@@ -5197,6 +5309,8 @@
         el.textContent = message;
         el.classList.add("visible");
       }
+      const boot = document.getElementById("boot-loader");
+      if (boot) boot.classList.add("hidden");
       console.error(message);
     }
 
@@ -6059,13 +6173,25 @@
     }
 
     const authOverlay = document.getElementById("auth-overlay");
+    const bootLoaderEl = document.getElementById("boot-loader");
+    const bootLoaderStatusEl = document.getElementById("boot-loader-status");
+
+function hideBootLoader() {
+  if (bootLoaderEl) bootLoaderEl.classList.add("hidden");
+}
+
+function setBootLoaderStatus(text) {
+  if (bootLoaderStatusEl) bootLoaderStatusEl.textContent = text;
+}
 
 function hideAuthOverlay() {
   authOverlay.classList.add("hidden");
+  hideBootLoader();
 }
 
 function showAuthOverlay() {
   authOverlay.classList.remove("hidden");
+  hideBootLoader();
 }
 
     function urlBase64ToUint8Array(base64String) {
@@ -7695,6 +7821,7 @@ notificationSettingsSave.onclick = async () => {
         logoutButton.style.display = "none";
         return;
       }
+      setBootLoaderStatus("Loading your workspace…");
       try {
 
         const serversPromise = loadServers();
@@ -7882,7 +8009,7 @@ el.innerHTML = `
 
     async function loadChannels(serverId) {
       const loadToken = ++channelsLoadToken;
-      channelListEl.innerHTML = `<div class="empty-state-small"><span class="spinner"></span>Loading channels...</div>`;
+      channelListEl.innerHTML = `<div class="loading-state-full"><span class="spinner-lg"></span><div class="loading-state-full-label">Loading channels…</div></div>`;
       try {
         const { channels } = await apiFetch(`/api/servers/${serverId}/channels`);
         if (loadToken !== channelsLoadToken) return;
@@ -7972,7 +8099,7 @@ el.innerHTML = `
     async function loadServerMembers(serverId) {
       const loadToken = ++serverMembersLoadToken;
       userPanelEl.style.display = "flex";
-      userListEl.innerHTML = `<div class="empty-state-small"><span class="spinner"></span>Loading members...</div>`;
+      userListEl.innerHTML = `<div class="loading-state-full"><span class="spinner-lg"></span><div class="loading-state-full-label">Loading members…</div></div>`;
       try {
         const { members } = await apiFetch(`/api/servers/${serverId}/users`);
         if (loadToken !== serverMembersLoadToken) return;
@@ -8116,7 +8243,7 @@ el.innerHTML = `
       chatChannelNameEl.textContent = channel.name;
       chatChannelMetaEl.textContent = channel.type === "announcement" ? "Announcement channel" : "Text channel";
       clearNoChannelSelectedState();
-      messageListEl.innerHTML = `<div class="empty-state-small"><span class="spinner"></span>Loading messages...</div>`;
+      messageListEl.innerHTML = `<div class="loading-state-full"><span class="spinner-lg"></span><div class="loading-state-full-label">Loading messages…</div></div>`;
       await loadMessages(channel.id);
       subscribeRealtimeMessages(channel.id);
     }
