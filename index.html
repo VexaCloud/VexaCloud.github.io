@@ -10014,8 +10014,20 @@ async function handleCreateServer() {
       }
     }
 
+    let dmOpenInProgressUserId = null;
+
     async function openDmWith(user) {
       dmModal.classList.add("visible");
+
+      const cached = dmConversationsCache.find((c) => c.other_user && c.other_user.id === user.id);
+      if (cached) {
+        openDmConversation(cached.id, user);
+        return;
+      }
+
+      if (dmOpenInProgressUserId === user.id) return;
+      dmOpenInProgressUserId = user.id;
+
       try {
         const { conversation_id } = await apiFetch("/api/dms", {
           method: "POST",
@@ -10026,6 +10038,8 @@ async function handleCreateServer() {
       } catch (err) {
         console.error(err);
         showToast(err.message || "Failed to open conversation", { variant: "danger" });
+      } finally {
+        dmOpenInProgressUserId = null;
       }
     }
 
