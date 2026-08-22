@@ -713,7 +713,7 @@
       border-radius: var(--r-sm);
       border: 1px solid var(--border);
       background: var(--surface-2);
-      color: var(--accent);
+      color: var(--text-secondary);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -779,6 +779,16 @@
     }
 
     .icon-button:hover {
+      border-color: var(--border-strong);
+      color: var(--text);
+      background: var(--surface-3);
+    }
+
+    .channel-list-actions .icon-button {
+      color: var(--accent);
+    }
+
+    .channel-list-actions .icon-button:hover {
       border-color: var(--accent);
       color: var(--accent-hover);
       background: var(--accent-subtle);
@@ -1087,18 +1097,18 @@
       flex-direction: row;
       flex-wrap: nowrap;
       align-items: center;
-      gap: 12px;
-      padding: 12px 14px;
+      gap: 10px;
+      padding: 10px 12px;
       flex: 0 0 auto;
       overflow: hidden;
-      max-height: 72px;
+      max-height: 76px;
       border-bottom: 1px solid var(--border);
     }
 
     .server-item {
       position: relative;
-      width: 48px;
-      height: 48px;
+      width: 44px;
+      height: 44px;
       border-radius: var(--r-full);
       background: var(--surface-2);
       border: 1px solid var(--border);
@@ -1106,7 +1116,7 @@
       align-items: center;
       justify-content: center;
       color: var(--text-secondary);
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
       cursor: pointer;
       transition: border-radius 0.16s ease, transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
@@ -1145,7 +1155,7 @@
 
     .server-tooltip {
       position: absolute;
-      left: 60px;
+      left: 56px;
       top: 50%;
       transform: translateY(-50%) scale(0.95);
       background: var(--surface-3);
