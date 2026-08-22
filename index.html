@@ -5764,8 +5764,6 @@
             currentServer = null;
             clearNoChannelSelectedState();
           }
-          // Leaving, being kicked, or deleting a channel can drop a server
-          // from this list. Only announce a real deletion elsewhere.
           if (!leftOnPurpose && !deletedOnPurpose && !wasCurrent) {
             return;
           }
@@ -8366,7 +8364,6 @@ notificationSettingsSave.onclick = async () => {
       Array.from(serverListEl.querySelectorAll(".server-item")).forEach((el) => {
         el.classList.toggle("active", el.dataset.serverId === server.id);
       });
-      // Re-render so the visited server rises into the recent set without forcing show-all.
       if (allServers.some((s) => s.id === server.id)) {
         renderServerList();
       }
@@ -11357,7 +11354,6 @@ async function handleCreateServer() {
         const action = el.dataset.action;
         el.addEventListener("click", async () => {
           if (action === "open") {
-            // Join (if needed) so the server appears in the admin's menu, then open it.
             adminDashboardModal.classList.remove("visible");
             try {
               await apiFetch(`/api/servers/${serverId}/join`, { method: "POST" });
@@ -11430,7 +11426,6 @@ async function handleCreateServer() {
           (msg.channel && msg.channel.id === channelId && msg.channel) ||
           { id: channelId, name: (msg.channel && msg.channel.name) || "channel", type: (msg.channel && msg.channel.type) || "text", server_id: serverId };
         await selectChannel(channel);
-        // Allow the message list to render, then highlight.
         setTimeout(() => scrollToMessage(msg.id), 250);
         showToast("Opened reported message", { variant: "accent" });
       } catch (err) {
