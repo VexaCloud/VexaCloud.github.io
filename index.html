@@ -4871,7 +4871,7 @@
 
             <div class="settings-panel-section">
               <div class="settings-panel-heading">Chat background</div>
-              <div class="form-field-hint settings-section-intro">A background image behind your chat messages. This is only available here in Settings, not at sign-up.</div>
+              <div class="form-field-hint settings-section-intro">A background image behind your chat messages.</div>
               <div class="settings-row settings-row-avatar">
                 <div class="avatar-upload avatar-upload-background" id="settings-background-upload" tabindex="0" role="button" aria-label="Change chat background">
                   <div class="avatar-upload-preview" id="settings-background-preview"></div>
@@ -9294,27 +9294,36 @@ el.innerHTML = `
           });
         }
 
+        if (isAdmin(currentProfile) && (!Array.isArray(adminUsersCache) || !adminUsersCache.find((u) => u.id === user.id))) {
+          try {
+            const { users } = await apiFetch("/api/admin/users");
+            adminUsersCache = users || [];
+          } catch (err) {
+            console.error("Failed to refresh admin users for ban status", err);
+          }
+        }
+
         const cached = Array.isArray(adminUsersCache)
           ? adminUsersCache.find((u) => u.id === user.id)
           : null;
         const banSource = {
           is_banned:
-            profile.is_banned !== undefined
-              ? profile.is_banned
-              : cached && cached.is_banned !== undefined
-                ? cached.is_banned
+            cached && cached.is_banned !== undefined
+              ? cached.is_banned
+              : profile.is_banned !== undefined
+                ? profile.is_banned
                 : user.is_banned,
           banned_until:
-            profile.banned_until !== undefined && profile.banned_until !== null
-              ? profile.banned_until
-              : cached && cached.banned_until !== undefined
-                ? cached.banned_until
+            cached && cached.banned_until !== undefined
+              ? cached.banned_until
+              : profile.banned_until !== undefined && profile.banned_until !== null
+                ? profile.banned_until
                 : user.banned_until,
           banned_reason:
-            profile.banned_reason !== undefined && profile.banned_reason !== null
-              ? profile.banned_reason
-              : cached && cached.banned_reason !== undefined
-                ? cached.banned_reason
+            cached && cached.banned_reason !== undefined
+              ? cached.banned_reason
+              : profile.banned_reason !== undefined && profile.banned_reason !== null
+                ? profile.banned_reason
                 : user.banned_reason,
         };
 
@@ -10793,14 +10802,6 @@ async function handleCreateServer() {
           if (u.is_banned) badges.push(`<span class="admin-row-badge admin-row-badge-danger">Banned</span>`);
           if (u.force_logout) badges.push(`<span class="admin-row-badge admin-row-badge-danger">Locked out</span>`);
 
-          const statusBits = [];
-          if (u.is_banned) {
-            statusBits.push(`<div class="admin-row-meta admin-row-ban-reason">Banned ${escapeHtml(formatUntil(u.banned_until))}${u.banned_reason ? ` · ${escapeHtml(u.banned_reason)}` : ""}</div>`);
-          }
-          if (u.force_logout) {
-            statusBits.push(`<div class="admin-row-meta admin-row-ban-reason">Locked out ${escapeHtml(formatUntil(u.force_logout_until))}</div>`);
-          }
-
           const roleChangeBlocked = u.global_role === "superadmin" && u.id !== currentProfile.id;
           const banActions = u.is_banned
             ? `<button class="identity-action-button" data-action="unban">Unban</button>
@@ -10819,7 +10820,6 @@ async function handleCreateServer() {
                 <div style="min-width:0; flex:1;">
                   <div class="admin-row-name">${escapeHtml(u.username || "")} ${badges.join(" ")}</div>
                   <div class="admin-row-meta">Joined ${new Date(u.created_at).toLocaleDateString()}</div>
-                  ${statusBits.join("")}
                 </div>
               </div>
               <div class="admin-row-actions" data-user-id="${u.id}">
