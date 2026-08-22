@@ -5570,6 +5570,11 @@
         if (data.channels) reconcileChannelsFromSync(data.channels);
         if (data.members) reconcileMembersFromSync(data.members);
       } catch (err) {
+        const described = describeAuthBlockError(err);
+        if (described) {
+          await forceSignOutAndReload(described);
+          return;
+        }
         console.error("Sync poll failed", err);
       }
     }
@@ -7793,7 +7798,17 @@ notificationSettingsSave.onclick = async () => {
               } catch {
                 json = { error: text || "Request failed" };
               }
-              throw new Error(json.error || json.message || "Request failed");
+              const apiError = new Error(json.error || json.message || "Request failed");
+              // Ban / force-logout responses (403 from authMiddleware) carry
+              // structured detail so the UI can show a proper "banned until…"
+              // message instead of just the raw error string.
+              if (json.code === "banned" || json.code === "force_logout") {
+                apiError.code = json.code;
+                apiError.reason = json.reason || null;
+                apiError.until = json.until || null;
+                apiError.forever = !!json.forever;
+              }
+              throw apiError;
             }
             const ct = res.headers.get("content-type") || "";
             if (ct.includes("application/json")) return res.json();
@@ -7859,8 +7874,20 @@ notificationSettingsSave.onclick = async () => {
       } catch (err) {
         console.error(err);
         showAuthOverlay();
-        authErrorSignin.textContent = err.message || "Failed to load your profile";
+        authErrorSignin.textContent = describeAuthBlockError(err) || err.message || "Failed to load your profile";
       }
+    }
+
+    // Turns the structured error from a "banned" / "force_logout" 403 (see
+    // apiFetch) into a readable message with the reason and expiry date, or
+    // returns null for any other kind of error.
+    function describeAuthBlockError(err) {
+      if (!err || (err.code !== "banned" && err.code !== "force_logout")) return null;
+      const whenText = err.forever ? "permanently" : `until ${new Date(err.until).toLocaleString(undefined, { year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" })}`;
+      const action = err.code === "banned" ? "banned" : "signed out";
+      let text = `You've been ${action} ${whenText}.`;
+      if (err.reason) text += ` Reason: ${err.reason}`;
+      return text;
     }
 
     function openChannelsDrawer() {
@@ -9046,25 +9073,74 @@ el.innerHTML = `
       openMoreMenuAnchor = null;
     }
 
-    async function handleBanUser(userId) {
-      const reason = prompt("Reason for ban (optional)");
-      try {
-        const result = await apiFetch(`/api/admin/users/${userId}/ban`, {
-          method: "POST",
-          body: JSON.stringify({ reason }),
-        });
-        if (result.executed) {
-          userBanStatusCache.set(userId, true);
-          showToast("User banned", { variant: "accent" });
-        } else {
-          showToast(result.message || "Ban recorded — awaiting another admin's approval", {
-            variant: "accent",
-          });
-        }
-      } catch (err) {
-        console.error(err);
-        showToast(err.message || "Failed to ban user", { variant: "danger" });
+    // Turns a duration-modal selection into an ISO timestamp (or null for
+    // "forever" / no expiry). Shared by every ban / force-logout modal.
+    function computeUntilFromDuration(duration, customLocalDatetime) {
+      if (!duration || duration === "forever") return null;
+      if (duration === "custom") {
+        if (!customLocalDatetime) throw new Error("Pick a date and time for the custom expiry");
+        const d = new Date(customLocalDatetime);
+        if (Number.isNaN(d.getTime())) throw new Error("Invalid expiry date");
+        if (d.getTime() <= Date.now()) throw new Error("Expiry date must be in the future");
+        return d.toISOString();
       }
+      const hoursByDuration = { "1h": 1, "6h": 6, "24h": 24, "3d": 72, "7d": 168, "30d": 720 };
+      const hours = hoursByDuration[duration];
+      if (!hours) return null;
+      return new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+    }
+
+    function durationSelectField(id) {
+      return {
+        id,
+        label: "Duration",
+        type: "select",
+        value: "forever",
+        options: [
+          { value: "forever", label: "Forever" },
+          { value: "1h", label: "1 hour" },
+          { value: "6h", label: "6 hours" },
+          { value: "24h", label: "24 hours" },
+          { value: "3d", label: "3 days" },
+          { value: "7d", label: "7 days" },
+          { value: "30d", label: "30 days" },
+          { value: "custom", label: "Custom date…" },
+        ],
+      };
+    }
+
+    function formatUntil(until) {
+      if (!until) return "forever";
+      return `until ${new Date(until).toLocaleString(undefined, { year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" })}`;
+    }
+
+    async function handleBanUser(userId) {
+      openFormModal({
+        title: "Ban user",
+        subtitle: "They'll be signed out and blocked from logging back in until the ban lifts.",
+        fields: [
+          { id: "ban-reason", label: "Reason (optional)", type: "textarea", placeholder: "Why is this user being banned?" },
+          durationSelectField("ban-duration"),
+          { id: "ban-until", label: "Banned until", type: "datetime-local", hidden: true, showWhen: { fieldId: "ban-duration", equals: "custom" } },
+        ],
+        submitLabel: "Ban user",
+        onSubmit: async (values) => {
+          const until = computeUntilFromDuration(values["ban-duration"], values["ban-until"]);
+          const result = await apiFetch(`/api/admin/users/${userId}/ban`, {
+            method: "POST",
+            body: JSON.stringify({ reason: values["ban-reason"] || null, until }),
+          });
+          if (result.executed) {
+            userBanStatusCache.set(userId, true);
+            showToast(`User banned ${formatUntil(until)}`, { variant: "accent" });
+          } else {
+            showToast(result.message || "Ban recorded — awaiting another admin's approval", {
+              variant: "accent",
+            });
+          }
+          loadAdminUsers();
+        },
+      });
     }
 
     async function handleUnbanUser(userId) {
@@ -9079,19 +9155,27 @@ el.innerHTML = `
     }
 
     async function handleForceLogoutUser(userId) {
-      try {
-        const result = await apiFetch(`/api/admin/users/${userId}/force-logout`, { method: "POST" });
-        if (result.executed) {
-          showToast("User signed out", { variant: "accent" });
-        } else {
-          showToast(result.message || "Recorded — awaiting another admin's approval", {
-            variant: "accent",
+      openFormModal({
+        title: "Force log out user",
+        subtitle: "They'll be signed out and can't log back in until you allow it (or the expiry passes).",
+        fields: [durationSelectField("logout-duration"), { id: "logout-until", label: "Locked out until", type: "datetime-local", hidden: true, showWhen: { fieldId: "logout-duration", equals: "custom" } }],
+        submitLabel: "Force log out",
+        onSubmit: async (values) => {
+          const until = computeUntilFromDuration(values["logout-duration"], values["logout-until"]);
+          const result = await apiFetch(`/api/admin/users/${userId}/force-logout`, {
+            method: "POST",
+            body: JSON.stringify({ until }),
           });
-        }
-      } catch (err) {
-        console.error(err);
-        showToast(err.message || "Failed to force log out user", { variant: "danger" });
-      }
+          if (result.executed) {
+            showToast(`User signed out ${formatUntil(until)}`, { variant: "accent" });
+          } else {
+            showToast(result.message || "Recorded — awaiting another admin's approval", {
+              variant: "accent",
+            });
+          }
+          loadAdminUsers();
+        },
+      });
     }
 
     let viewProfileTargetUser = null;
@@ -9149,9 +9233,10 @@ el.innerHTML = `
           });
         }
 
-        if (isAdmin(currentProfile) && user.is_banned && user.banned_reason) {
+        if (isAdmin(currentProfile) && user.is_banned) {
           viewProfileBanRow.style.display = "";
-          viewProfileBanReasonEl.textContent = user.banned_reason;
+          const untilText = `Banned ${formatUntil(user.banned_until)}`;
+          viewProfileBanReasonEl.textContent = user.banned_reason ? `${user.banned_reason} — ${untilText}` : untilText;
         }
       } catch (err) {
         console.error(err);
@@ -9264,6 +9349,30 @@ el.innerHTML = `
           </div>
         `;
       }
+      if (field.type === "select") {
+        const options = (field.options || [])
+          .map(
+            (opt) =>
+              `<option value="${escapeHtml(opt.value)}" ${opt.value === field.value ? "selected" : ""}>${escapeHtml(opt.label)}</option>`
+          )
+          .join("");
+        return `
+          <div class="form-field">
+            <div class="settings-label">${escapeHtml(field.label)}</div>
+            <select id="${field.id}" class="settings-input">${options}</select>
+            ${field.hint ? `<div class="form-field-hint">${escapeHtml(field.hint)}</div>` : ""}
+          </div>
+        `;
+      }
+      if (field.type === "datetime-local") {
+        return `
+          <div class="form-field" id="${field.id}-wrap" style="${field.hidden ? "display:none;" : ""}">
+            <div class="settings-label">${escapeHtml(field.label)}</div>
+            <input id="${field.id}" class="settings-input" type="datetime-local" value="${escapeHtml(field.value || "")}" />
+            ${field.hint ? `<div class="form-field-hint">${escapeHtml(field.hint)}</div>` : ""}
+          </div>
+        `;
+      }
       if (field.type === "textarea") {
         return `
           <div class="form-field">
@@ -9313,6 +9422,18 @@ el.innerHTML = `
             wrap.dataset.value = opt.dataset.value;
           });
         });
+      });
+
+      fields.forEach((field) => {
+        if (!field.showWhen) return;
+        const wrap = document.getElementById(`${field.id}-wrap`);
+        const controller = document.getElementById(field.showWhen.fieldId);
+        if (!wrap || !controller) return;
+        const sync = () => {
+          wrap.style.display = controller.value === field.showWhen.equals ? "" : "none";
+        };
+        controller.addEventListener("change", sync);
+        sync();
       });
 
       fields.forEach((field) => {
@@ -10582,7 +10703,8 @@ async function handleCreateServer() {
         .map((u) => {
           const badges = [];
           if (u.global_role !== "user") badges.push(`<span class="admin-row-badge">${escapeHtml(u.global_role)}</span>`);
-          if (u.is_banned) badges.push(`<span class="admin-row-badge admin-row-badge-danger">Banned</span>`);
+          if (u.is_banned) badges.push(`<span class="admin-row-badge admin-row-badge-danger">Banned ${escapeHtml(formatUntil(u.banned_until))}</span>`);
+          if (u.force_logout) badges.push(`<span class="admin-row-badge admin-row-badge-danger">Locked out ${escapeHtml(formatUntil(u.force_logout_until))}</span>`);
 
           const roleChangeBlocked = u.global_role === "superadmin" && u.id !== currentProfile.id;
           return `
@@ -10659,28 +10781,14 @@ async function handleCreateServer() {
               return;
             }
             if (action === "ban") {
-              const reason = prompt("Ban reason (optional)") || null;
-              const result = await apiFetch(`/api/admin/users/${userId}/ban`, {
-                method: "POST",
-                body: JSON.stringify({ reason }),
-              });
-              showToast(
-                result.executed
-                  ? "User banned"
-                  : result.message || "Ban recorded — awaiting another admin's approval",
-                { variant: "accent" }
-              );
+              await handleBanUser(userId);
+              return;
             } else if (action === "unban") {
               await apiFetch(`/api/admin/users/${userId}/unban`, { method: "POST" });
               showToast("User unbanned", { variant: "accent" });
             } else if (action === "force-logout") {
-              const result = await apiFetch(`/api/admin/users/${userId}/force-logout`, { method: "POST" });
-              showToast(
-                result.executed
-                  ? "User force-logged out — they stay locked out until you Allow login"
-                  : result.message || "Recorded — awaiting another admin's approval",
-                { variant: "accent" }
-              );
+              await handleForceLogoutUser(userId);
+              return;
             } else if (action === "kick") {
               const result = await apiFetch(`/api/admin/users/${userId}/kick`, { method: "POST" });
               showToast(
@@ -12440,6 +12548,11 @@ async function handleCreateServer() {
           await forceSignOutAndReload("You've been signed out by an administrator.");
         }
       } catch (err) {
+        const described = describeAuthBlockError(err);
+        if (described) {
+          await forceSignOutAndReload(described);
+          return;
+        }
         const msg = (err && err.message) || "";
         if (/banned|force logged out/i.test(msg)) {
           await forceSignOutAndReload("Your account access has been revoked.");
@@ -12458,16 +12571,22 @@ async function handleCreateServer() {
         .on(
           "postgres_changes",
           { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${currentUser.id}` },
-          (payload) => {
-            if (payload.new.is_banned || payload.new.force_logout) {
-              forceSignOutAndReload(
-                payload.new.is_banned
-                  ? "You've been banned by an administrator."
-                  : "You've been signed out by an administrator."
-              );
-            } else {
-
+          async (payload) => {
+            // Moderation fields (is_banned, banned_until, force_logout,
+            // force_logout_until, banned_reason) are deliberately not
+            // readable by anon/authenticated (see
+            // restrict_profiles_columns.sql), so this realtime payload
+            // can't be trusted to carry them. Treat the event as just
+            // "something on my row changed" and ask the API - which uses
+            // the service-role key and always has the full picture - for
+            // the authoritative status and reason/expiry.
+            try {
+              await apiFetch("/api/auth/me");
+              // Not banned/logged out - a normal update (theme, etc).
               currentProfile = { ...currentProfile, ...payload.new };
+            } catch (err) {
+              const described = describeAuthBlockError(err);
+              if (described) await forceSignOutAndReload(described);
             }
           }
         )
