@@ -970,14 +970,14 @@
     .auth-input-shell,
     .chat-input-shell {
       display: flex;
-      align-items: flex-end;
+      align-items: center;
       gap: 8px;
       border-radius: var(--r-md);
       border: 1px solid var(--input-border);
       background: var(--input-bg);
-      padding: 8px 12px;
+      padding: 6px 12px;
       box-sizing: border-box;
-      min-height: 40px;
+      min-height: 36px;
       transition: border-color 0.12s ease;
     }
 
@@ -1037,7 +1037,7 @@
       max-height: 200px;
       line-height: 1.4;
       box-sizing: border-box;
-      min-height: 40px;
+      min-height: 36px;
     }
 
     .settings-textarea {
@@ -2316,14 +2316,14 @@
 
     .chat-input-row {
       display: flex;
-      align-items: flex-end;
+      align-items: center;
       gap: 8px;
     }
 
     .chat-input-row .chat-send-button,
     .dm-input-row .chat-send-button {
       box-sizing: border-box;
-      min-height: 40px;
+      min-height: 36px;
     }
 
     .chat-input-tools {
@@ -3738,7 +3738,7 @@
       gap: 8px;
       padding: 12px 16px;
       border-top: 1px solid var(--border);
-      align-items: flex-end;
+      align-items: center;
     }
 
     .dm-input {
@@ -4113,6 +4113,31 @@
     @keyframes replyHighlight {
       0% { background: var(--accent-subtle); }
       100% { background: transparent; }
+    }
+
+    .message-row.report-highlight .message-content {
+      background: var(--danger-subtle);
+      border-radius: var(--r-sm);
+    }
+
+    .report-review-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 14px;
+      background: var(--danger-subtle);
+      border-bottom: 1px solid var(--border);
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--danger);
+      flex-wrap: wrap;
+    }
+
+    .report-review-banner-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .emoji-picker-grid-mode {
@@ -4736,6 +4761,14 @@
             <div class="voice-stage-grid" id="voice-stage-grid"></div>
           </div>
           <div class="chat-body" id="chat-body">
+            <div class="report-review-banner" id="report-review-banner" style="display:none;">
+              <span class="report-review-banner-text">Reviewing report</span>
+              <div class="report-review-banner-actions">
+                <button class="identity-action-button identity-action-button-danger" id="report-review-ban-button" style="display:none;">Ban user</button>
+                <button class="identity-action-button" id="report-review-dismiss-button">Dismiss</button>
+                <button class="identity-action-button" id="report-review-resolve-button">Mark as resolved</button>
+              </div>
+            </div>
             <div class="message-list" id="message-list"></div>
             <div class="chat-input-area">
               <div class="reply-preview-bar" id="reply-preview-bar" style="display:none;">
@@ -6745,6 +6778,12 @@ function showAuthOverlay() {
     }
 
     const messageListEl = document.getElementById("message-list");
+    const reportReviewBanner = document.getElementById("report-review-banner");
+    const reportReviewBanButton = document.getElementById("report-review-ban-button");
+    const reportReviewDismissButton = document.getElementById("report-review-dismiss-button");
+    const reportReviewResolveButton = document.getElementById("report-review-resolve-button");
+    let activeReviewingReport = null;
+    let activeReviewingMessageId = null;
 
     let messageListStickToBottom = true;
 
@@ -8565,12 +8604,12 @@ notificationSettingsSave.onclick = async () => {
                 ${badgeHTML(unreadCount)}
               </div>
               <div class="channel-item-trailing">
+                <span class="channel-item-meta">${ch.is_private ? "Private" : ""}</span>
                 ${
                   pushNotificationsActive
                     ? `<button class="channel-mute-toggle" title="${isMuted ? "Unmute" : "Mute notifications"}" aria-label="${isMuted ? "Unmute" : "Mute notifications"}">${muteBellSVG(isMuted)}</button>`
                     : ""
                 }
-                <span class="channel-item-meta">${ch.is_private ? "Private" : ""}</span>
               </div>
             `;
             const muteBtn = el.querySelector(".channel-mute-toggle");
@@ -8747,6 +8786,7 @@ notificationSettingsSave.onclick = async () => {
 
     async function selectChannel(channel) {
       currentChannel = channel;
+      hideReportReviewBanner();
       clearReplyTarget();
       markChannelRead(channel.id);
       reportFocusStateToServiceWorker();
@@ -9222,6 +9262,73 @@ notificationSettingsSave.onclick = async () => {
       row.classList.add("highlight-flash");
       setTimeout(() => row.classList.remove("highlight-flash"), 1500);
     }
+
+    function clearReportHighlight() {
+      if (!activeReviewingMessageId) return;
+      const row = messageListEl.querySelector(`[data-message-id="${activeReviewingMessageId}"]`);
+      if (row) row.classList.remove("report-highlight");
+      activeReviewingMessageId = null;
+    }
+
+    function scrollToReportedMessage(messageId, attempt = 0) {
+      const row = messageListEl.querySelector(`[data-message-id="${messageId}"]`);
+      if (!row) {
+        if (attempt < 10) {
+          setTimeout(() => scrollToReportedMessage(messageId, attempt + 1), 200);
+        }
+        return;
+      }
+      row.scrollIntoView({ behavior: "smooth", block: "center" });
+      clearReportHighlight();
+      row.classList.add("report-highlight");
+      activeReviewingMessageId = messageId;
+    }
+
+    function showReportReviewBanner(report) {
+      activeReviewingReport = report;
+      reportReviewBanButton.style.display = report.reported_user ? "" : "none";
+      reportReviewBanner.style.display = "flex";
+    }
+
+    function hideReportReviewBanner() {
+      reportReviewBanner.style.display = "none";
+      activeReviewingReport = null;
+      clearReportHighlight();
+    }
+
+    async function resolveActiveReviewingReport(status) {
+      const report = activeReviewingReport;
+      if (!report) return;
+      try {
+        await apiFetch(`/api/admin/reports/${report.id}/resolve`, {
+          method: "POST",
+          body: JSON.stringify({ status }),
+        });
+        showToast(`Report ${status}`, { variant: "accent" });
+        hideReportReviewBanner();
+      } catch (err) {
+        console.error(err);
+        showToast(err.message || "Action failed", { variant: "danger" });
+      }
+    }
+
+    reportReviewDismissButton.addEventListener("click", () => resolveActiveReviewingReport("dismissed"));
+    reportReviewResolveButton.addEventListener("click", () => resolveActiveReviewingReport("resolved"));
+    reportReviewBanButton.addEventListener("click", async () => {
+      const report = activeReviewingReport;
+      if (!report || !report.reported_user) return;
+      try {
+        const result = await apiFetch(`/api/admin/users/${report.reported_user.id}/ban`, {
+          method: "POST",
+          body: JSON.stringify({ reason: `Report: ${report.reason}` }),
+        });
+        showToast(result.executed ? "User banned" : result.message, { variant: "accent" });
+        hideReportReviewBanner();
+      } catch (err) {
+        console.error(err);
+        showToast(err.message || "Action failed", { variant: "danger" });
+      }
+    });
 
     let isSendingMessage = false;
 
@@ -11556,7 +11663,8 @@ async function handleCreateServer() {
           (msg.channel && msg.channel.id === channelId && msg.channel) ||
           { id: channelId, name: (msg.channel && msg.channel.name) || "channel", type: (msg.channel && msg.channel.type) || "text", server_id: serverId };
         await selectChannel(channel);
-        setTimeout(() => scrollToMessage(msg.id), 250);
+        scrollToReportedMessage(msg.id);
+        showReportReviewBanner(report);
         showToast("Opened reported message", { variant: "accent" });
       } catch (err) {
         console.error(err);
