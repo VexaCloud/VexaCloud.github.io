@@ -4515,7 +4515,7 @@
     </div>
   </div>
   <div class="panel-body">
-    <div class="scroll-y server-list" id="server-list" style="flex-direction:row; flex-wrap:wrap; max-height:120px; border-bottom:1px solid var(--border); padding:8px;"></div>
+    <div class="scroll-y server-list" id="server-list" style="flex-direction:row; flex-wrap:wrap; max-height:none; border-bottom:1px solid var(--border); padding:8px; gap:8px; align-items:center;"></div>
     <div class="channel-list-subheader">
       <span class="channel-list-subheader-label">Channels</span>
       <button class="icon-button icon-button-sm" id="create-channel-button" title="Create channel" style="display:none;">+</button>
@@ -7933,6 +7933,40 @@ notificationSettingsSave.onclick = async () => {
     }
 
     let allServers = [];
+    const SERVER_MENU_RECENT_LIMIT = 8;
+    let serverMenuShowAll = false;
+    const RECENT_SERVERS_KEY = "vexa_recent_server_ids";
+
+    function getRecentServerIds() {
+      try {
+        const raw = localStorage.getItem(RECENT_SERVERS_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed.filter((id) => typeof id === "string") : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function rememberServerVisit(serverId) {
+      if (!serverId) return;
+      const next = [serverId, ...getRecentServerIds().filter((id) => id !== serverId)].slice(0, 50);
+      try {
+        localStorage.setItem(RECENT_SERVERS_KEY, JSON.stringify(next));
+      } catch {}
+    }
+
+    function orderServersForMenu(servers) {
+      const recent = getRecentServerIds();
+      const rank = new Map(recent.map((id, i) => [id, i]));
+      return [...servers].sort((a, b) => {
+        const ra = rank.has(a.id) ? rank.get(a.id) : 9999;
+        const rb = rank.has(b.id) ? rank.get(b.id) : 9999;
+        if (ra !== rb) return ra - rb;
+        const ja = a.joined_at || a.created_at || "";
+        const jb = b.joined_at || b.created_at || "";
+        return ja < jb ? 1 : ja > jb ? -1 : 0;
+      });
+    }
 
     const DEFAULT_SERVER_ID = "afd99627-f642-4a98-9ea5-743d873e1064";
     const DEFAULT_CHANNEL_ID = "b305cfc6-4c85-4301-9232-981788126142";
@@ -7964,44 +7998,68 @@ notificationSettingsSave.onclick = async () => {
 
     let serversLoadToken = 0;
 
-    async function loadServers() {
-      const loadToken = ++serversLoadToken;
-      try {
-        const { servers } = await apiFetch("/api/servers");
-        if (loadToken !== serversLoadToken) return;
-        allServers = servers;
-        serverListEl.innerHTML = "";
-        if (!servers.length) {
-          const empty = document.createElement("div");
-          empty.className = "empty-state-small";
-          empty.textContent = "No servers yet — create one or browse public servers.";
-          serverListEl.appendChild(empty);
-        }
-        servers.forEach((server) => {
-          const el = document.createElement("div");
-          el.className = "server-item";
-          el.dataset.serverId = server.id;
-const iconContent = server.icon_url
-  ? `<img src="${escapeHtml(server.icon_url)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`
-  : `<span>${escapeHtml((server.name || "?").slice(0, 2).toUpperCase())}</span>`;
-
-el.innerHTML = `
+    function renderServerMenuItem(server) {
+      const el = document.createElement("div");
+      el.className = "server-item";
+      el.dataset.serverId = server.id;
+      const iconContent = server.icon_url
+        ? `<img src="${escapeHtml(server.icon_url)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`
+        : `<span>${escapeHtml((server.name || "?").slice(0, 2).toUpperCase())}</span>`;
+      el.innerHTML = `
   ${iconContent}
   <span class="voice-active-dot"></span>
   ${badgeHTML(serverUnreadTotal(server.id))}
   <div class="server-tooltip">${escapeHtml(server.name)}${server.is_public ? " · Public" : ""}</div>
 `;
-          if (serverHasUnread(server.id)) el.classList.add("has-unread");
-          if (serverHasVoiceActivity(server.id)) el.classList.add("has-voice-activity");
-          el.addEventListener("click", () => {
-            selectServer(server);
-          });
-          el.addEventListener("contextmenu", (e) => {
-            e.preventDefault();
-            openServerContextMenu(e.clientX, e.clientY, server);
-          });
-          serverListEl.appendChild(el);
+      if (currentServer && currentServer.id === server.id) el.classList.add("active");
+      if (serverHasUnread(server.id)) el.classList.add("has-unread");
+      if (serverHasVoiceActivity(server.id)) el.classList.add("has-voice-activity");
+      el.addEventListener("click", () => {
+        selectServer(server);
+      });
+      el.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        openServerContextMenu(e.clientX, e.clientY, server);
+      });
+      return el;
+    }
+
+    function renderServerList() {
+      serverListEl.innerHTML = "";
+      if (!allServers.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty-state-small";
+        empty.textContent = "No servers yet — create one or browse public servers.";
+        serverListEl.appendChild(empty);
+        return;
+      }
+
+      const ordered = orderServersForMenu(allServers);
+      const visible = serverMenuShowAll ? ordered : ordered.slice(0, SERVER_MENU_RECENT_LIMIT);
+      visible.forEach((server) => serverListEl.appendChild(renderServerMenuItem(server)));
+
+      if (ordered.length > SERVER_MENU_RECENT_LIMIT) {
+        const moreBtn = document.createElement("button");
+        moreBtn.type = "button";
+        moreBtn.className = "server-item server-item-add";
+        moreBtn.title = serverMenuShowAll ? "Show fewer servers" : "Show more servers";
+        moreBtn.innerHTML = `<span style="font-size:11px;font-weight:700;">${serverMenuShowAll ? "Less" : `+${ordered.length - SERVER_MENU_RECENT_LIMIT}`}</span>`;
+        moreBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          serverMenuShowAll = !serverMenuShowAll;
+          renderServerList();
         });
+        serverListEl.appendChild(moreBtn);
+      }
+    }
+
+    async function loadServers() {
+      const loadToken = ++serversLoadToken;
+      try {
+        const { servers } = await apiFetch("/api/servers");
+        if (loadToken !== serversLoadToken) return;
+        allServers = servers || [];
+        renderServerList();
       } catch (err) {
         if (loadToken !== serversLoadToken) return;
         console.error(err);
@@ -8015,9 +8073,13 @@ el.innerHTML = `
       currentServerMembers = [];
       currentServerMembership = null;
       unsubscribeRealtimeMessages();
+      rememberServerVisit(server.id);
       Array.from(serverListEl.querySelectorAll(".server-item")).forEach((el) => {
         el.classList.toggle("active", el.dataset.serverId === server.id);
       });
+      if (allServers.some((s) => s.id === server.id)) {
+        renderServerList();
+      }
       currentServerNameEl.textContent = server.name;
       currentServerMetaEl.textContent = server.is_public ? "Public server" : "Private server";
       chatChannelNameEl.textContent = "No channel";
@@ -9763,9 +9825,42 @@ async function handleCreateServer() {
       }
     }
 
+    async function handleLeaveServer(server) {
+      if (!confirm(`Leave "${server.name}"? It will disappear from your server list.`)) return;
+      try {
+        await apiFetch(`/api/servers/${server.id}/leave`, { method: "POST" });
+        showToast(`Left ${server.name}`, { variant: "accent" });
+        if (currentServer && currentServer.id === server.id) {
+          currentServer = null;
+          currentChannel = null;
+          unsubscribeRealtimeMessages();
+          channelListEl.innerHTML = "";
+          messageListEl.innerHTML = "";
+          currentServerNameEl.textContent = "No server";
+          currentServerMetaEl.textContent = "Select a server";
+          showNoChannelSelectedState();
+        }
+        const recent = getRecentServerIds().filter((id) => id !== server.id);
+        try {
+          localStorage.setItem(RECENT_SERVERS_KEY, JSON.stringify(recent));
+        } catch {}
+        await loadServers();
+      } catch (err) {
+        console.error(err);
+        showToast(err.message || "Failed to leave server", { variant: "danger" });
+      }
+    }
+
     function openServerContextMenu(x, y, server) {
       closeContextMenus();
-      const canManage = isAdmin(currentProfile) || server.owner_id === (currentProfile && currentProfile.id);
+      const isMember = allServers.some((s) => s.id === server.id);
+      const canManage =
+        (currentServerMembership &&
+          currentServer &&
+          currentServer.id === server.id &&
+          (currentServerMembership.role === "admin" || currentServerMembership.role === "moderator")) ||
+        isAdmin(currentProfile) ||
+        server.owner_id === (currentProfile && currentProfile.id);
       const muted = mutedServerIds.has(server.id);
 
       const items = [
@@ -9803,6 +9898,9 @@ async function handleCreateServer() {
               },
               { label: "Delete server", action: () => handleDeleteServer(server), danger: true },
             ]
+          : []),
+        ...(isMember
+          ? [{ label: "Leave server", action: () => handleLeaveServer(server), danger: true }]
           : []),
       ].filter((item) => !item.superadminOnly || (currentProfile && currentProfile.global_role === "superadmin"));
 
@@ -10963,8 +11061,17 @@ async function handleCreateServer() {
         el.addEventListener("click", async () => {
           if (action === "open") {
             adminDashboardModal.classList.remove("visible");
-            await loadServers();
-            selectServer(server);
+            try {
+              let target = server;
+              if (!target || !target.id) {
+                const res = await apiFetch(`/api/servers/${serverId}`);
+                target = res.server;
+              }
+              await selectServer(target);
+            } catch (err) {
+              console.error(err);
+              showToast(err.message || "Failed to open server", { variant: "danger" });
+            }
             return;
           }
           if (action === "delete") {
@@ -10998,6 +11105,38 @@ async function handleCreateServer() {
       });
     }
 
+    async function openReportTarget(report) {
+      const msg = report && report.message;
+      if (!msg) {
+        showToast("This report has no linked message", { variant: "danger" });
+        return;
+      }
+      const channelId = msg.channel_id || (msg.channel && msg.channel.id);
+      const serverId = msg.channel && msg.channel.server_id;
+      if (!channelId || !serverId) {
+        showToast("Could not locate the reported message's channel", { variant: "danger" });
+        return;
+      }
+      try {
+        adminDashboardModal.classList.remove("visible");
+        let server = allServers.find((s) => s.id === serverId);
+        if (!server) {
+          const res = await apiFetch(`/api/servers/${serverId}`);
+          server = res.server;
+        }
+        await selectServer(server);
+        const channel =
+          (msg.channel && msg.channel.id === channelId && msg.channel) ||
+          { id: channelId, name: (msg.channel && msg.channel.name) || "channel", type: (msg.channel && msg.channel.type) || "text", server_id: serverId };
+        await selectChannel(channel);
+        setTimeout(() => scrollToMessage(msg.id), 250);
+        showToast("Opened reported message", { variant: "accent" });
+      } catch (err) {
+        console.error(err);
+        showToast(err.message || "Failed to open report", { variant: "danger" });
+      }
+    }
+
     async function loadAdminReports() {
       adminReportsPanel.innerHTML = `<div class="empty-state-small"><span class="spinner"></span>Loading...</div>`;
       try {
@@ -11028,6 +11167,7 @@ async function handleCreateServer() {
                 </div>
               </div>
               <div class="admin-row-actions">
+                ${msg && (msg.channel_id || (msg.channel && msg.channel.id)) ? `<button class="identity-action-button" data-action="open">Open report</button>` : ""}
                 ${target ? `<button class="identity-action-button identity-action-button-danger" data-action="ban">Ban user</button>` : ""}
                 <button class="identity-action-button" data-action="dismiss">Dismiss</button>
                 <button class="identity-action-button" data-action="resolve">Mark resolved</button>
@@ -11043,6 +11183,10 @@ async function handleCreateServer() {
           const report = reports.find((r) => r.id === reportId);
           el.addEventListener("click", async () => {
             try {
+              if (el.dataset.action === "open") {
+                await openReportTarget(report);
+                return;
+              }
               if (el.dataset.action === "ban" && report.reported_user) {
                 const result = await apiFetch(`/api/admin/users/${report.reported_user.id}/ban`, {
                   method: "POST",
