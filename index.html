@@ -2736,7 +2736,8 @@
 
     #support-modal,
     #forgot-password-modal,
-    #recovery-password-modal {
+    #recovery-password-modal,
+    #form-modal {
       z-index: 600;
     }
 
@@ -12565,6 +12566,7 @@ async function handleCreateServer() {
           "postgres_changes",
           { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${currentUser.id}` },
           async (payload) => {
+
             try {
               await apiFetch("/api/auth/me");
               currentProfile = { ...currentProfile, ...payload.new };
