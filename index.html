@@ -976,6 +976,8 @@
       border: 1px solid var(--input-border);
       background: var(--input-bg);
       padding: 8px 12px;
+      box-sizing: border-box;
+      min-height: 40px;
       transition: border-color 0.12s ease;
     }
 
@@ -1034,6 +1036,8 @@
       overflow-y: hidden;
       max-height: 200px;
       line-height: 1.4;
+      box-sizing: border-box;
+      min-height: 40px;
     }
 
     .settings-textarea {
@@ -2314,6 +2318,12 @@
       display: flex;
       align-items: flex-end;
       gap: 8px;
+    }
+
+    .chat-input-row .chat-send-button,
+    .dm-input-row .chat-send-button {
+      box-sizing: border-box;
+      min-height: 40px;
     }
 
     .chat-input-tools {
