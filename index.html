@@ -817,9 +817,11 @@
       color: var(--text-secondary);
       font-size: 12px;
       font-weight: 600;
-      padding: 7px 12px;
+      padding: 6px 10px;
       cursor: pointer;
       transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
+      white-space: nowrap;
+      line-height: 1.3;
     }
 
     .auth-oauth-button:hover,
@@ -1575,14 +1577,14 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px 10px;
+      padding: 7px 10px;
       border-radius: var(--r-sm);
       cursor: pointer;
       color: var(--text-secondary);
       font-size: 13px;
       font-weight: 500;
-      gap: 6px;
-      margin-bottom: 1px;
+      gap: 8px;
+      margin-bottom: 2px;
       transition: background 0.1s ease, color 0.1s ease;
     }
 
@@ -1930,7 +1932,7 @@
       padding: 16px 18px 12px;
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 4px;
     }
 
     .message-row {
@@ -1982,8 +1984,10 @@
     .message-header {
       display: flex;
       align-items: baseline;
-      gap: 8px;
+      flex-wrap: wrap;
+      gap: 6px 8px;
       margin-bottom: 2px;
+      line-height: 1.3;
     }
 
     .message-username {
@@ -2014,8 +2018,7 @@
       word-break: break-word;
       white-space: pre-wrap;
       line-height: 1.5;
-      margin-top: 22px;
-      text-indent: 42px;
+      margin-top: 2px;
     }
 
     .message-content.deleted {
@@ -2551,20 +2554,23 @@
     }
     .view-profile-role {
       font-size: 12px;
-      color: var(--text-3);
+      color: var(--text-tertiary);
       text-transform: capitalize;
+      margin-top: 2px;
     }
     .view-profile-bio {
       white-space: pre-wrap;
       word-break: break-word;
-      color: var(--text-2);
+      color: var(--text-secondary);
       font-size: 14px;
+      line-height: 1.45;
     }
     .view-profile-ban-reason {
       color: var(--danger, #ef4444);
-      font-size: 14px;
+      font-size: 13px;
       white-space: pre-wrap;
       word-break: break-word;
+      line-height: 1.45;
     }
     .mention-scroll-limited {
       max-height: 220px;
@@ -2773,6 +2779,10 @@
 
     .modal-wide {
       width: 560px;
+    }
+
+    .modal-wider {
+      width: 820px;
     }
 
     .modal-tall {
@@ -3163,16 +3173,16 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
       padding: 16px 20px;
     }
 
     .admin-row {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
-      gap: 12px;
-      padding: 10px 12px;
+      gap: 14px;
+      padding: 12px 14px;
       border-radius: var(--r-md);
       border: 1px solid var(--border);
       background: var(--surface-2);
@@ -3180,9 +3190,10 @@
 
     .admin-row-main {
       display: flex;
-      align-items: center;
-      gap: 10px;
+      align-items: flex-start;
+      gap: 12px;
       min-width: 0;
+      flex: 1;
     }
 
     .admin-row-name {
@@ -3193,15 +3204,19 @@
       align-items: center;
       gap: 6px;
       flex-wrap: wrap;
+      line-height: 1.35;
     }
 
     .admin-row-meta {
       font-size: 11px;
       color: var(--text-tertiary);
+      margin-top: 3px;
+      line-height: 1.4;
     }
 
     .admin-row-ban-reason {
       color: var(--danger, #ef4444);
+      margin-top: 4px;
     }
 
     .admin-row-actions {
@@ -3210,16 +3225,21 @@
       flex-shrink: 0;
       flex-wrap: wrap;
       justify-content: flex-end;
+      align-items: center;
+      max-width: 52%;
     }
 
     .admin-row-badge {
-      font-size: 9px;
+      font-size: 10px;
       font-weight: 700;
       text-transform: uppercase;
+      letter-spacing: 0.02em;
       padding: 2px 8px;
       border-radius: var(--r-full);
       background: var(--accent-subtle);
       color: var(--accent-hover);
+      white-space: nowrap;
+      line-height: 1.3;
     }
 
     .admin-row-badge-danger {
@@ -4350,7 +4370,8 @@
         display: none;
       }
       .modal,
-      .modal-wide {
+      .modal-wide,
+      .modal-wider {
         width: calc(100vw - 16px);
         max-width: calc(100vw - 16px);
       }
@@ -4360,10 +4381,11 @@
       .admin-row {
         flex-direction: column;
         align-items: flex-start;
-        gap: 8px;
+        gap: 10px;
       }
       .admin-row-actions {
         width: 100%;
+        max-width: none;
         justify-content: flex-start;
         flex-wrap: wrap;
       }
@@ -5077,7 +5099,7 @@
           <div id="view-profile-joined"></div>
         </div>
         <div class="settings-row" id="view-profile-ban-row" style="display:none;">
-          <div class="settings-label">Ban reason</div>
+          <div class="settings-label">Ban status</div>
           <div class="view-profile-ban-reason" id="view-profile-ban-reason"></div>
         </div>
       </div>
@@ -5188,7 +5210,7 @@
   </div>
 
   <div class="modal-backdrop" id="admin-dashboard-modal">
-    <div class="modal modal-wide modal-tall">
+    <div class="modal modal-wider modal-tall">
       <div class="modal-header">
         <div>
           <div class="modal-title">Admin dashboard</div>
@@ -9104,8 +9126,59 @@ el.innerHTML = `
     }
 
     function formatUntil(until) {
-      if (!until) return "forever";
-      return `until ${new Date(until).toLocaleString(undefined, { year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" })}`;
+      if (until === undefined || until === null || until === "") return "forever";
+      const d = new Date(until);
+      if (Number.isNaN(d.getTime())) return "forever";
+      if (d.getFullYear() >= 9999) return "forever";
+      return `until ${d.toLocaleString(undefined, { year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" })}`;
+    }
+
+    async function handleBanDetails(userId) {
+      const user = adminUsersCache.find((u) => u.id === userId);
+      if (!user) return;
+      const currentUntil = user.banned_until ? new Date(user.banned_until) : null;
+      const untilLocal =
+        currentUntil && !Number.isNaN(currentUntil.getTime())
+          ? new Date(currentUntil.getTime() - currentUntil.getTimezoneOffset() * 60000)
+              .toISOString()
+              .slice(0, 16)
+          : "";
+      openFormModal({
+        title: "Ban details",
+        subtitle: `Manage ban for ${user.username || "user"}`,
+        fields: [
+          {
+            id: "ban-reason",
+            label: "Reason",
+            type: "textarea",
+            placeholder: "Why is this user banned?",
+            value: user.banned_reason || "",
+          },
+          {
+            id: "ban-until",
+            label: "Banned until (leave empty for permanent)",
+            type: "datetime-local",
+            value: untilLocal,
+          },
+        ],
+        submitLabel: "Save ban",
+        onSubmit: async (values) => {
+          const untilRaw = (values["ban-until"] || "").trim();
+          const until = untilRaw ? new Date(untilRaw).toISOString() : null;
+          const result = await apiFetch(`/api/admin/users/${userId}/ban`, {
+            method: "POST",
+            body: JSON.stringify({ reason: values["ban-reason"] || null, until }),
+          });
+          if (result.executed) {
+            showToast(`Ban updated ${formatUntil(until)}`, { variant: "accent" });
+          } else {
+            showToast(result.message || "Ban update recorded — awaiting approval", {
+              variant: "accent",
+            });
+          }
+          loadAdminUsers();
+        },
+      });
     }
 
     async function handleBanUser(userId) {
@@ -9227,10 +9300,36 @@ el.innerHTML = `
           });
         }
 
-        if (isAdmin(currentProfile) && user.is_banned) {
+        const cached = Array.isArray(adminUsersCache)
+          ? adminUsersCache.find((u) => u.id === user.id)
+          : null;
+        const banSource = {
+          is_banned:
+            profile.is_banned !== undefined
+              ? profile.is_banned
+              : cached && cached.is_banned !== undefined
+                ? cached.is_banned
+                : user.is_banned,
+          banned_until:
+            profile.banned_until !== undefined && profile.banned_until !== null
+              ? profile.banned_until
+              : cached && cached.banned_until !== undefined
+                ? cached.banned_until
+                : user.banned_until,
+          banned_reason:
+            profile.banned_reason !== undefined && profile.banned_reason !== null
+              ? profile.banned_reason
+              : cached && cached.banned_reason !== undefined
+                ? cached.banned_reason
+                : user.banned_reason,
+        };
+
+        if (isAdmin(currentProfile) && banSource.is_banned) {
           viewProfileBanRow.style.display = "";
-          const untilText = `Banned ${formatUntil(user.banned_until)}`;
-          viewProfileBanReasonEl.textContent = user.banned_reason ? `${user.banned_reason} — ${untilText}` : untilText;
+          const untilText = `Banned ${formatUntil(banSource.banned_until)}`;
+          viewProfileBanReasonEl.textContent = banSource.banned_reason
+            ? `${banSource.banned_reason} — ${untilText}`
+            : untilText;
         }
       } catch (err) {
         console.error(err);
@@ -10697,36 +10796,42 @@ async function handleCreateServer() {
         .map((u) => {
           const badges = [];
           if (u.global_role !== "user") badges.push(`<span class="admin-row-badge">${escapeHtml(u.global_role)}</span>`);
-          if (u.is_banned) badges.push(`<span class="admin-row-badge admin-row-badge-danger">Banned ${escapeHtml(formatUntil(u.banned_until))}</span>`);
-          if (u.force_logout) badges.push(`<span class="admin-row-badge admin-row-badge-danger">Locked out ${escapeHtml(formatUntil(u.force_logout_until))}</span>`);
+          if (u.is_banned) badges.push(`<span class="admin-row-badge admin-row-badge-danger">Banned</span>`);
+          if (u.force_logout) badges.push(`<span class="admin-row-badge admin-row-badge-danger">Locked out</span>`);
+
+          const statusBits = [];
+          if (u.is_banned) {
+            statusBits.push(`<div class="admin-row-meta admin-row-ban-reason">Banned ${escapeHtml(formatUntil(u.banned_until))}${u.banned_reason ? ` · ${escapeHtml(u.banned_reason)}` : ""}</div>`);
+          }
+          if (u.force_logout) {
+            statusBits.push(`<div class="admin-row-meta admin-row-ban-reason">Locked out ${escapeHtml(formatUntil(u.force_logout_until))}</div>`);
+          }
 
           const roleChangeBlocked = u.global_role === "superadmin" && u.id !== currentProfile.id;
+          const banActions = u.is_banned
+            ? `<button class="identity-action-button" data-action="unban">Unban</button>
+               <button class="identity-action-button" data-action="ban-details">Ban details</button>`
+            : `<button class="identity-action-button identity-action-button-danger" data-action="ban">Ban</button>`;
+          const lockActions = u.is_banned
+            ? ""
+            : u.force_logout
+              ? `<button class="identity-action-button" data-action="allow-login">Allow login</button>`
+              : `<button class="identity-action-button" data-action="force-logout">Force logout</button>`;
+
           return `
             <div class="admin-row">
               <div class="admin-row-main">
-                <div class="user-avatar" style="width:32px;height:32px;">${avatarHTML(u)}</div>
-                <div>
+                <div class="user-avatar" style="width:32px;height:32px;flex-shrink:0;">${avatarHTML(u)}</div>
+                <div style="min-width:0; flex:1;">
                   <div class="admin-row-name">${escapeHtml(u.username || "")} ${badges.join(" ")}</div>
                   <div class="admin-row-meta">Joined ${new Date(u.created_at).toLocaleDateString()}</div>
-                  ${
-                    u.is_banned && u.banned_reason
-                      ? `<div class="admin-row-meta admin-row-ban-reason">Ban reason: ${escapeHtml(u.banned_reason)}</div>`
-                      : ""
-                  }
+                  ${statusBits.join("")}
                 </div>
               </div>
               <div class="admin-row-actions" data-user-id="${u.id}">
                 <button class="identity-action-button" data-action="view-profile">Profile</button>
-                ${
-                  u.is_banned
-                    ? `<button class="identity-action-button" data-action="unban">Unban</button>`
-                    : `<button class="identity-action-button identity-action-button-danger" data-action="ban">Ban</button>`
-                }
-                ${
-                  u.force_logout
-                    ? `<button class="identity-action-button" data-action="allow-login">Allow login</button>`
-                    : `<button class="identity-action-button" data-action="force-logout">Force logout</button>`
-                }
+                ${banActions}
+                ${lockActions}
                 <button class="identity-action-button" data-action="kick">Kick</button>
                 ${
                   canChangeRoles
@@ -10776,6 +10881,9 @@ async function handleCreateServer() {
             }
             if (action === "ban") {
               await handleBanUser(userId);
+              return;
+            } else if (action === "ban-details") {
+              await handleBanDetails(userId);
               return;
             } else if (action === "unban") {
               await apiFetch(`/api/admin/users/${userId}/unban`, { method: "POST" });
