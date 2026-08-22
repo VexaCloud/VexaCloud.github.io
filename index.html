@@ -713,7 +713,7 @@
       border-radius: var(--r-sm);
       border: 1px solid var(--border);
       background: var(--surface-2);
-      color: var(--text-secondary);
+      color: var(--accent);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -779,9 +779,9 @@
     }
 
     .icon-button:hover {
-      border-color: var(--border-strong);
-      color: var(--text);
-      background: var(--surface-3);
+      border-color: var(--accent);
+      color: var(--accent-hover);
+      background: var(--accent-subtle);
     }
 
     .icon-button.active-voice {
@@ -1087,18 +1087,18 @@
       flex-direction: row;
       flex-wrap: nowrap;
       align-items: center;
-      gap: 6px;
-      padding: 4px 8px;
+      gap: 12px;
+      padding: 12px 14px;
       flex: 0 0 auto;
       overflow: hidden;
-      max-height: 48px;
+      max-height: 72px;
       border-bottom: 1px solid var(--border);
     }
 
     .server-item {
       position: relative;
-      width: 36px;
-      height: 36px;
+      width: 48px;
+      height: 48px;
       border-radius: var(--r-full);
       background: var(--surface-2);
       border: 1px solid var(--border);
@@ -1106,7 +1106,7 @@
       align-items: center;
       justify-content: center;
       color: var(--text-secondary);
-      font-size: 12px;
+      font-size: 14px;
       font-weight: 700;
       cursor: pointer;
       transition: border-radius 0.16s ease, transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
@@ -1145,7 +1145,7 @@
 
     .server-tooltip {
       position: absolute;
-      left: 54px;
+      left: 60px;
       top: 50%;
       transform: translateY(-50%) scale(0.95);
       background: var(--surface-3);
@@ -2100,6 +2100,31 @@
     .message-content.deleted {
       font-style: italic;
       color: var(--text-tertiary);
+    }
+
+    .message-content.clamped,
+    .dm-message-content.clamped {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 10;
+      overflow: hidden;
+    }
+
+    .message-show-more {
+      display: inline-block;
+      margin-top: 4px;
+      border: none;
+      background: transparent;
+      color: var(--accent);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 2px 0;
+    }
+
+    .message-show-more:hover {
+      color: var(--accent-hover);
+      text-decoration: underline;
     }
 
     .message-attachments {
@@ -5825,7 +5850,10 @@
               existingRow.remove();
             } else {
               const contentEl = existingRow.querySelector(".message-content");
-              if (contentEl) contentEl.innerHTML = formatMessageContent(message.content);
+              if (contentEl) {
+                contentEl.innerHTML = formatMessageContent(message.content);
+                applyMessageContentTruncation(contentEl);
+              }
 
               const reactionsEl = existingRow.querySelector(".message-reactions");
               if (reactionsEl) {
@@ -7277,6 +7305,42 @@ notificationSettingsSave.onclick = async () => {
       });
     }
 
+    function applyMessageContentTruncation(contentEl) {
+      if (!contentEl) return;
+
+      const existingBtn = contentEl.nextElementSibling;
+      if (existingBtn && existingBtn.classList && existingBtn.classList.contains("message-show-more")) {
+        existingBtn.remove();
+      }
+      contentEl.classList.remove("clamped");
+
+      requestAnimationFrame(() => {
+        if (!contentEl.isConnected) return;
+        contentEl.classList.add("clamped");
+        const isTruncated = contentEl.scrollHeight - contentEl.clientHeight > 2;
+        if (!isTruncated) {
+          contentEl.classList.remove("clamped");
+          return;
+        }
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "message-show-more";
+        btn.textContent = "Show more";
+        btn.addEventListener("click", () => {
+          const expanded = !contentEl.classList.contains("clamped");
+          if (expanded) {
+            contentEl.classList.add("clamped");
+            btn.textContent = "Show more";
+          } else {
+            contentEl.classList.remove("clamped");
+            btn.textContent = "Show less";
+          }
+        });
+        contentEl.insertAdjacentElement("afterend", btn);
+      });
+    }
+
     function findKnownUserByUsername(handle) {
       const needle = handle.toLowerCase();
       const pools = [
@@ -8606,7 +8670,10 @@ notificationSettingsSave.onclick = async () => {
                 row.remove();
               } else {
                 const contentEl = row.querySelector(".message-content");
-                if (contentEl) contentEl.innerHTML = formatMessageContent(record.content || "");
+                if (contentEl) {
+                  contentEl.innerHTML = formatMessageContent(record.content || "");
+                  applyMessageContentTruncation(contentEl);
+                }
               }
             }
             return;
@@ -8843,9 +8910,7 @@ notificationSettingsSave.onclick = async () => {
 
       messageListEl.appendChild(row);
 
-      if (repliesToggle) {
-        toggleRepliesThread(message.id, repliesToggle);
-      }
+      applyMessageContentTruncation(row.querySelector(".message-content"));
     }
 
     function applyOwnMessageMarker(el, message) {
@@ -8945,6 +9010,7 @@ notificationSettingsSave.onclick = async () => {
         replyAvatarEl.addEventListener("click", openReplyProfile);
       }
       threadEl.appendChild(el);
+      applyMessageContentTruncation(el.querySelector(".message-content"));
     }
 
     async function toggleRepliesThread(messageId, toggleBtn) {
@@ -9031,9 +9097,6 @@ notificationSettingsSave.onclick = async () => {
       const isOpen = threadEl.style.display !== "none";
       if (isOpen) {
         appendReplyThreadItem(threadEl, replyMsg);
-      } else if (currentUser && replyMsg.user_id === currentUser.id) {
-
-        toggleRepliesThread(replyMsg.parent_id, toggleBtn);
       }
       return true;
     }
@@ -9182,7 +9245,10 @@ notificationSettingsSave.onclick = async () => {
         const row = messageListEl.querySelector(`[data-message-id="${message.id}"]`);
         if (row) {
           const contentEl = row.querySelector(".message-content");
-          if (contentEl) contentEl.innerHTML = formatMessageContent(updated.content);
+          if (contentEl) {
+            contentEl.innerHTML = formatMessageContent(updated.content);
+            applyMessageContentTruncation(contentEl);
+          }
         }
         showToast("Message edited", { variant: "accent" });
       } catch (err) {
@@ -10445,7 +10511,10 @@ async function handleCreateServer() {
       if (existing) {
 
         const contentEl = existing.querySelector(".dm-message-content");
-        if (contentEl) contentEl.innerHTML = formatMessageContent(message.content);
+        if (contentEl) {
+          contentEl.innerHTML = formatMessageContent(message.content);
+          applyMessageContentTruncation(contentEl);
+        }
         return;
       }
 
@@ -10492,9 +10561,7 @@ async function handleCreateServer() {
       }
       dmMessageList.appendChild(el);
 
-      if (repliesToggle) {
-        toggleRepliesThread(message.id, repliesToggle);
-      }
+      applyMessageContentTruncation(el.querySelector(".dm-message-content"));
     }
 
     async function openDmConversation(conversationId, otherUser) {
@@ -10550,7 +10617,10 @@ async function handleCreateServer() {
                 } else {
 
                   const contentEl = row.querySelector(".dm-message-content");
-                  if (contentEl) contentEl.innerHTML = formatMessageContent(record.content || "");
+                  if (contentEl) {
+                    contentEl.innerHTML = formatMessageContent(record.content || "");
+                    applyMessageContentTruncation(contentEl);
+                  }
                 }
               }
               return;
