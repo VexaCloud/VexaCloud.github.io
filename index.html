@@ -7799,9 +7799,7 @@ notificationSettingsSave.onclick = async () => {
                 json = { error: text || "Request failed" };
               }
               const apiError = new Error(json.error || json.message || "Request failed");
-              // Ban / force-logout responses (403 from authMiddleware) carry
-              // structured detail so the UI can show a proper "banned until…"
-              // message instead of just the raw error string.
+
               if (json.code === "banned" || json.code === "force_logout") {
                 apiError.code = json.code;
                 apiError.reason = json.reason || null;
@@ -7878,9 +7876,6 @@ notificationSettingsSave.onclick = async () => {
       }
     }
 
-    // Turns the structured error from a "banned" / "force_logout" 403 (see
-    // apiFetch) into a readable message with the reason and expiry date, or
-    // returns null for any other kind of error.
     function describeAuthBlockError(err) {
       if (!err || (err.code !== "banned" && err.code !== "force_logout")) return null;
       const whenText = err.forever ? "permanently" : `until ${new Date(err.until).toLocaleString(undefined, { year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" })}`;
@@ -9073,8 +9068,6 @@ el.innerHTML = `
       openMoreMenuAnchor = null;
     }
 
-    // Turns a duration-modal selection into an ISO timestamp (or null for
-    // "forever" / no expiry). Shared by every ban / force-logout modal.
     function computeUntilFromDuration(duration, customLocalDatetime) {
       if (!duration || duration === "forever") return null;
       if (duration === "custom") {
@@ -12572,17 +12565,8 @@ async function handleCreateServer() {
           "postgres_changes",
           { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${currentUser.id}` },
           async (payload) => {
-            // Moderation fields (is_banned, banned_until, force_logout,
-            // force_logout_until, banned_reason) are deliberately not
-            // readable by anon/authenticated (see
-            // restrict_profiles_columns.sql), so this realtime payload
-            // can't be trusted to carry them. Treat the event as just
-            // "something on my row changed" and ask the API - which uses
-            // the service-role key and always has the full picture - for
-            // the authoritative status and reason/expiry.
             try {
               await apiFetch("/api/auth/me");
-              // Not banned/logged out - a normal update (theme, etc).
               currentProfile = { ...currentProfile, ...payload.new };
             } catch (err) {
               const described = describeAuthBlockError(err);
