@@ -1526,14 +1526,37 @@
       background: none;
       border: none;
       cursor: pointer;
-      font-size: 12px;
-      opacity: 0.5;
+      opacity: 0.45;
       padding: 2px;
       flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-tertiary);
+      border-radius: var(--r-sm);
     }
     .channel-mute-toggle:hover,
     .dm-mute-toggle:hover {
       opacity: 1;
+      color: var(--text);
+      background: var(--surface-3);
+    }
+    .channel-mute-toggle svg,
+    .dm-mute-toggle svg {
+      width: 14px;
+      height: 14px;
+      display: block;
+    }
+    .channel-item-trailing {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+      flex-shrink: 0;
+      min-width: 28px;
+      margin-left: auto;
     }
 
     .notif-muted-list {
@@ -1613,6 +1636,8 @@
       align-items: center;
       gap: 7px;
       min-width: 0;
+      flex: 1;
+      overflow: hidden;
     }
 
     .channel-item-icon {
@@ -5139,6 +5164,24 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="my-servers-modal">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Your servers</div>
+          <div class="modal-subtitle">Servers you've joined</div>
+        </div>
+        <button class="modal-close" id="my-servers-close">Close</button>
+      </div>
+      <div class="admin-search-bar">
+        <input type="text" id="my-servers-search-input" class="settings-input" placeholder="Search your servers…" />
+      </div>
+      <div class="modal-body public-server-list" id="my-servers-list">
+        <div class="empty-state-small">No servers yet.</div>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-backdrop" id="server-admin-modal">
     <div class="modal modal-wide modal-tall">
       <div class="modal-header">
@@ -6671,6 +6714,9 @@ function showAuthOverlay() {
     const browseServersClose = document.getElementById("browse-servers-close");
     const publicServerList = document.getElementById("public-server-list");
     const publicServerSearchInput = document.getElementById("public-server-search-input");
+    const myServersModal = document.getElementById("my-servers-modal");
+    const myServersClose = document.getElementById("my-servers-close");
+    const myServersSearchInput = document.getElementById("my-servers-search-input");
 
     const adminDashboardButton = document.getElementById("admin-dashboard-button");
     const adminDashboardModal = document.getElementById("admin-dashboard-modal");
@@ -7933,9 +7979,15 @@ notificationSettingsSave.onclick = async () => {
     }
 
     let allServers = [];
-    const SERVER_MENU_RECENT_LIMIT = 8;
-    let serverMenuShowAll = false;
+    const SERVER_MENU_RECENT_LIMIT = 3;
     const RECENT_SERVERS_KEY = "vexa_recent_server_ids";
+
+    function muteBellSVG(muted) {
+      if (muted) {
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.73 21a2 2 0 0 1-3.46 0"/><path d="M18.63 13A17.89 17.89 0 0 1 18 8"/><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"/><path d="M18 8a6 6 0 0 0-9.33-5"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+      }
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`;
+    }
 
     function getRecentServerIds() {
       try {
@@ -8035,22 +8087,93 @@ notificationSettingsSave.onclick = async () => {
       }
 
       const ordered = orderServersForMenu(allServers);
-      const visible = serverMenuShowAll ? ordered : ordered.slice(0, SERVER_MENU_RECENT_LIMIT);
+      const visible = ordered.slice(0, SERVER_MENU_RECENT_LIMIT);
       visible.forEach((server) => serverListEl.appendChild(renderServerMenuItem(server)));
 
       if (ordered.length > SERVER_MENU_RECENT_LIMIT) {
         const moreBtn = document.createElement("button");
         moreBtn.type = "button";
         moreBtn.className = "server-item server-item-add";
-        moreBtn.title = serverMenuShowAll ? "Show fewer servers" : "Show more servers";
-        moreBtn.innerHTML = `<span style="font-size:11px;font-weight:700;">${serverMenuShowAll ? "Less" : `+${ordered.length - SERVER_MENU_RECENT_LIMIT}`}</span>`;
+        moreBtn.title = "Show all servers";
+        moreBtn.innerHTML = `<span style="font-size:11px;font-weight:700;">More</span>`;
         moreBtn.addEventListener("click", (e) => {
           e.stopPropagation();
-          serverMenuShowAll = !serverMenuShowAll;
-          renderServerList();
+          openMyServersModal();
         });
         serverListEl.appendChild(moreBtn);
       }
+    }
+
+    function openMyServersModal() {
+      const modal = document.getElementById("my-servers-modal");
+      const searchInput = document.getElementById("my-servers-search-input");
+      if (searchInput) searchInput.value = "";
+      renderMyServersList("");
+      if (modal) modal.classList.add("visible");
+      if (searchInput) setTimeout(() => searchInput.focus(), 50);
+    }
+
+    function renderMyServersList(filterText) {
+      const listEl = document.getElementById("my-servers-list");
+      if (!listEl) return;
+      const q = (filterText || "").trim().toLowerCase();
+      const ordered = orderServersForMenu(allServers);
+      const filtered = q
+        ? ordered.filter((s) => (s.name || "").toLowerCase().includes(q))
+        : ordered;
+
+      if (!filtered.length) {
+        listEl.innerHTML = `<div class="empty-state-small">${q ? "No servers match that search." : "No servers yet."}</div>`;
+        return;
+      }
+
+      listEl.innerHTML = filtered
+        .map(
+          (s) => `
+        <div class="admin-row" data-my-server-id="${s.id}">
+          <div class="admin-row-main">
+            <div class="public-server-icon">
+              ${
+                s.icon_url
+                  ? `<img src="${escapeHtml(s.icon_url)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`
+                  : escapeHtml((s.name || "?").slice(0, 2).toUpperCase())
+              }
+            </div>
+            <div>
+              <div class="admin-row-name">
+                ${escapeHtml(s.name)}
+                ${s.is_public ? `<span class="admin-row-badge">Public</span>` : ""}
+                ${currentServer && currentServer.id === s.id ? `<span class="admin-row-badge">Current</span>` : ""}
+              </div>
+              <div class="admin-row-meta">${s.is_public ? "Public server" : "Private server"}</div>
+            </div>
+          </div>
+          <div class="admin-row-actions">
+            <button class="identity-action-button" data-action="open-my-server">Open</button>
+            <button class="identity-action-button identity-action-button-danger" data-action="leave-my-server">Leave</button>
+          </div>
+        </div>
+      `
+        )
+        .join("");
+
+      listEl.querySelectorAll("[data-action]").forEach((btn) => {
+        const row = btn.closest("[data-my-server-id]");
+        const serverId = row && row.dataset.myServerId;
+        const server = allServers.find((s) => s.id === serverId);
+        if (!server) return;
+        btn.addEventListener("click", async () => {
+          if (btn.dataset.action === "open-my-server") {
+            document.getElementById("my-servers-modal").classList.remove("visible");
+            await selectServer(server);
+            return;
+          }
+          if (btn.dataset.action === "leave-my-server") {
+            await handleLeaveServer(server);
+            renderMyServersList(document.getElementById("my-servers-search-input")?.value || "");
+          }
+        });
+      });
     }
 
     async function loadServers() {
@@ -8077,6 +8200,7 @@ notificationSettingsSave.onclick = async () => {
       Array.from(serverListEl.querySelectorAll(".server-item")).forEach((el) => {
         el.classList.toggle("active", el.dataset.serverId === server.id);
       });
+      // Re-render so the visited server rises into the recent set without forcing show-all.
       if (allServers.some((s) => s.id === server.id)) {
         renderServerList();
       }
@@ -8147,6 +8271,7 @@ notificationSettingsSave.onclick = async () => {
             const unreadCount = unreadChannelCounts.get(ch.id) || 0;
             if (unreadCount > 0) el.classList.add("has-unread");
             if (type === "voice" && activeVoiceRoomIds.has(ch.id)) el.classList.add("has-voice-activity");
+            const isMuted = mutedChannelIds.has(ch.id);
             el.innerHTML = `
               <div class="channel-item-main">
                 <span class="channel-item-icon">${icon}</span>
@@ -8154,12 +8279,14 @@ notificationSettingsSave.onclick = async () => {
                 ${type === "voice" ? `<span class="voice-active-dot"></span>` : ""}
                 ${badgeHTML(unreadCount)}
               </div>
-              ${
-                pushNotificationsActive
-                  ? `<button class="channel-mute-toggle" title="${mutedChannelIds.has(ch.id) ? "Unmute" : "Mute notifications"}">${mutedChannelIds.has(ch.id) ? "🔕" : "🔔"}</button>`
-                  : ""
-              }
-              <span class="channel-item-meta">${ch.is_private ? "Private" : ""}</span>
+              <div class="channel-item-trailing">
+                ${
+                  pushNotificationsActive
+                    ? `<button class="channel-mute-toggle" title="${isMuted ? "Unmute" : "Mute notifications"}" aria-label="${isMuted ? "Unmute" : "Mute notifications"}">${muteBellSVG(isMuted)}</button>`
+                    : ""
+                }
+                <span class="channel-item-meta">${ch.is_private ? "Private" : ""}</span>
+              </div>
             `;
             const muteBtn = el.querySelector(".channel-mute-toggle");
 
@@ -8167,8 +8294,9 @@ notificationSettingsSave.onclick = async () => {
               e.stopPropagation();
               await toggleMuteChannel(ch.id, !mutedChannelIds.has(ch.id));
               const nowMuted = mutedChannelIds.has(ch.id);
-              muteBtn.textContent = nowMuted ? "🔕" : "🔔";
+              muteBtn.innerHTML = muteBellSVG(nowMuted);
               muteBtn.title = nowMuted ? "Unmute" : "Mute notifications";
+              muteBtn.setAttribute("aria-label", nowMuted ? "Unmute" : "Mute notifications");
             });
             el.title = type === "voice" ? "Click to join voice" : "Click to open";
             el.addEventListener("click", () => {
@@ -10297,7 +10425,7 @@ async function handleCreateServer() {
             ${badgeHTML(unreadDmCounts.get(c.id) || 0)}
             ${
               pushNotificationsActive
-                ? `<button class="dm-mute-toggle" title="${mutedConversationIds.has(c.id) ? "Unmute" : "Mute notifications"}">${mutedConversationIds.has(c.id) ? "🔕" : "🔔"}</button>`
+                ? `<button class="dm-mute-toggle" title="${mutedConversationIds.has(c.id) ? "Unmute" : "Mute notifications"}" aria-label="${mutedConversationIds.has(c.id) ? "Unmute" : "Mute notifications"}">${muteBellSVG(mutedConversationIds.has(c.id))}</button>`
                 : ""
             }
             <span class="voice-active-dot"></span>
@@ -10312,8 +10440,9 @@ async function handleCreateServer() {
             const id = conversations[idx].id;
             await toggleMuteConversation(id, !mutedConversationIds.has(id));
             const nowMuted = mutedConversationIds.has(id);
-            btn.textContent = nowMuted ? "🔕" : "🔔";
+            btn.innerHTML = muteBellSVG(nowMuted);
             btn.title = nowMuted ? "Unmute" : "Mute notifications";
+            btn.setAttribute("aria-label", nowMuted ? "Unmute" : "Mute notifications");
           });
         });
 
@@ -11060,9 +11189,12 @@ async function handleCreateServer() {
         const action = el.dataset.action;
         el.addEventListener("click", async () => {
           if (action === "open") {
+            // Join (if needed) so the server appears in the admin's menu, then open it.
             adminDashboardModal.classList.remove("visible");
             try {
-              let target = server;
+              await apiFetch(`/api/servers/${serverId}/join`, { method: "POST" });
+              await loadServers();
+              let target = allServers.find((s) => s.id === serverId) || server;
               if (!target || !target.id) {
                 const res = await apiFetch(`/api/servers/${serverId}`);
                 target = res.server;
@@ -11129,6 +11261,7 @@ async function handleCreateServer() {
           (msg.channel && msg.channel.id === channelId && msg.channel) ||
           { id: channelId, name: (msg.channel && msg.channel.name) || "channel", type: (msg.channel && msg.channel.type) || "text", server_id: serverId };
         await selectChannel(channel);
+        // Allow the message list to render, then highlight.
         setTimeout(() => scrollToMessage(msg.id), 250);
         showToast("Opened reported message", { variant: "accent" });
       } catch (err) {
@@ -12554,6 +12687,14 @@ async function handleCreateServer() {
       createServerButton.addEventListener("click", handleCreateServer);
       browseServersButton.addEventListener("click", handleBrowseServers);
       browseServersClose.addEventListener("click", () => browseServersModal.classList.remove("visible"));
+      if (myServersClose && myServersModal) {
+        myServersClose.addEventListener("click", () => myServersModal.classList.remove("visible"));
+      }
+      if (myServersSearchInput) {
+        myServersSearchInput.addEventListener("input", () => {
+          renderMyServersList(myServersSearchInput.value);
+        });
+      }
 
       adminDashboardButton.addEventListener("click", handleAdminDashboardOpen);
       adminDashboardClose.addEventListener("click", () => adminDashboardModal.classList.remove("visible"));
