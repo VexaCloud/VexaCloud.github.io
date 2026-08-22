@@ -728,6 +728,56 @@
       flex-shrink: 0;
     }
 
+    .ui-icon {
+      display: inline-block;
+      vertical-align: -3px;
+      flex-shrink: 0;
+    }
+
+    .voice-control-button,
+    .identity-action-button,
+    .dm-call-bar-button,
+    .voice-tile-mod-button,
+    .message-inline-button,
+    .message-replies-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .message-replies-toggle {
+      text-decoration: none;
+    }
+
+    .channel-item-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .channel-item-icon .ui-icon {
+      width: 14px;
+      height: 14px;
+      vertical-align: 0;
+    }
+
+    .empty-state-full-icon .ui-icon {
+      width: 40px;
+      height: 40px;
+      vertical-align: 0;
+      opacity: 0.7;
+    }
+
+    .incoming-call-name,
+    .dm-call-bar-title,
+    .voice-tile-name,
+    .voice-participant span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
     .icon-button:hover {
       border-color: var(--border-strong);
       color: var(--text);
@@ -1033,17 +1083,22 @@
     }
 
     .server-list {
-      align-items: center;
-      padding: 10px 0;
-      gap: 10px;
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      flex: 0 0 auto;
+      overflow: hidden;
+      max-height: 48px;
+      border-bottom: 1px solid var(--border);
     }
 
     .server-item {
       position: relative;
-      width: 42px;
-      height: 42px;
+      width: 36px;
+      height: 36px;
       border-radius: var(--r-full);
       background: var(--surface-2);
       border: 1px solid var(--border);
@@ -1051,25 +1106,15 @@
       align-items: center;
       justify-content: center;
       color: var(--text-secondary);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
       cursor: pointer;
-      position: relative;
       transition: border-radius 0.16s ease, transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
       flex-shrink: 0;
     }
 
     .server-item::before {
-      content: "";
-      position: absolute;
-      left: -10px;
-      top: 50%;
-      width: 4px;
-      height: 0;
-      border-radius: 0 4px 4px 0;
-      background: var(--text);
-      transform: translateY(-50%);
-      transition: height 0.16s ease-out;
+      display: none;
     }
 
     .server-item.active {
@@ -1080,7 +1125,7 @@
     }
 
     .server-item.active::before {
-      height: 22px;
+      display: none;
     }
 
     .server-item:hover {
@@ -1090,7 +1135,7 @@
     }
 
     .server-item:hover::before {
-      height: 12px;
+      display: none;
     }
 
     .server-item-add {
@@ -1699,6 +1744,12 @@
       display: flex;
       align-items: center;
       gap: 6px;
+    }
+
+    #chat-channel-prefix {
+      display: inline-flex;
+      align-items: center;
+      color: var(--text-tertiary);
     }
 
     .chat-channel-meta {
@@ -3655,6 +3706,15 @@
       color: var(--text-secondary);
       cursor: pointer;
       transition: background 0.1s ease, color 0.1s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .context-menu-item span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .context-menu-item:hover {
@@ -3940,6 +4000,9 @@
       cursor: pointer;
       font-size: 13px;
       padding: 2px 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .reply-preview-cancel:hover {
@@ -4533,14 +4596,18 @@
         </div>
       </div>
       <div class="channel-list-actions">
-        <button class="icon-button" id="browse-servers-button" title="Browse public servers">🌐</button>
+        <button class="icon-button" id="browse-servers-button" title="Browse public servers" aria-label="Browse public servers">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </button>
         <button class="icon-button" id="create-server-button" title="Create server">+</button>
-        <button class="icon-button" id="server-admin-panel-button" title="Server admin panel" style="display:none;">⚙️</button>
+        <button class="icon-button" id="server-admin-panel-button" title="Server admin panel" aria-label="Server admin panel" style="display:none;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
       </div>
     </div>
   </div>
   <div class="panel-body">
-    <div class="scroll-y server-list" id="server-list" style="flex-direction:row; flex-wrap:wrap; max-height:none; border-bottom:1px solid var(--border); padding:8px; gap:8px; align-items:center;"></div>
+    <div class="server-list" id="server-list"></div>
     <div class="channel-list-subheader">
       <span class="channel-list-subheader-label">Channels</span>
       <button class="icon-button icon-button-sm" id="create-channel-button" title="Create channel" style="display:none;">+</button>
@@ -4585,7 +4652,9 @@
               <div class="voice-bar-participants" id="voice-bar-participants"></div>
             </div>
             <div class="voice-bar-controls">
-              <button class="voice-control-button" id="voice-mute-button" title="Mute">🎤</button>
+              <button class="voice-control-button" id="voice-mute-button" title="Mute" aria-label="Mute">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              </button>
               <button class="voice-control-button voice-control-danger" id="voice-leave-button" title="Leave voice">Leave</button>
             </div>
           </div>
@@ -4597,7 +4666,9 @@
             <div class="chat-input-area">
               <div class="reply-preview-bar" id="reply-preview-bar" style="display:none;">
                 <span id="reply-preview-text"></span>
-                <button class="reply-preview-cancel" id="reply-preview-cancel" title="Cancel reply">✕</button>
+                <button class="reply-preview-cancel" id="reply-preview-cancel" title="Cancel reply" aria-label="Cancel reply">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
               </div>
               <div class="attachment-preview" id="attachment-preview" style="display:none;"></div>
               <div class="chat-input-row">
@@ -4605,7 +4676,9 @@
                   <input id="chat-input" class="chat-input" type="text" placeholder="Message" autocomplete="off" />
                   <div class="chat-input-tools">
                     <input type="file" id="attachment-input" style="display:none;" />
-                    <button class="icon-button" id="attachment-button" title="Upload file">🔗</button>
+                    <button class="icon-button" id="attachment-button" title="Upload file" aria-label="Upload file">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    </button>
                   </div>
                 </div>
                 <button class="chat-send-button" id="chat-send-button">
@@ -4627,7 +4700,9 @@
             Members
           </div>
           <div class="channel-list-actions">
-            <button class="icon-button" id="admin-dashboard-button" title="Admin dashboard" style="display:none;">🛡</button>
+            <button class="icon-button" id="admin-dashboard-button" title="Admin dashboard" aria-label="Admin dashboard" style="display:none;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </button>
           </div>
         </div>
         <div class="panel-body">
@@ -5000,7 +5075,10 @@
                 <span class="push-status-dot" id="notification-push-status-dot"></span>
                 <span id="notification-push-status-text">Checking push notification status…</span>
               </div>
-              <button id="notification-enable-push" class="settings-save" style="width:100%; margin-top:8px;">🔔 Enable browser push notifications</button>
+              <button id="notification-enable-push" class="settings-save" style="width:100%; margin-top:8px; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                Enable browser push notifications
+              </button>
               <div class="form-field-hint" id="notification-push-hint" style="margin-top:6px;">Your browser will ask for permission. You can revoke it anytime from your browser's site settings.</div>
             </div>
 
@@ -5329,7 +5407,7 @@
         <div class="dm-chat-pane">
           <div class="dm-chat-header">
             <span id="dm-chat-header">Select a conversation</span>
-            <button class="identity-action-button" id="dm-call-button" style="display:none;">📞 Call</button>
+            <button class="identity-action-button" id="dm-call-button" style="display:none;">Call</button>
           </div>
           <div class="voice-bar" id="dm-voice-bar">
             <div class="voice-bar-main">
@@ -5337,14 +5415,18 @@
               <div class="voice-bar-participants" id="dm-voice-bar-participants"></div>
             </div>
             <div class="voice-bar-controls">
-              <button class="voice-control-button" id="dm-voice-mute-button" title="Mute">🎤</button>
+              <button class="voice-control-button" id="dm-voice-mute-button" title="Mute" aria-label="Mute">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              </button>
               <button class="voice-control-button voice-control-danger" id="dm-voice-leave-button" title="Leave call">Leave</button>
             </div>
           </div>
           <div class="dm-message-list" id="dm-message-list"></div>
           <div class="reply-preview-bar" id="dm-reply-preview-bar" style="display:none;">
             <span id="dm-reply-preview-text"></span>
-            <button class="reply-preview-cancel" id="dm-reply-preview-cancel" title="Cancel reply">✕</button>
+            <button class="reply-preview-cancel" id="dm-reply-preview-cancel" title="Cancel reply" aria-label="Cancel reply">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
           </div>
           <div class="dm-input-row">
             <input class="dm-input" id="dm-input" type="text" placeholder="Message..." />
@@ -5645,25 +5727,47 @@
 
     let lastServersSignature = "";
     let lastServerIds = new Set();
+    const recentlyLeftServerIds = new Set();
+    const recentlyDeletedServerIds = new Set();
+
+    function markServerLeftLocally(serverId) {
+      if (!serverId) return;
+      recentlyLeftServerIds.add(serverId);
+      lastServerIds.delete(serverId);
+    }
+
+    function markServerDeletedLocally(serverId) {
+      if (!serverId) return;
+      recentlyDeletedServerIds.add(serverId);
+      lastServerIds.delete(serverId);
+    }
+
+    function syncLocalServerIdsFromAllServers() {
+      lastServerIds = new Set((allServers || []).map((s) => s.id));
+      lastServersSignature = listSignature(allServers || [], ["id", "name", "icon_url", "is_public"]);
+    }
+
     function reconcileServersFromSync(servers) {
       const sig = listSignature(servers, ["id", "name", "icon_url", "is_public"]);
       if (sig === lastServersSignature) return;
 
       const newIds = new Set(servers.map((s) => s.id));
       if (lastServersSignature) {
-        servers.forEach((s) => {
-          if (!lastServerIds.has(s.id)) {
-            showToast(`🆕 New server: ${escapeHtml(s.name || "Untitled")}`, { variant: "accent" });
-          }
-        });
         lastServerIds.forEach((id) => {
-          if (!newIds.has(id)) {
-            const wasCurrent = currentServer && currentServer.id === id;
-            showToast("🗑️ A server you were in was deleted", { variant: "danger" });
-            if (wasCurrent) {
-              currentServer = null;
-              clearNoChannelSelectedState();
-            }
+          if (newIds.has(id)) return;
+          const wasCurrent = currentServer && currentServer.id === id;
+          const leftOnPurpose = recentlyLeftServerIds.has(id);
+          const deletedOnPurpose = recentlyDeletedServerIds.has(id);
+          recentlyLeftServerIds.delete(id);
+          recentlyDeletedServerIds.delete(id);
+          if (wasCurrent) {
+            currentServer = null;
+            clearNoChannelSelectedState();
+          }
+          // Leaving, being kicked, or deleting a channel can drop a server
+          // from this list. Only announce a real deletion elsewhere.
+          if (!leftOnPurpose && !deletedOnPurpose && !wasCurrent) {
+            return;
           }
         });
       }
@@ -6000,7 +6104,7 @@
       el.className = "incoming-call-popup";
       el.innerHTML = `
         <div class="incoming-call-info">
-          <div class="incoming-call-name">📞 ${escapeHtml(name)}</div>
+          <div class="incoming-call-name">${uiIcon("phone", 16)} ${escapeHtml(name)}</div>
           <div class="incoming-call-sub">Incoming call...</div>
         </div>
         <div class="incoming-call-actions">
@@ -6091,7 +6195,7 @@
 
               if (!known) loadDmConversations();
               showToast(
-                `💬 ${escapeHtml(other ? other.username : "Someone")}: ${escapeHtml((row.content || "").slice(0, 80))}`,
+                `${escapeHtml(other ? other.username : "Someone")}: ${escapeHtml((row.content || "").slice(0, 80))}`,
                 {
                   variant: "accent",
                   onClick: () => {
@@ -6137,9 +6241,7 @@
           async (payload) => {
             const server = payload.new;
             if (!server) return;
-
             await loadServers();
-            showToast(`🆕 New server: ${escapeHtml(server.name || "Untitled")}`, { variant: "accent" });
           }
         )
         .on(
@@ -6168,10 +6270,12 @@
             const old = payload.old;
             if (!old) return;
             const wasCurrent = currentServer && currentServer.id === old.id;
+            const leftOnPurpose = recentlyLeftServerIds.has(old.id);
+            const deletedOnPurpose = recentlyDeletedServerIds.has(old.id);
+            recentlyLeftServerIds.delete(old.id);
+            recentlyDeletedServerIds.delete(old.id);
             await loadServers();
-            showToast(`🗑️ A server was deleted${old.name ? `: ${escapeHtml(old.name)}` : ""}`, {
-              variant: "danger",
-            });
+            if (leftOnPurpose || deletedOnPurpose) return;
             if (wasCurrent) {
               currentServer = null;
               clearNoChannelSelectedState();
@@ -6547,9 +6651,9 @@ function showAuthOverlay() {
     function showNoChannelSelectedState() {
       messageListEl.innerHTML = `
         <div class="empty-state-full">
-          <div class="empty-state-full-icon">💬</div>
+          <div class="empty-state-full-icon">${uiIcon("message", 40)}</div>
           <div class="empty-state-full-title">No channel selected</div>
-          <div class="empty-state-full-sub">Pick a channel from the ☰ menu on the left to start chatting.</div>
+          <div class="empty-state-full-sub">Pick a channel from the menu on the left to start chatting.</div>
         </div>
       `;
       chatInputEl.disabled = true;
@@ -6998,6 +7102,13 @@ notificationSettingsSave.onclick = async () => {
   }
 };
 
+    function stripToastEmoji(message) {
+      return String(message || "")
+        .replace(/[\u{1F300}-\u{1FAFF}\u{1F1E6}-\u{1F1FF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, "")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+    }
+
     function showToast(message, options = {}) {
       const toast = document.createElement("div");
       toast.className = "toast";
@@ -7005,7 +7116,7 @@ notificationSettingsSave.onclick = async () => {
       if (options.variant === "accent") toast.classList.add("toast-strong");
       if (options.onClick) toast.style.cursor = "pointer";
       toast.innerHTML = `
-        <span>${message}</span>
+        <span>${stripToastEmoji(message)}</span>
         <button class="toast-close">×</button>
       `;
       toastContainer.appendChild(toast);
@@ -7983,10 +8094,63 @@ notificationSettingsSave.onclick = async () => {
     const RECENT_SERVERS_KEY = "vexa_recent_server_ids";
 
     function muteBellSVG(muted) {
-      if (muted) {
-        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.73 21a2 2 0 0 1-3.46 0"/><path d="M18.63 13A17.89 17.89 0 0 1 18 8"/><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"/><path d="M18 8a6 6 0 0 0-9.33-5"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
-      }
-      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`;
+      return uiIcon(muted ? "bell-off" : "bell", 14);
+    }
+
+    function uiIcon(name, size) {
+      const s = size || 16;
+      const paths = {
+        globe: '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+        settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+        shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+        mic: '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
+        "mic-off": '<line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/><path d="M17 16.95A7 7 0 0 1 5 12v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
+        paperclip: '<path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
+        phone: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+        hash: '<line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/>',
+        volume: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>',
+        megaphone: '<path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.08"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>',
+        message: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+        smile: '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>',
+        file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',
+        mail: '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>',
+        link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+        x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+        "chevron-down": '<polyline points="6 9 12 15 18 9"/>',
+        "chevron-up": '<polyline points="18 15 12 9 6 15"/>',
+        alert: '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+        reply: '<polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/>',
+        bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+        "bell-off": '<path d="M13.73 21a2 2 0 0 1-3.46 0"/><path d="M18.63 13A17.89 17.89 0 0 1 18 8"/><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"/><path d="M18 8a6 6 0 0 0-9.33-5"/><line x1="1" y1="1" x2="23" y2="23"/>',
+      };
+      return `<svg class="ui-icon" viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] || ""}</svg>`;
+    }
+
+    function channelTypeIcon(type, size) {
+      const t = (type || "text").toString();
+      if (t === "voice") return uiIcon("volume", size || 14);
+      if (t === "announcement") return uiIcon("megaphone", size || 14);
+      return uiIcon("hash", size || 14);
+    }
+
+    function repliesToggleHTML(count, open) {
+      const n = Number(count) || 0;
+      const word = n === 1 ? "reply" : "replies";
+      return `${uiIcon("message", 14)} ${n} ${word} ${uiIcon(open ? "chevron-up" : "chevron-down", 12)}`;
+    }
+
+    function setRepliesToggle(btn, count, open) {
+      if (!btn) return;
+      if (count != null) btn.dataset.count = String(count);
+      const n = count != null ? Number(count) : parseInt(btn.dataset.count || "0", 10);
+      btn.innerHTML = repliesToggleHTML(n, !!open);
+    }
+
+    function setMuteButtonIcon(btn, muted) {
+      if (!btn) return;
+      btn.innerHTML = uiIcon(muted ? "mic-off" : "mic", 16);
+      btn.title = muted ? "Unmute" : "Mute";
+      btn.setAttribute("aria-label", muted ? "Unmute" : "Mute");
     }
 
     function getRecentServerIds() {
@@ -8081,7 +8245,8 @@ notificationSettingsSave.onclick = async () => {
       if (!allServers.length) {
         const empty = document.createElement("div");
         empty.className = "empty-state-small";
-        empty.textContent = "No servers yet — create one or browse public servers.";
+        empty.style.cssText = "white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0;padding:0;font-size:12px;";
+        empty.textContent = "No servers yet";
         serverListEl.appendChild(empty);
         return;
       }
@@ -8182,6 +8347,7 @@ notificationSettingsSave.onclick = async () => {
         const { servers } = await apiFetch("/api/servers");
         if (loadToken !== serversLoadToken) return;
         allServers = servers || [];
+        syncLocalServerIdsFromAllServers();
         renderServerList();
       } catch (err) {
         if (loadToken !== serversLoadToken) return;
@@ -8200,6 +8366,7 @@ notificationSettingsSave.onclick = async () => {
       Array.from(serverListEl.querySelectorAll(".server-item")).forEach((el) => {
         el.classList.toggle("active", el.dataset.serverId === server.id);
       });
+      // Re-render so the visited server rises into the recent set without forcing show-all.
       if (allServers.some((s) => s.id === server.id)) {
         renderServerList();
       }
@@ -8311,9 +8478,9 @@ notificationSettingsSave.onclick = async () => {
           });
         }
 
-        renderSection("Text Channels", textChannels, "#");
-        renderSection("Voice Channels", voiceChannels, "🔊");
-        renderSection("Announcements", announcementChannels, "📣");
+        renderSection("Text Channels", textChannels, channelTypeIcon("text"));
+        renderSection("Voice Channels", voiceChannels, channelTypeIcon("voice"));
+        renderSection("Announcements", announcementChannels, channelTypeIcon("announcement"));
       } catch (err) {
         if (loadToken !== channelsLoadToken) return;
         console.error(err);
@@ -8467,7 +8634,7 @@ notificationSettingsSave.onclick = async () => {
       Array.from(channelListEl.querySelectorAll(".channel-item")).forEach((el) => {
         el.classList.toggle("active", el.dataset.channelId === channel.id);
       });
-      chatChannelPrefixEl.textContent = channel.type === "announcement" ? "📣" : "#";
+      chatChannelPrefixEl.innerHTML = channelTypeIcon(channel.type, 14);
       chatChannelNameEl.textContent = channel.name;
       chatChannelMetaEl.textContent = channel.type === "announcement" ? "Announcement channel" : "Text channel";
       clearNoChannelSelectedState();
@@ -8537,7 +8704,7 @@ notificationSettingsSave.onclick = async () => {
           </div>
           ${
             message.parent && message.parent.id
-              ? `<div class="message-reply-quote" data-parent-id="${message.parent.id}">↩ ${escapeHtml((message.parent.user && message.parent.user.username) || "Unknown")}: ${escapeHtml(message.parent.deleted_at ? "(message deleted)" : message.parent.content ? message.parent.content.slice(0, 80) : "📎 Attachment")}</div>`
+              ? `<div class="message-reply-quote" data-parent-id="${message.parent.id}">${uiIcon("reply", 12)} ${escapeHtml((message.parent.user && message.parent.user.username) || "Unknown")}: ${escapeHtml(message.parent.deleted_at ? "(message deleted)" : message.parent.content ? message.parent.content.slice(0, 80) : "Attachment")}</div>`
               : ""
           }
           <div class="message-content">${formatMessageContent(message.content)}</div>
@@ -8562,7 +8729,7 @@ notificationSettingsSave.onclick = async () => {
           </div>
           ${
             message.reply_count > 0
-              ? `<button class="message-replies-toggle" data-message-id="${message.id}">💬 ${message.reply_count} repl${message.reply_count === 1 ? "y" : "ies"} ▾</button>
+              ? `<button class="message-replies-toggle" data-message-id="${message.id}" data-count="${message.reply_count}">${repliesToggleHTML(message.reply_count, false)}</button>
                  <div class="message-replies-thread" data-thread-for="${message.id}" style="display:none;"></div>`
               : ""
           }
@@ -8573,8 +8740,8 @@ notificationSettingsSave.onclick = async () => {
                 : ""
             }
             <div class="message-actions-inline">
-              <button class="message-inline-button" data-action="react" title="React">😀</button>
-              <button class="message-inline-button" data-action="reply" title="Reply">↩ Reply</button>
+              <button class="message-inline-button" data-action="react" title="React">${uiIcon("smile", 14)}</button>
+              <button class="message-inline-button" data-action="reply" title="Reply">${uiIcon("reply", 14)} Reply</button>
               ${
                 isOwn || canModerateMessages() || !isOwn
                   ? `<button class="message-inline-button message-more-button" data-action="more" title="More">⋯</button>`
@@ -8633,7 +8800,7 @@ notificationSettingsSave.onclick = async () => {
             btn.innerHTML = `<img src="${url}" alt="${btn.title || ""}" loading="lazy" />`;
           } catch (err) {
             console.error(err);
-            btn.innerHTML = `<span>⚠️ Failed to load image</span>`;
+            btn.innerHTML = `${uiIcon("alert", 14)} <span>Failed to load image</span>`;
           }
         })();
         btn.addEventListener("click", () => {
@@ -8790,10 +8957,10 @@ notificationSettingsSave.onclick = async () => {
       const isOpen = threadEl.style.display !== "none";
       if (isOpen) {
         threadEl.style.display = "none";
-        toggleBtn.textContent = toggleBtn.textContent.replace("▴", "▾");
+        toggleBtn.innerHTML = repliesToggleHTML(parseInt(toggleBtn.dataset.count || "0", 10), false);
         return;
       }
-      toggleBtn.textContent = toggleBtn.textContent.replace("▾", "▴");
+      setRepliesToggle(toggleBtn, toggleBtn.dataset.count, true);
       threadEl.style.display = "block";
       threadEl.innerHTML = `<div class="empty-state-small"><span class="spinner"></span>Loading replies...</div>`;
       try {
@@ -8803,7 +8970,7 @@ notificationSettingsSave.onclick = async () => {
 
         toggleBtn._countedReplyIds = new Set(replies.map((r) => r.id));
         toggleBtn.dataset.count = String(replies.length);
-        toggleBtn.textContent = `💬 ${replies.length} repl${replies.length === 1 ? "y" : "ies"} ▴`;
+        setRepliesToggle(toggleBtn, replies.length, true);
       } catch (err) {
         console.error(err);
         threadEl.innerHTML = `<div class="empty-state-small">Failed to load replies.</div>`;
@@ -8830,14 +8997,14 @@ notificationSettingsSave.onclick = async () => {
           const next = Math.max(0, parseInt(toggleBtn.dataset.count || "1", 10) - 1);
           toggleBtn.dataset.count = String(next);
           const isOpenNow = threadEl && threadEl.style.display !== "none";
-          toggleBtn.textContent = `💬 ${next} repl${next === 1 ? "y" : "ies"} ${isOpenNow ? "▴" : "▾"}`;
+          setRepliesToggle(toggleBtn, next, isOpenNow);
         }
         return true;
       }
 
       if (!toggleBtn) {
         const anchor = row.querySelector(".message-meta-row") || row.querySelector(".dm-message-actions");
-        const html = `<button class="message-replies-toggle" data-message-id="${replyMsg.parent_id}" data-count="0">💬 0 replies ▾</button><div class="message-replies-thread" data-thread-for="${replyMsg.parent_id}" style="display:none;"></div>`;
+        const html = `<button class="message-replies-toggle" data-message-id="${replyMsg.parent_id}" data-count="0">${repliesToggleHTML(0, false)}</button><div class="message-replies-thread" data-thread-for="${replyMsg.parent_id}" style="display:none;"></div>`;
         if (anchor) {
           anchor.insertAdjacentHTML("beforebegin", html);
         } else {
@@ -8861,7 +9028,7 @@ notificationSettingsSave.onclick = async () => {
         const next = parseInt(toggleBtn.dataset.count || "0", 10) + 1;
         toggleBtn.dataset.count = String(next);
         const isOpenAlready = threadEl.style.display !== "none";
-        toggleBtn.textContent = `💬 ${next} repl${next === 1 ? "y" : "ies"} ${isOpenAlready ? "▴" : "▾"}`;
+        setRepliesToggle(toggleBtn, next, isOpenAlready);
       }
 
       const isOpen = threadEl.style.display !== "none";
@@ -8896,12 +9063,12 @@ notificationSettingsSave.onclick = async () => {
       const isImage = file.type && file.type.startsWith("image/");
       attachmentPreview.style.display = "flex";
       attachmentPreview.innerHTML = `
-        <div class="attachment-preview-thumb" id="attachment-preview-thumb">📄</div>
+        <div class="attachment-preview-thumb" id="attachment-preview-thumb">${uiIcon("file", 18)}</div>
         <div class="attachment-preview-info">
           <div class="attachment-preview-name">${escapeHtml(file.name)}</div>
           <div class="attachment-preview-size">${formatFileSize(file.size)}</div>
         </div>
-        <button class="attachment-preview-remove" id="attachment-preview-remove" title="Remove">✕</button>
+        <button class="attachment-preview-remove" id="attachment-preview-remove" title="Remove">${uiIcon("x", 14)}</button>
       `;
 
       if (isImage) {
@@ -9045,7 +9212,7 @@ notificationSettingsSave.onclick = async () => {
               const next = Math.max(0, parseInt(toggleBtn.dataset.count || "1", 10) - 1);
               toggleBtn.dataset.count = String(next);
               const isOpenNow = threadEl.style.display !== "none";
-              toggleBtn.textContent = `💬 ${next} repl${next === 1 ? "y" : "ies"} ${isOpenNow ? "▴" : "▾"}`;
+              setRepliesToggle(toggleBtn, next, isOpenNow);
             }
           }
           row.remove();
@@ -9621,12 +9788,12 @@ notificationSettingsSave.onclick = async () => {
             <div class="settings-label">${escapeHtml(field.label)}</div>
             <div class="channel-type-options" id="${field.id}" data-value="${field.value || "text"}">
               <div class="channel-type-option ${(field.value || "text") === "text" ? "selected" : ""}" data-value="text">
-                <span class="channel-type-icon">#</span>
+                <span class="channel-type-icon">${uiIcon("hash", 18)}</span>
                 <span>Text</span>
                 <small>Chat with messages</small>
               </div>
               <div class="channel-type-option ${field.value === "voice" ? "selected" : ""}" data-value="voice">
-                <span class="channel-type-icon">🔊</span>
+                <span class="channel-type-icon">${uiIcon("volume", 18)}</span>
                 <span>Voice</span>
                 <small>Live audio room</small>
               </div>
@@ -9936,6 +10103,7 @@ async function handleCreateServer() {
       try {
         await apiFetch(`/api/servers/${server.id}`, { method: "DELETE" });
         showToast("Server deleted", { variant: "accent" });
+        markServerDeletedLocally(server.id);
         if (currentServer && currentServer.id === server.id) {
           currentServer = null;
           currentChannel = null;
@@ -9957,6 +10125,7 @@ async function handleCreateServer() {
       try {
         await apiFetch(`/api/servers/${server.id}/leave`, { method: "POST" });
         showToast(`Left ${server.name}`, { variant: "accent" });
+        markServerLeftLocally(server.id);
         if (currentServer && currentServer.id === server.id) {
           currentServer = null;
           currentChannel = null;
@@ -9994,7 +10163,7 @@ async function handleCreateServer() {
         ...(pushNotificationsActive
           ? [
               {
-                label: muted ? "🔔 Unmute notifications" : "🔕 Mute notifications",
+                label: `${muteBellSVG(muted)} ${muted ? "Unmute notifications" : "Mute notifications"}`,
                 action: () => toggleMuteServer(server.id, !muted),
               },
             ]
@@ -10295,13 +10464,13 @@ async function handleCreateServer() {
           <span class="dm-message-time">${formatTime(message.created_at)}</span>
           ${
             message.parent && message.parent.id
-              ? `<div class="dm-message-reply-quote" data-parent-id="${message.parent.id}">↩ ${escapeHtml((message.parent.user && message.parent.user.username) || "Unknown")}: ${escapeHtml(message.parent.deleted_at ? "(message deleted)" : message.parent.content ? message.parent.content.slice(0, 80) : "📎 Attachment")}</div>`
+              ? `<div class="dm-message-reply-quote" data-parent-id="${message.parent.id}">${uiIcon("reply", 12)} ${escapeHtml((message.parent.user && message.parent.user.username) || "Unknown")}: ${escapeHtml(message.parent.deleted_at ? "(message deleted)" : message.parent.content ? message.parent.content.slice(0, 80) : "Attachment")}</div>`
               : ""
           }
           <div class="dm-message-content">${formatMessageContent(message.content)}</div>
           ${
             message.reply_count > 0
-              ? `<button class="message-replies-toggle" data-message-id="${message.id}">💬 ${message.reply_count} repl${message.reply_count === 1 ? "y" : "ies"} ▾</button>
+              ? `<button class="message-replies-toggle" data-message-id="${message.id}" data-count="${message.reply_count}">${repliesToggleHTML(message.reply_count, false)}</button>
                  <div class="message-replies-thread" data-thread-for="${message.id}" style="display:none;"></div>`
               : ""
           }
@@ -10774,7 +10943,7 @@ async function handleCreateServer() {
           <div class="admin-row">
             <div class="admin-row-main">
               <div>
-                <div class="admin-row-name">${ch.type === "voice" ? "🔊" : "#"} ${escapeHtml(ch.name)}</div>
+                <div class="admin-row-name">${channelTypeIcon(ch.type, 14)} ${escapeHtml(ch.name)}</div>
                 <div class="admin-row-meta">${escapeHtml(ch.type || "text")}${ch.is_private ? " · Private" : ""}</div>
               </div>
             </div>
@@ -11188,6 +11357,7 @@ async function handleCreateServer() {
         const action = el.dataset.action;
         el.addEventListener("click", async () => {
           if (action === "open") {
+            // Join (if needed) so the server appears in the admin's menu, then open it.
             adminDashboardModal.classList.remove("visible");
             try {
               await apiFetch(`/api/servers/${serverId}/join`, { method: "POST" });
@@ -11209,6 +11379,7 @@ async function handleCreateServer() {
             try {
               await apiFetch(`/api/servers/${serverId}`, { method: "DELETE" });
               showToast("Server deleted", { variant: "accent" });
+              markServerDeletedLocally(serverId);
               loadAdminServers();
               loadServers();
             } catch (err) {
@@ -11259,6 +11430,7 @@ async function handleCreateServer() {
           (msg.channel && msg.channel.id === channelId && msg.channel) ||
           { id: channelId, name: (msg.channel && msg.channel.name) || "channel", type: (msg.channel && msg.channel.type) || "text", server_id: serverId };
         await selectChannel(channel);
+        // Allow the message list to render, then highlight.
         setTimeout(() => scrollToMessage(msg.id), 250);
         showToast("Opened reported message", { variant: "accent" });
       } catch (err) {
@@ -11272,7 +11444,7 @@ async function handleCreateServer() {
       try {
         const { reports } = await apiFetch("/api/admin/reports?status=open");
         if (!reports.length) {
-          adminReportsPanel.innerHTML = `<div class="empty-state-small">No open reports. 🎉</div>`;
+          adminReportsPanel.innerHTML = `<div class="empty-state-small">No open reports.</div>`;
           return;
         }
         adminReportsPanel.innerHTML = reports
@@ -11479,7 +11651,7 @@ async function handleCreateServer() {
           return `
             <div class="voice-participant ${speaking ? "speaking" : ""}" data-identity="${escapeHtml(p.identity)}">
               <div class="voice-participant-avatar">${profile ? avatarHTML(profile) : DEFAULT_AVATAR_SVG}</div>
-              <span>${escapeHtml(name)}${muted ? " 🔇" : ""}</span>
+              <span>${escapeHtml(name)}${muted ? uiIcon("mic-off", 12) : ""}</span>
             </div>
           `;
         })
@@ -11520,14 +11692,14 @@ async function handleCreateServer() {
             <div class="voice-tile ${speaking ? "speaking" : ""}" data-identity="${escapeHtml(p.identity)}">
               <div class="voice-tile-avatar">${profile ? avatarHTML(profile) : DEFAULT_AVATAR_SVG}</div>
               <div class="voice-tile-name">
-                ${muted ? `<span class="voice-tile-mic-off">🔇</span>` : ""}
+                ${muted ? `<span class="voice-tile-mic-off">${uiIcon("mic-off", 14)}</span>` : ""}
                 <span>${escapeHtml(name)}${isLocal ? " (you)" : ""}</span>
               </div>
               ${
                 canModerate
                   ? `<div class="voice-tile-mod-actions">
-                      <button class="voice-tile-mod-button" data-mod-action="mute" title="Mute">🔇</button>
-                      <button class="voice-tile-mod-button" data-mod-action="kick" title="Remove from voice">✕</button>
+                      <button class="voice-tile-mod-button" data-mod-action="mute" title="Mute">${uiIcon("mic-off", 14)}</button>
+                      <button class="voice-tile-mod-button" data-mod-action="kick" title="Remove from voice">${uiIcon("x", 14)}</button>
                     </div>`
                   : ""
               }
@@ -11672,8 +11844,8 @@ async function handleCreateServer() {
         voiceChannelId = descriptor.id;
         voiceMuted = false;
         const { label: activeLabel, muteButton } = activeVoiceBarEls();
-        activeLabel.textContent = `🔊 Connected: ${descriptor.name}`;
-        muteButton.textContent = "🎤";
+        activeLabel.innerHTML = `${uiIcon("volume", 14)} Connected: ${escapeHtml(descriptor.name)}`;
+        setMuteButtonIcon(muteButton, false);
         muteButton.classList.remove("active");
         if (voiceContext === "server") chatConnectionStatusEl.textContent = "Voice connected";
         renderVoiceParticipants();
@@ -11752,7 +11924,7 @@ async function handleCreateServer() {
       voiceMuted = !voiceMuted;
       voiceRoom.localParticipant.setMicrophoneEnabled(!voiceMuted);
       const { muteButton } = activeVoiceBarEls();
-      muteButton.textContent = voiceMuted ? "🔇" : "🎤";
+      setMuteButtonIcon(muteButton, voiceMuted);
       muteButton.classList.toggle("active", voiceMuted);
       showToast(voiceMuted ? "Microphone muted" : "Microphone unmuted", { duration: 1500 });
     }
@@ -11775,15 +11947,15 @@ async function handleCreateServer() {
       }
       dmCallButton.style.display = "inline-flex";
       if (voiceRoom && voiceContext === "dm" && activeDmCallId) {
-        dmCallButton.textContent = dmCallParticipants.length <= 1 ? "📞 End call" : "📞 Leave call";
+        dmCallButton.innerHTML = `${uiIcon("phone", 14)} ${dmCallParticipants.length <= 1 ? "End call" : "Leave call"}`;
         return;
       }
       try {
         const { call } = await apiFetch(`/api/dms/${currentDmConversationId}/call`);
-        dmCallButton.textContent = call ? "📞 Join call" : "📞 Call";
+        dmCallButton.innerHTML = `${uiIcon("phone", 14)} ${call ? "Join call" : "Call"}`;
       } catch (err) {
         console.error(err);
-        dmCallButton.textContent = "📞 Call";
+        dmCallButton.innerHTML = `${uiIcon("phone", 14)} Call`;
       }
     }
 
@@ -11879,11 +12051,11 @@ async function handleCreateServer() {
 
       dmCallBarEl.innerHTML = `
         <div class="dm-call-bar-info">
-          <div class="dm-call-bar-title">🔊 On a call</div>
+          <div class="dm-call-bar-title">${uiIcon("volume", 14)} On a call</div>
           <div class="dm-call-bar-names">${escapeHtml(namesText)}</div>
         </div>
         <div class="dm-call-bar-actions">
-          <button class="dm-call-bar-button dm-call-bar-mute${voiceMuted ? " active" : ""}" title="${voiceMuted ? "Unmute" : "Mute"}">${voiceMuted ? "🔇" : "🎤"}</button>
+          <button class="dm-call-bar-button dm-call-bar-mute${voiceMuted ? " active" : ""}" title="${voiceMuted ? "Unmute" : "Mute"}">${uiIcon(voiceMuted ? "mic-off" : "mic", 16)}</button>
           <button class="dm-call-bar-button dm-call-bar-leave">${isAlone ? "End" : "Leave"}</button>
         </div>
       `;
@@ -12002,7 +12174,7 @@ async function handleCreateServer() {
       const providers = new Set(identities.map((i) => i.provider));
 
       identityBadges.innerHTML = Array.from(providers)
-        .map((p) => `<span class="identity-badge">${p === "email" ? "📧" : "🔗"} ${escapeHtml(p)}</span>`)
+        .map((p) => `<span class="identity-badge">${p === "email" ? uiIcon("mail", 12) : uiIcon("link", 12)} ${escapeHtml(p)}</span>`)
         .join("");
 
       OAUTH_PROVIDERS.forEach((provider) => {
