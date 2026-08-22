@@ -970,7 +970,7 @@
     .auth-input-shell,
     .chat-input-shell {
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       gap: 8px;
       border-radius: var(--r-md);
       border: 1px solid var(--input-border);
@@ -1000,6 +1000,7 @@
       background: var(--input-bg);
       color: var(--text);
       font-size: 13px;
+      font-family: inherit;
       border-radius: var(--r-md);
       padding: 8px 12px;
     }
@@ -1010,6 +1011,10 @@
       border: none;
       background: transparent;
       padding: 2px 0;
+      resize: none;
+      overflow-y: hidden;
+      max-height: 200px;
+      line-height: 1.4;
     }
 
     .auth-input:focus,
@@ -1022,6 +1027,13 @@
     .dm-input:focus,
     .dm-search-input:focus {
       border-color: var(--input-border-focus);
+    }
+
+    .dm-input {
+      resize: none;
+      overflow-y: hidden;
+      max-height: 200px;
+      line-height: 1.4;
     }
 
     .settings-textarea {
@@ -2300,7 +2312,7 @@
 
     .chat-input-row {
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       gap: 8px;
     }
 
@@ -3716,11 +3728,12 @@
       gap: 8px;
       padding: 12px 16px;
       border-top: 1px solid var(--border);
+      align-items: flex-end;
     }
 
     .dm-input {
       flex: 1;
-      border-radius: var(--r-full);
+      border-radius: var(--r-lg);
     }
 
     .context-menu {
@@ -4724,7 +4737,7 @@
               <div class="attachment-preview" id="attachment-preview" style="display:none;"></div>
               <div class="chat-input-row">
                 <div class="chat-input-shell">
-                  <input id="chat-input" class="chat-input" type="text" placeholder="Message" autocomplete="off" />
+                  <textarea id="chat-input" class="chat-input" placeholder="Message" autocomplete="off" rows="1"></textarea>
                   <div class="chat-input-tools">
                     <input type="file" id="attachment-input" style="display:none;" />
                     <button class="icon-button" id="attachment-button" title="Upload file" aria-label="Upload file">
@@ -4737,7 +4750,7 @@
                 </button>
               </div>
               <div class="chat-input-meta">
-                <span>Enter to send</span>
+                <span>Enter to send, Shift+Enter for new line</span>
                 <span id="chat-input-hint"></span>
               </div>
             </div>
@@ -5480,7 +5493,7 @@
             </button>
           </div>
           <div class="dm-input-row">
-            <input class="dm-input" id="dm-input" type="text" placeholder="Message..." />
+            <textarea class="dm-input" id="dm-input" placeholder="Message..." rows="1"></textarea>
             <button class="chat-send-button" id="dm-send-button">Send</button>
           </div>
         </div>
@@ -7367,6 +7380,12 @@ notificationSettingsSave.onclick = async () => {
       });
     }
 
+    function autoResizeTextarea(el) {
+      if (!el) return;
+      el.style.height = "auto";
+      el.style.height = Math.min(el.scrollHeight, 200) + "px";
+    }
+
     function findKnownUserByUsername(handle) {
       const needle = handle.toLowerCase();
       const pools = [
@@ -9249,6 +9268,7 @@ notificationSettingsSave.onclick = async () => {
           body: JSON.stringify({ content, attachments, parent_id: parentId }),
         });
         chatInputEl.value = "";
+        autoResizeTextarea(chatInputEl);
         clearReplyTarget();
 
         renderMessage({ ...message, user: currentProfile });
@@ -10875,6 +10895,7 @@ async function handleCreateServer() {
           body: JSON.stringify({ content, parent_id: parentId }),
         });
         dmInput.value = "";
+        autoResizeTextarea(dmInput);
         clearDmReplyTarget();
         renderDmMessage({ ...message, user: currentProfile });
         dmMessageList.scrollTop = dmMessageList.scrollHeight;
@@ -12878,7 +12899,10 @@ async function handleCreateServer() {
           handleSendMessage();
         }
       });
-      chatInputEl.addEventListener("input", () => updateMentionSuggestions(chatInputEl, () => currentServerMembers.map((m) => m.user).filter(Boolean)));
+      chatInputEl.addEventListener("input", () => {
+        autoResizeTextarea(chatInputEl);
+        updateMentionSuggestions(chatInputEl, () => currentServerMembers.map((m) => m.user).filter(Boolean));
+      });
       replyPreviewCancel.addEventListener("click", clearReplyTarget);
 
       attachmentButton.addEventListener("click", () => attachmentInput.click());
@@ -13043,7 +13067,10 @@ async function handleCreateServer() {
           handleSendDmMessage();
         }
       });
-      dmInput.addEventListener("input", () => updateMentionSuggestions(dmInput, () => (currentDmOtherUser ? [currentDmOtherUser] : [])));
+      dmInput.addEventListener("input", () => {
+        autoResizeTextarea(dmInput);
+        updateMentionSuggestions(dmInput, () => (currentDmOtherUser ? [currentDmOtherUser] : []));
+      });
       dmReplyPreviewCancel.addEventListener("click", clearDmReplyTarget);
       dmCallButton.addEventListener("click", handleDmCallButtonClick);
       dmSearchInput.addEventListener("input", handleDmSearchInput);
