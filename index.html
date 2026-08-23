@@ -3679,6 +3679,24 @@
       flex-shrink: 0;
     }
 
+    .dm-conversation-main {
+      min-width: 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .dm-conversation-trailing {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+      flex-shrink: 0;
+      min-width: 28px;
+      margin-left: auto;
+    }
+
     .dm-conversation-name {
       font-size: 13px;
       font-weight: 600;
@@ -3694,6 +3712,24 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    .dm-conversation-trailing .unread-badge {
+      position: static;
+      border: none;
+      margin: 0;
+    }
+
+    .dm-conversation-trailing .voice-active-dot {
+      position: static;
+      display: none;
+      border: none;
+      width: 7px;
+      height: 7px;
+    }
+
+    .dm-conversation-item.has-voice-activity .dm-conversation-trailing .voice-active-dot {
+      display: inline-block;
     }
 
     .dm-chat-pane {
@@ -4196,6 +4232,16 @@
       box-sizing: border-box;
       overflow: hidden;
       padding: 8px;
+    }
+
+    .emoji-picker-grid-mode.is-compact {
+      height: auto;
+      max-height: min(280px, calc(100vh - 24px));
+    }
+
+    .emoji-picker-grid-mode.is-compact .emoji-picker-grid {
+      flex: 0 0 auto;
+      max-height: 160px;
     }
 
     .emoji-picker-tabs {
@@ -4751,6 +4797,12 @@
         </div>
       </div>
       <div class="channel-list-actions">
+        <button class="icon-button" id="server-mute-button" title="Mute server notifications" aria-label="Mute server notifications" style="display:none;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </button>
+        <button class="icon-button" id="server-leave-button" title="Leave server" aria-label="Leave server" style="display:none;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
         <button class="icon-button" id="server-admin-panel-button" title="Server admin panel" aria-label="Server admin panel" style="display:none;">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </button>
@@ -5755,11 +5807,29 @@
       }
     }
 
+    function isChannelMutedForNotifs(channelId) {
+      if (!channelId) return false;
+      if (mutedChannelIds.has(channelId)) return true;
+      const serverId = channelIdToServerId.get(channelId);
+      return !!(serverId && mutedServerIds.has(serverId));
+    }
+
+    function isConversationMutedForNotifs(conversationId) {
+      return !!(conversationId && mutedConversationIds.has(conversationId));
+    }
+
     async function toggleMuteServer(serverId, mute) {
       try {
         await apiFetch(`/api/notification-settings/mute-server/${serverId}`, { method: mute ? "POST" : "DELETE" });
         if (mute) mutedServerIds.add(serverId);
         else mutedServerIds.delete(serverId);
+        if (mute) {
+          for (const [chId] of Array.from(unreadChannelCounts.entries())) {
+            if (channelIdToServerId.get(chId) === serverId) markChannelRead(chId);
+          }
+        }
+        refreshServerUnreadDot(serverId);
+        if (typeof updateServerHeaderMuteLeaveButtons === "function") updateServerHeaderMuteLeaveButtons();
         showToast(mute ? "Server muted" : "Server unmuted", { duration: 1500 });
       } catch (err) {
         console.error(err);
@@ -5772,6 +5842,7 @@
         await apiFetch(`/api/notification-settings/mute-channel/${channelId}`, { method: mute ? "POST" : "DELETE" });
         if (mute) mutedChannelIds.add(channelId);
         else mutedChannelIds.delete(channelId);
+        if (mute) markChannelRead(channelId);
         showToast(mute ? "Channel muted" : "Channel unmuted", { duration: 1500 });
       } catch (err) {
         console.error(err);
@@ -5786,6 +5857,14 @@
         });
         if (mute) mutedConversationIds.add(conversationId);
         else mutedConversationIds.delete(conversationId);
+        if (mute) {
+          markDmRead(conversationId);
+          const stack = document.querySelector(".dm-notification-stack");
+          if (stack) {
+            const existing = stack.querySelector(`[data-conversation-id="${conversationId}"]`);
+            if (existing) existing.remove();
+          }
+        }
         showToast(mute ? "Conversation muted" : "Conversation unmuted", { duration: 1500 });
       } catch (err) {
         console.error(err);
@@ -6113,16 +6192,18 @@
     }
 
     function serverHasUnread(serverId) {
+      if (mutedServerIds.has(serverId)) return false;
       for (const [chId, count] of unreadChannelCounts) {
-        if (count > 0 && channelIdToServerId.get(chId) === serverId) return true;
+        if (count > 0 && channelIdToServerId.get(chId) === serverId && !mutedChannelIds.has(chId)) return true;
       }
       return false;
     }
 
     function serverUnreadTotal(serverId) {
+      if (mutedServerIds.has(serverId)) return 0;
       let total = 0;
       for (const [chId, count] of unreadChannelCounts) {
-        if (channelIdToServerId.get(chId) === serverId) total += count;
+        if (channelIdToServerId.get(chId) === serverId && !mutedChannelIds.has(chId)) total += count;
       }
       return total;
     }
@@ -6138,6 +6219,7 @@
     }
 
     function markChannelUnread(channelId) {
+      if (isChannelMutedForNotifs(channelId)) return;
       unreadChannelCounts.set(channelId, (unreadChannelCounts.get(channelId) || 0) + 1);
       const el = channelListEl.querySelector(`.channel-item[data-channel-id="${channelId}"]`);
       if (el) {
@@ -6164,7 +6246,10 @@
     }
 
     function refreshDmButtonDot() {
-      const total = Array.from(unreadDmCounts.values()).reduce((a, b) => a + b, 0);
+      let total = 0;
+      for (const [id, count] of unreadDmCounts) {
+        if (!isConversationMutedForNotifs(id)) total += count;
+      }
       dmButton.classList.toggle("has-unread", total > 0);
       const existing = dmButton.querySelector(".unread-badge");
       if (existing) existing.remove();
@@ -6172,13 +6257,15 @@
     }
 
     function markDmUnread(conversationId) {
+      if (isConversationMutedForNotifs(conversationId)) return;
       unreadDmCounts.set(conversationId, (unreadDmCounts.get(conversationId) || 0) + 1);
       const el = dmConversationList.querySelector(`.dm-conversation-item[data-conversation-id="${conversationId}"]`);
       if (el) {
         el.classList.add("has-unread");
         const badgeEl = el.querySelector(".unread-badge");
         if (badgeEl) badgeEl.remove();
-        el.insertAdjacentHTML("beforeend", badgeHTML(unreadDmCounts.get(conversationId)));
+        const trailing = el.querySelector(".dm-conversation-trailing") || el;
+        trailing.insertAdjacentHTML("beforeend", badgeHTML(unreadDmCounts.get(conversationId)));
       }
       refreshDmButtonDot();
     }
@@ -6219,6 +6306,7 @@
     }
 
     async function showDmNotification(message, other) {
+      if (!message || isConversationMutedForNotifs(message.conversation_id)) return;
       const stack = getDmNotificationStack();
 
       const existing = stack.querySelector(`[data-conversation-id="${message.conversation_id}"]`);
@@ -6289,7 +6377,6 @@
         </div>
       `;
       const stack = getTopRightAlertStack();
-      // Keep incoming call above DM notifications / active call bar when possible
       const callBar = stack.querySelector(".dm-call-bar");
       if (callBar) stack.insertBefore(el, callBar);
       else stack.insertBefore(el, stack.firstChild);
@@ -6369,6 +6456,7 @@
               const isOpenDm =
                 dmModal.classList.contains("visible") && currentDmConversationId === row.conversation_id;
               if (isOpenDm) return;
+              if (isConversationMutedForNotifs(row.conversation_id)) return;
               markDmUnread(row.conversation_id);
               const known = dmConversationsCache.find((c) => c.id === row.conversation_id);
               const other = known ? known.other_user : await resolveProfile(row.user_id);
@@ -6565,8 +6653,6 @@ function showAuthOverlay() {
       if (!("serviceWorker" in navigator)) return;
       const state = {
         type: "focus-state",
-        // Treat page as visible if the tab is visible — hasFocus can be false while reading
-        // messages / on a call with another window focused, but user is still "on the site".
         visible: document.visibilityState === "visible",
         channelId: currentChannel ? currentChannel.id : null,
         conversationId:
@@ -6938,6 +7024,24 @@ function showAuthOverlay() {
     const browseServersButton = document.getElementById("browse-servers-button");
     const createChannelButton = document.getElementById("create-channel-button");
     const serverAdminPanelButton = document.getElementById("server-admin-panel-button");
+    const serverMuteButton = document.getElementById("server-mute-button");
+    const serverLeaveButton = document.getElementById("server-leave-button");
+
+    function updateServerHeaderMuteLeaveButtons() {
+      if (!serverMuteButton || !serverLeaveButton) return;
+      if (!currentServer) {
+        serverMuteButton.style.display = "none";
+        serverLeaveButton.style.display = "none";
+        return;
+      }
+      const muted = mutedServerIds.has(currentServer.id);
+      serverMuteButton.style.display = "flex";
+      serverMuteButton.innerHTML = muteBellSVG(muted);
+      serverMuteButton.title = muted ? "Unmute server notifications" : "Mute server notifications";
+      serverMuteButton.setAttribute("aria-label", serverMuteButton.title);
+      // Leave is available for any selected server the user is in
+      serverLeaveButton.style.display = "flex";
+    }
     const settingsModal = document.getElementById("settings-modal");
     const viewProfileModal = document.getElementById("view-profile-modal");
     const viewProfileClose = document.getElementById("view-profile-close");
@@ -7755,7 +7859,8 @@ notificationSettingsSave.onclick = async () => {
     function positionAnchoredPopover(el, anchorRect, margin = 8, gap = 8) {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      const preferredH = 360;
+      const isCompact = el.classList.contains("is-compact");
+      const preferredH = isCompact ? Math.min(280, Math.max(el.offsetHeight || 200, 180)) : 360;
       const w = Math.min(el.offsetWidth || 320, vw - margin * 2);
 
       const spaceBelow = vh - anchorRect.bottom - margin - gap;
@@ -7767,11 +7872,18 @@ notificationSettingsSave.onclick = async () => {
         (anchorRect.bottom > vh * 0.55 && spaceAbove >= Math.min(spaceBelow, preferredH * 0.5));
 
       const available = openAbove ? spaceAbove : spaceBelow;
-      const h = Math.max(200, Math.min(preferredH, available > 40 ? available : vh - margin * 2));
+      const h = isCompact
+        ? Math.min(preferredH, available > 40 ? available : vh - margin * 2)
+        : Math.max(200, Math.min(preferredH, available > 40 ? available : vh - margin * 2));
 
       el.style.width = `${Math.min(320, vw - margin * 2)}px`;
-      el.style.height = `${h}px`;
-      el.style.maxHeight = `${h}px`;
+      if (isCompact) {
+        el.style.height = "auto";
+        el.style.maxHeight = `${Math.max(160, h)}px`;
+      } else {
+        el.style.height = `${h}px`;
+        el.style.maxHeight = `${h}px`;
+      }
 
       let top = openAbove
         ? anchorRect.top - gap - h
@@ -8123,6 +8235,11 @@ notificationSettingsSave.onclick = async () => {
         grid.querySelectorAll(".emoji-picker-option").forEach((btn) => {
           btn.addEventListener("click", () => pickEmoji(btn.dataset.emoji));
         });
+        const compact = list.length <= 16;
+        picker.classList.toggle("is-compact", compact);
+        if (picker.isConnected && anchorEl.isConnected) {
+          positionAnchoredPopover(picker, anchorEl.getBoundingClientRect());
+        }
       }
 
       function renderCategory(name) {
@@ -8306,7 +8423,7 @@ notificationSettingsSave.onclick = async () => {
 
         await serversPromise;
         loadDmConversations();
-        loadNotificationSettings();
+        await loadNotificationSettings();
 
         startVoiceActivityPolling();
         startSyncPolling();
@@ -8653,14 +8770,18 @@ notificationSettingsSave.onclick = async () => {
       showNoChannelSelectedState();
       createChannelButton.style.display = "none";
       serverAdminPanelButton.style.display = "none";
+      if (serverMuteButton) serverMuteButton.style.display = "none";
+      if (serverLeaveButton) serverLeaveButton.style.display = "none";
       try {
         const { membership } = await apiFetch(`/api/servers/${server.id}/membership`);
         currentServerMembership = membership;
         const canManage = canManageCurrentServer();
         createChannelButton.style.display = canManage ? "flex" : "none";
         serverAdminPanelButton.style.display = canManage ? "flex" : "none";
+        updateServerHeaderMuteLeaveButtons();
       } catch (err) {
         console.error(err);
+        updateServerHeaderMuteLeaveButtons();
       }
 
       await Promise.all([loadChannels(server.id), loadServerMembers(server.id)]);
@@ -8710,10 +8831,10 @@ notificationSettingsSave.onclick = async () => {
             el.dataset.channelId = ch.id;
             el.dataset.channelType = type;
             channelIdToServerId.set(ch.id, serverId);
-            const unreadCount = unreadChannelCounts.get(ch.id) || 0;
+            const isMuted = mutedChannelIds.has(ch.id) || mutedServerIds.has(serverId);
+            const unreadCount = isMuted ? 0 : (unreadChannelCounts.get(ch.id) || 0);
             if (unreadCount > 0) el.classList.add("has-unread");
             if (type === "voice" && activeVoiceRoomIds.has(ch.id)) el.classList.add("has-voice-activity");
-            const isMuted = mutedChannelIds.has(ch.id);
             el.innerHTML = `
               <div class="channel-item-main">
                 <span class="channel-item-icon">${icon}</span>
@@ -10538,14 +10659,12 @@ async function handleCreateServer() {
       const muted = mutedServerIds.has(server.id);
 
       const items = [
-        ...(pushNotificationsActive
-          ? [
-              {
-                label: `${muteBellSVG(muted)} ${muted ? "Unmute notifications" : "Mute notifications"}`,
-                action: () => toggleMuteServer(server.id, !muted),
-              },
-            ]
-          : []),
+        {
+          label: `${muteBellSVG(muted)} ${muted ? "Unmute notifications" : "Mute notifications"}`,
+          action: async () => {
+            await toggleMuteServer(server.id, !muted);
+          },
+        },
         ...(canManage
           ? [
               { label: "Edit server", action: () => handleEditServer(server) },
@@ -10965,22 +11084,27 @@ async function handleCreateServer() {
         }
         dmConversationList.innerHTML = conversations
           .map(
-            (c) => `
-          <div class="dm-conversation-item${unreadDmCounts.has(c.id) ? " has-unread" : ""}${activeCallConversationIds.has(c.id) ? " has-voice-activity" : ""}" data-conversation-id="${c.id}">
+            (c) => {
+              const isMuted = mutedConversationIds.has(c.id);
+              const unread = isMuted ? 0 : (unreadDmCounts.get(c.id) || 0);
+              return `
+          <div class="dm-conversation-item${unread > 0 ? " has-unread" : ""}${activeCallConversationIds.has(c.id) ? " has-voice-activity" : ""}" data-conversation-id="${c.id}">
             <div class="dm-conversation-avatar">${c.other_user ? avatarHTML(c.other_user) : DEFAULT_AVATAR_SVG}</div>
-            <div style="min-width:0;">
+            <div class="dm-conversation-main">
               <div class="dm-conversation-name">${escapeHtml(c.other_user ? c.other_user.username : "Unknown")}</div>
               <div class="dm-conversation-preview">${escapeHtml(c.last_message ? c.last_message.content || "" : "No messages yet")}</div>
             </div>
-            ${badgeHTML(unreadDmCounts.get(c.id) || 0)}
-            ${
-              pushNotificationsActive
-                ? `<button class="dm-mute-toggle" title="${mutedConversationIds.has(c.id) ? "Unmute" : "Mute notifications"}" aria-label="${mutedConversationIds.has(c.id) ? "Unmute" : "Mute notifications"}">${muteBellSVG(mutedConversationIds.has(c.id))}</button>`
-                : ""
+            <div class="dm-conversation-trailing">
+              ${badgeHTML(unread)}
+              ${
+                pushNotificationsActive
+                  ? `<button class="dm-mute-toggle" title="${isMuted ? "Unmute" : "Mute notifications"}" aria-label="${isMuted ? "Unmute" : "Mute notifications"}">${muteBellSVG(isMuted)}</button>`
+                  : ""
+              }
+              <span class="voice-active-dot"></span>
+            </div>
+          </div>`;
             }
-            <span class="voice-active-dot"></span>
-          </div>
-        `
           )
           .join("");
 
@@ -13410,6 +13534,19 @@ async function handleCreateServer() {
       serverAdminPanelButton.addEventListener("click", () => {
         if (currentServer) openServerAdminPanel(currentServer);
       });
+      if (serverMuteButton) {
+        serverMuteButton.addEventListener("click", async () => {
+          if (!currentServer) return;
+          const next = !mutedServerIds.has(currentServer.id);
+          await toggleMuteServer(currentServer.id, next);
+        });
+      }
+      if (serverLeaveButton) {
+        serverLeaveButton.addEventListener("click", async () => {
+          if (!currentServer) return;
+          await handleLeaveServer(currentServer);
+        });
+      }
 
       formModalClose.addEventListener("click", closeFormModal);
       formModalCancel.addEventListener("click", closeFormModal);
