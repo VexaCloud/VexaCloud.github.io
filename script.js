@@ -1,4 +1,4 @@
-    function showInitError(message) {
+function showInitError(message) {
       const el = document.getElementById("auth-init-error");
       if (el) {
         el.textContent = message;
@@ -3011,7 +3011,12 @@ notificationSettingsSave.onclick = async () => {
       setBootLoaderStatus("Loading…");
       try {
 
-        const serversPromise = loadServers();
+        // Gate on /api/auth/me FIRST. This is what actually enforces bans/force-logout,
+        // so no authenticated data (servers, DMs, etc.) may be requested or rendered until
+        // it has come back clean. Previously loadServers() was fired in parallel with this
+        // check, so a banned account's server/channel data would still be fetched and briefly
+        // rendered behind the auth overlay before the ban error landed — reloading ("Retry")
+        // repeatedly just gave more chances to catch and interact with that window.
         const me = await apiFetch("/api/auth/me");
         currentProfile = me.user;
         topBarSubtitle.textContent = currentProfile.username || currentUser.email;
@@ -3027,6 +3032,7 @@ notificationSettingsSave.onclick = async () => {
         if (typeof window.updatePushStatusUI === "function") window.updatePushStatusUI();
         await tryApplyPendingAvatar();
 
+        const serversPromise = loadServers();
         await serversPromise;
         loadDmConversations();
         await loadNotificationSettings();
@@ -9934,4 +9940,3 @@ async function handleSignIn() {
         window.location.reload();
       }
     });
-  
