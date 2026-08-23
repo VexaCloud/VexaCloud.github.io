@@ -1379,11 +1379,27 @@
       right: 6px;
     }
 
-    .incoming-call-popup {
+    .top-right-alert-stack {
       position: fixed;
       top: 16px;
       right: 16px;
       z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-end;
+      max-width: min(360px, calc(100vw - 32px));
+      pointer-events: none;
+    }
+    .top-right-alert-stack > * {
+      pointer-events: auto;
+    }
+
+    .incoming-call-popup {
+      position: relative;
+      top: auto;
+      right: auto;
+      z-index: auto;
       background: var(--surface);
       border: 1px solid var(--border-strong);
       border-radius: var(--r-lg);
@@ -1393,6 +1409,8 @@
       align-items: center;
       gap: 12px;
       min-width: 260px;
+      width: 100%;
+      box-sizing: border-box;
       animation: incoming-call-pulse 1.6s ease-in-out infinite;
     }
     @keyframes incoming-call-pulse {
@@ -1434,10 +1452,10 @@
     }
 
     .dm-call-bar {
-      position: fixed;
-      top: 16px;
-      right: 16px;
-      z-index: 999;
+      position: relative;
+      top: auto;
+      right: auto;
+      z-index: auto;
       background: var(--surface);
       border: 1px solid var(--border-strong);
       border-radius: var(--r-lg);
@@ -1447,7 +1465,9 @@
       align-items: center;
       gap: 10px;
       min-width: 220px;
+      width: 100%;
       max-width: 320px;
+      box-sizing: border-box;
     }
     .dm-call-bar-info {
       flex: 1;
@@ -1494,14 +1514,15 @@
     }
 
     .dm-notification-stack {
-      position: fixed;
-      top: 16px;
-      right: 16px;
-      z-index: 998;
+      position: relative;
+      top: auto;
+      right: auto;
+      z-index: auto;
       display: flex;
       flex-direction: column;
       gap: 8px;
       align-items: flex-end;
+      width: 100%;
     }
     .dm-notification {
       display: flex;
@@ -4115,9 +4136,23 @@
       100% { background: transparent; }
     }
 
-    .message-row.report-highlight .message-content {
+    .message-row.report-highlight {
       background: var(--danger-subtle);
+      box-shadow: inset 3px 0 0 var(--danger);
       border-radius: var(--r-sm);
+    }
+    .message-row.report-highlight .message-content {
+      background: transparent;
+      border-radius: var(--r-sm);
+    }
+    .message-row.report-highlight .message-username {
+      color: var(--danger);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .message-row.report-highlight .message-avatar {
+      outline: 2px solid var(--danger);
+      outline-offset: 1px;
     }
 
     .report-review-banner {
@@ -4574,16 +4609,24 @@
         flex-direction: column;
         align-items: flex-start;
       }
-      .incoming-call-popup,
-      .dm-call-bar {
+      .top-right-alert-stack {
         left: 8px;
         right: 8px;
         top: 8px;
+        max-width: none;
+        width: auto;
+      }
+      .incoming-call-popup,
+      .dm-call-bar {
+        left: auto;
+        right: auto;
+        top: auto;
         min-width: 0;
         max-width: none;
+        width: 100%;
       }
       .dm-notification {
-        width: calc(100vw - 24px);
+        width: 100%;
       }
     }
 
@@ -4764,7 +4807,8 @@
             <div class="report-review-banner" id="report-review-banner" style="display:none;">
               <span class="report-review-banner-text">Reviewing report</span>
               <div class="report-review-banner-actions">
-                <button class="identity-action-button identity-action-button-danger" id="report-review-ban-button" style="display:none;">Ban user</button>
+                <button class="identity-action-button identity-action-button-danger" id="report-review-ban-button" style="display:none;">Ban reported user</button>
+                <button class="identity-action-button identity-action-button-danger" id="report-review-ban-reporter-button" style="display:none;">Ban reporter</button>
                 <button class="identity-action-button" id="report-review-dismiss-button">Dismiss</button>
                 <button class="identity-action-button" id="report-review-resolve-button">Mark as resolved</button>
               </div>
@@ -6140,12 +6184,23 @@
       apiFetch(`/api/dms/${conversationId}/read`, { method: "POST", body: JSON.stringify({}) }).catch(() => {});
     }
 
+    let topRightAlertStackEl = null;
     let dmNotificationStackEl = null;
+    function getTopRightAlertStack() {
+      if (!topRightAlertStackEl || !document.body.contains(topRightAlertStackEl)) {
+        topRightAlertStackEl = document.createElement("div");
+        topRightAlertStackEl.className = "top-right-alert-stack";
+        topRightAlertStackEl.id = "top-right-alert-stack";
+        document.body.appendChild(topRightAlertStackEl);
+      }
+      return topRightAlertStackEl;
+    }
     function getDmNotificationStack() {
-      if (!dmNotificationStackEl || !document.body.contains(dmNotificationStackEl)) {
+      const parent = getTopRightAlertStack();
+      if (!dmNotificationStackEl || !parent.contains(dmNotificationStackEl)) {
         dmNotificationStackEl = document.createElement("div");
         dmNotificationStackEl.className = "dm-notification-stack";
-        document.body.appendChild(dmNotificationStackEl);
+        parent.appendChild(dmNotificationStackEl);
       }
       return dmNotificationStackEl;
     }
@@ -6220,7 +6275,10 @@
           <button class="incoming-call-button incoming-call-decline">Dismiss</button>
         </div>
       `;
-      document.body.appendChild(el);
+      const stack = getTopRightAlertStack();
+      const callBar = stack.querySelector(".dm-call-bar");
+      if (callBar) stack.insertBefore(el, callBar);
+      else stack.insertBefore(el, stack.firstChild);
       incomingCallPopupEl = el;
       incomingCallPopupCallId = call.id;
 
@@ -6493,7 +6551,7 @@ function showAuthOverlay() {
       if (!("serviceWorker" in navigator)) return;
       const state = {
         type: "focus-state",
-        visible: document.visibilityState === "visible" && document.hasFocus(),
+        visible: document.visibilityState === "visible",
         channelId: currentChannel ? currentChannel.id : null,
         conversationId:
           dmModal && dmModal.classList.contains("visible") ? currentDmConversationId : null,
@@ -6506,6 +6564,7 @@ function showAuthOverlay() {
 
     window.addEventListener("focus", reportFocusStateToServiceWorker);
     window.addEventListener("blur", reportFocusStateToServiceWorker);
+    setInterval(reportFocusStateToServiceWorker, 15000);
 
     async function getPushServiceWorkerRegistration() {
       if (pushServiceWorkerRegistration) return pushServiceWorkerRegistration;
@@ -6780,6 +6839,7 @@ function showAuthOverlay() {
     const messageListEl = document.getElementById("message-list");
     const reportReviewBanner = document.getElementById("report-review-banner");
     const reportReviewBanButton = document.getElementById("report-review-ban-button");
+    const reportReviewBanReporterButton = document.getElementById("report-review-ban-reporter-button");
     const reportReviewDismissButton = document.getElementById("report-review-dismiss-button");
     const reportReviewResolveButton = document.getElementById("report-review-resolve-button");
     let activeReviewingReport = null;
@@ -9287,6 +9347,15 @@ notificationSettingsSave.onclick = async () => {
     function showReportReviewBanner(report) {
       activeReviewingReport = report;
       reportReviewBanButton.style.display = report.reported_user ? "" : "none";
+      if (reportReviewBanReporterButton) {
+        reportReviewBanReporterButton.style.display = report.reporter ? "" : "none";
+      }
+      const reporterName = (report.reporter && report.reporter.username) || "reporter";
+      const reportedName = (report.reported_user && report.reported_user.username) || "user";
+      const bannerText = reportReviewBanner.querySelector(".report-review-banner-text");
+      if (bannerText) {
+        bannerText.textContent = `Reviewing report · ${reportedName}${report.reporter ? ` (reported by ${reporterName})` : ""}`;
+      }
       reportReviewBanner.style.display = "flex";
     }
 
@@ -9322,13 +9391,35 @@ notificationSettingsSave.onclick = async () => {
           method: "POST",
           body: JSON.stringify({ reason: `Report: ${report.reason}` }),
         });
-        showToast(result.executed ? "User banned" : result.message, { variant: "accent" });
+        showToast(result.executed ? "Reported user banned" : result.message, { variant: "accent" });
         hideReportReviewBanner();
       } catch (err) {
         console.error(err);
         showToast(err.message || "Action failed", { variant: "danger" });
       }
     });
+
+    if (reportReviewBanReporterButton) {
+      reportReviewBanReporterButton.addEventListener("click", async () => {
+        const report = activeReviewingReport;
+        if (!report || !report.reporter) return;
+        const ok = window.confirm(
+          `Ban reporter "${report.reporter.username || "user"}"? Use this for abuse of the report system.`
+        );
+        if (!ok) return;
+        try {
+          const result = await apiFetch(`/api/admin/users/${report.reporter.id}/ban`, {
+            method: "POST",
+            body: JSON.stringify({ reason: `Abusive report: ${report.reason || "n/a"}` }),
+          });
+          showToast(result.executed ? "Reporter banned" : result.message, { variant: "accent" });
+          hideReportReviewBanner();
+        } catch (err) {
+          console.error(err);
+          showToast(err.message || "Action failed", { variant: "danger" });
+        }
+      });
+    }
 
     let isSendingMessage = false;
 
@@ -11703,7 +11794,8 @@ async function handleCreateServer() {
               </div>
               <div class="admin-row-actions">
                 ${msg && (msg.channel_id || (msg.channel && msg.channel.id)) ? `<button class="identity-action-button" data-action="open">Open report</button>` : ""}
-                ${target ? `<button class="identity-action-button identity-action-button-danger" data-action="ban">Ban user</button>` : ""}
+                ${target ? `<button class="identity-action-button identity-action-button-danger" data-action="ban">Ban reported</button>` : ""}
+                ${r.reporter ? `<button class="identity-action-button identity-action-button-danger" data-action="ban-reporter">Ban reporter</button>` : ""}
                 <button class="identity-action-button" data-action="dismiss">Dismiss</button>
                 <button class="identity-action-button" data-action="resolve">Mark resolved</button>
               </div>
@@ -11727,7 +11819,17 @@ async function handleCreateServer() {
                   method: "POST",
                   body: JSON.stringify({ reason: `Report: ${report.reason}` }),
                 });
-                showToast(result.executed ? "User banned" : result.message, { variant: "accent" });
+                showToast(result.executed ? "Reported user banned" : result.message, { variant: "accent" });
+              } else if (el.dataset.action === "ban-reporter" && report.reporter) {
+                const ok = window.confirm(
+                  `Ban reporter "${report.reporter.username || "user"}"? Use this for abuse of the report system.`
+                );
+                if (!ok) return;
+                const result = await apiFetch(`/api/admin/users/${report.reporter.id}/ban`, {
+                  method: "POST",
+                  body: JSON.stringify({ reason: `Abusive report: ${report.reason || "n/a"}` }),
+                });
+                showToast(result.executed ? "Reporter banned" : result.message, { variant: "accent" });
               } else {
                 const status = el.dataset.action === "dismiss" ? "dismissed" : "resolved";
                 await apiFetch(`/api/admin/reports/${reportId}/resolve`, {
@@ -12062,12 +12164,12 @@ async function handleCreateServer() {
         await room.connect(url, token);
 
         if (myGeneration !== voiceConnectGeneration) {
-
           try {
             await room.disconnect();
           } catch (err) {
             console.error(err);
           }
+          leaveVoiceCleanup();
           return;
         }
 
@@ -12101,54 +12203,74 @@ async function handleCreateServer() {
 
     function leaveVoiceCleanup() {
       const wasServerVoice = voiceContext === "server";
-      const { bar, participants: participantsEl } = activeVoiceBarEls();
+      const previousContext = voiceContext;
+      try {
+        const { bar, participants: participantsEl } = activeVoiceBarEls();
+        if (bar) bar.classList.remove("visible");
+        if (participantsEl) participantsEl.innerHTML = "";
+      } catch (err) {
+        console.error(err);
+      }
       voiceRoom = null;
       voiceChannelId = null;
       voiceMuted = false;
-      bar.classList.remove("visible");
-      participantsEl.innerHTML = "";
-      getVoiceAudioContainer().innerHTML = "";
-      Array.from(channelListEl.querySelectorAll(".channel-item")).forEach((el) => {
-        el.classList.remove("in-voice");
-      });
-      if (voiceContext === "server" && chatConnectionStatusEl.textContent.startsWith("Voice")) {
+      try {
+        getVoiceAudioContainer().innerHTML = "";
+      } catch (err) {}
+      try {
+        Array.from(channelListEl.querySelectorAll(".channel-item")).forEach((el) => {
+          el.classList.remove("in-voice");
+        });
+      } catch (err) {}
+      if (wasServerVoice && chatConnectionStatusEl && chatConnectionStatusEl.textContent.startsWith("Voice")) {
         chatConnectionStatusEl.textContent = "Ready";
       }
       voiceContext = null;
       activeDmCallId = null;
       activeDmCallStartedAt = null;
       dmCallParticipants = [];
-      unsubscribeDmCallRealtime();
-      hideDmCallBar();
-      if (wasServerVoice) {
-        pollActiveVoiceRooms();
-        setVoiceStageVisible(false);
-        voiceStageGrid.innerHTML = "";
+      try {
+        unsubscribeDmCallRealtime();
+      } catch (err) {}
+      try {
+        hideDmCallBar();
+      } catch (err) {}
+      if (wasServerVoice || previousContext === "server") {
+        try {
+          pollActiveVoiceRooms();
+        } catch (err) {}
+        try {
+          setVoiceStageVisible(false);
+          voiceStageGrid.innerHTML = "";
+        } catch (err) {}
       }
     }
 
     async function disconnectVoice() {
-
       voiceConnectGeneration++;
       const wasDm = voiceContext === "dm";
       const callId = activeDmCallId;
       const room = voiceRoom;
+      voiceRoom = null;
       if (room) {
         try {
-
           await room.disconnect();
         } catch (err) {
           console.error(err);
         }
       }
-      if (!room) leaveVoiceCleanup();
+      leaveVoiceCleanup();
       if (wasDm && callId) {
         try {
           await apiFetch(`/api/voice-calls/${callId}/leave`, { method: "POST" });
         } catch (err) {
           console.error(err);
         }
-        updateDmCallButton();
+        try {
+          updateDmCallButton();
+        } catch (err) {
+          console.error(err);
+        }
       }
     }
 
@@ -12272,7 +12394,11 @@ async function handleCreateServer() {
       if (!dmCallBarEl) {
         dmCallBarEl = document.createElement("div");
         dmCallBarEl.className = "dm-call-bar";
-        document.body.appendChild(dmCallBarEl);
+        const stack = getTopRightAlertStack();
+        const incoming = stack.querySelector(".incoming-call-popup");
+        if (incoming && incoming.nextSibling) stack.insertBefore(dmCallBarEl, incoming.nextSibling);
+        else if (incoming) stack.appendChild(dmCallBarEl);
+        else stack.insertBefore(dmCallBarEl, stack.firstChild);
       }
 
       const otherParticipants = dmCallParticipants.filter((p) => p.user_id !== currentUser.id);
