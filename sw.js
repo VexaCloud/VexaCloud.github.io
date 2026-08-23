@@ -15,9 +15,11 @@ self.addEventListener("push", function (event) {
   const contextLine = contextParts.join(" • ");
   const body = data.body ? `${contextLine}\n${data.body}` : contextLine;
 
-  if (focusState.visible) return;
-
-  const tag = data.conversationId ? `dm-${data.conversationId}` : data.channelId ? `channel-${data.channelId}` : data.tag;
+  const tag = data.conversationId
+    ? `dm-${data.conversationId}`
+    : data.channelId
+      ? `channel-${data.channelId}`
+      : data.tag;
 
   const options = {
     body,
@@ -28,7 +30,26 @@ self.addEventListener("push", function (event) {
     renotify: !!tag,
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(
+    (async () => {
+      try {
+        const clientList = await clients.matchAll({
+          type: "window",
+          includeUncontrolled: true,
+        });
+        const anyFocusedOrVisible = clientList.some(
+          (c) => c.focused || c.visibilityState === "visible"
+        );
+        if (anyFocusedOrVisible || focusState.visible) {
+          return;
+        }
+      } catch (_) {
+        if (focusState.visible) return;
+      }
+
+      await self.registration.showNotification(title, options);
+    })()
+  );
 });
 
 let focusState = { visible: false, channelId: null, conversationId: null };
