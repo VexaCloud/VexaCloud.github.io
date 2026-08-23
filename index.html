@@ -16,11 +16,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
   <style id="boot-critical-css">
-    /* Critical boot loader — always light; theme is unknown until app loads */
+    /* Critical boot loader — the #boot-loader/#boot-load-error overlays below carry their
+       own opaque backgrounds and fully cover the viewport while boot is in progress, so we
+       don't need to (and must not) force html/body colors here. Doing so with !important
+       used to permanently win over the theme's real `background: var(--bg-canvas)` rule in
+       stylesheet.css after the app finished loading, leaving a white backdrop showing through
+       the .app-shell padding in every dark theme. */
     html, body {
       margin: 0;
-      background: #f5f6f8 !important;
-      color: #111827 !important;
     }
     #boot-loader {
       position: fixed; inset: 0; z-index: 99999;
