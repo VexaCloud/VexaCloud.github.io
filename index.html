@@ -2440,6 +2440,38 @@
       color: var(--danger);
     }
 
+    .chat-drop-overlay {
+      position: absolute;
+      inset: 8px;
+      z-index: 6;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-subtle);
+      backdrop-filter: var(--blur-soft);
+      -webkit-backdrop-filter: var(--blur-soft);
+      border: 2px dashed var(--accent);
+      border-radius: var(--r-lg);
+      pointer-events: none;
+    }
+
+    .chat-drop-overlay.visible {
+      display: flex;
+    }
+
+    .chat-drop-overlay-inner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: var(--r-full);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: var(--shadow-2);
+    }
+
     .user-list {
       display: flex;
       flex-direction: column;
@@ -4876,6 +4908,12 @@
             <div class="voice-stage-grid" id="voice-stage-grid"></div>
           </div>
           <div class="chat-body" id="chat-body">
+            <div class="chat-drop-overlay" id="chat-drop-overlay">
+              <div class="chat-drop-overlay-inner">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                <span>Drop image to attach</span>
+              </div>
+            </div>
             <div class="report-review-banner" id="report-review-banner" style="display:none;">
               <span class="report-review-banner-text">Reviewing report</span>
               <div class="report-review-banner-actions">
@@ -4894,6 +4932,7 @@
                 </button>
               </div>
               <div class="attachment-preview" id="attachment-preview" style="display:none;"></div>
+              <div class="attachment-preview" id="link-preview" style="display:none;"></div>
               <div class="chat-input-row">
                 <div class="chat-input-shell">
                   <textarea id="chat-input" class="chat-input" placeholder="Message" autocomplete="off" rows="1"></textarea>
@@ -5651,6 +5690,7 @@
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
+          <div class="attachment-preview" id="dm-link-preview" style="display:none;"></div>
           <div class="dm-input-row">
             <textarea class="dm-input" id="dm-input" placeholder="Message..." rows="1"></textarea>
             <button class="chat-send-button" id="dm-send-button">Send</button>
@@ -6999,6 +7039,8 @@ function showAuthOverlay() {
     const attachmentInput = document.getElementById("attachment-input");
     const attachmentButton = document.getElementById("attachment-button");
     const attachmentPreview = document.getElementById("attachment-preview");
+    const linkPreviewEl = document.getElementById("link-preview");
+    const chatDropOverlay = document.getElementById("chat-drop-overlay");
     const voiceBar = document.getElementById("voice-bar");
     let _voiceAudioContainer = null;
     function getVoiceAudioContainer() {
@@ -7170,6 +7212,7 @@ function showAuthOverlay() {
     const dmMessageList = document.getElementById("dm-message-list");
     const dmInput = document.getElementById("dm-input");
     const dmSendButton = document.getElementById("dm-send-button");
+    const dmLinkPreviewEl = document.getElementById("dm-link-preview");
     const dmReplyPreviewBar = document.getElementById("dm-reply-preview-bar");
     const dmReplyPreviewText = document.getElementById("dm-reply-preview-text");
     const dmReplyPreviewCancel = document.getElementById("dm-reply-preview-cancel");
@@ -9474,6 +9517,123 @@ notificationSettingsSave.onclick = async () => {
       document.getElementById("attachment-preview-remove").addEventListener("click", clearAttachmentPreview);
     }
 
+    function attachFileToComposer(file) {
+      if (!file) return;
+      try {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        attachmentInput.files = dt.files;
+        handleAttachmentSelected();
+      } catch (err) {
+        console.error(err);
+        showToast("Couldn't attach that file", { variant: "danger" });
+      }
+    }
+
+    function extractFirstUrl(text) {
+      if (!text) return null;
+      const match = text.match(/https?:\/\/[^\s<>"']+/i);
+      return match ? match[0].replace(/[),.!?]+$/, "") : null;
+    }
+
+    function isImageUrlLike(url) {
+      return /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?(#.*)?$/i.test(url);
+    }
+
+    function faviconUrlFor(url) {
+      try {
+        const hostname = new URL(url).hostname;
+        return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=64`;
+      } catch (err) {
+        return "";
+      }
+    }
+
+    function createLinkPreviewController(previewEl) {
+      let currentUrl = null;
+
+      function clear() {
+        currentUrl = null;
+        previewEl.style.display = "none";
+        previewEl.innerHTML = "";
+      }
+
+      function show(url) {
+        currentUrl = url;
+        let hostname = url;
+        try {
+          hostname = new URL(url).hostname;
+        } catch (err) {
+          /* keep raw url as label */
+        }
+        const looksLikeImage = isImageUrlLike(url);
+        const thumbId = `${previewEl.id}-thumb`;
+        previewEl.style.display = "flex";
+        previewEl.innerHTML = `
+          <div class="attachment-preview-thumb" id="${thumbId}">${uiIcon("link", 16)}</div>
+          <div class="attachment-preview-info">
+            <div class="attachment-preview-name">${looksLikeImage ? "Image link" : escapeHtml(hostname)}</div>
+            <div class="attachment-preview-size">${escapeHtml(url)}</div>
+          </div>
+          <button class="attachment-preview-remove" id="${previewEl.id}-remove" title="Remove preview">${uiIcon("x", 14)}</button>
+        `;
+        const thumb = document.getElementById(thumbId);
+        const img = new Image();
+        img.alt = "";
+        img.onload = () => {
+          if (currentUrl !== url || !thumb) return;
+          thumb.innerHTML = "";
+          thumb.appendChild(img);
+        };
+        img.src = looksLikeImage ? url : faviconUrlFor(url);
+        const removeBtn = document.getElementById(`${previewEl.id}-remove`);
+        if (removeBtn) removeBtn.addEventListener("click", clear);
+      }
+
+      function sync(text) {
+        const url = extractFirstUrl(text);
+        if (url) {
+          if (url !== currentUrl) show(url);
+        } else if (currentUrl) {
+          clear();
+        }
+      }
+
+      return {
+        clear,
+        sync,
+        get url() {
+          return currentUrl;
+        },
+      };
+    }
+
+    const linkPreviewCtrl = createLinkPreviewController(linkPreviewEl);
+    const dmLinkPreviewCtrl = createLinkPreviewController(dmLinkPreviewEl);
+
+    function handleChatInputPaste(e) {
+      const items = e.clipboardData && e.clipboardData.items;
+      if (items) {
+        for (const item of items) {
+          if (item.kind === "file" && item.type && item.type.startsWith("image/")) {
+            const file = item.getAsFile();
+            if (file) {
+              e.preventDefault();
+              attachFileToComposer(file);
+              return;
+            }
+          }
+        }
+      }
+      setTimeout(() => linkPreviewCtrl.sync(chatInputEl.value), 0);
+    }
+
+    function isFileDrag(e) {
+      return !!(e.dataTransfer && Array.from(e.dataTransfer.types || []).includes("Files"));
+    }
+
+    let chatDragCounter = 0;
+
     function setReplyTarget(message) {
       replyingToMessage = message;
       const user = message.user || {};
@@ -9653,6 +9813,7 @@ notificationSettingsSave.onclick = async () => {
         });
         chatInputEl.value = "";
         autoResizeTextarea(chatInputEl);
+        linkPreviewCtrl.clear();
         clearReplyTarget();
 
         renderMessage({ ...message, user: currentProfile });
@@ -11297,6 +11458,7 @@ async function handleCreateServer() {
         });
         dmInput.value = "";
         autoResizeTextarea(dmInput);
+        dmLinkPreviewCtrl.clear();
         clearDmReplyTarget();
         renderDmMessage({ ...message, user: currentProfile });
         dmMessageList.scrollTop = dmMessageList.scrollHeight;
@@ -13358,11 +13520,38 @@ async function handleCreateServer() {
       chatInputEl.addEventListener("input", () => {
         autoResizeTextarea(chatInputEl);
         updateMentionSuggestions(chatInputEl, () => currentServerMembers.map((m) => m.user).filter(Boolean));
+        linkPreviewCtrl.sync(chatInputEl.value);
       });
+      chatInputEl.addEventListener("paste", handleChatInputPaste);
       replyPreviewCancel.addEventListener("click", clearReplyTarget);
 
       attachmentButton.addEventListener("click", () => attachmentInput.click());
       attachmentInput.addEventListener("change", handleAttachmentSelected);
+
+      chatBodyEl.addEventListener("dragenter", (e) => {
+        if (!isFileDrag(e)) return;
+        e.preventDefault();
+        chatDragCounter++;
+        chatDropOverlay.classList.add("visible");
+      });
+      chatBodyEl.addEventListener("dragover", (e) => {
+        if (!isFileDrag(e)) return;
+        e.preventDefault();
+      });
+      chatBodyEl.addEventListener("dragleave", (e) => {
+        if (!isFileDrag(e)) return;
+        chatDragCounter = Math.max(0, chatDragCounter - 1);
+        if (chatDragCounter === 0) chatDropOverlay.classList.remove("visible");
+      });
+      chatBodyEl.addEventListener("drop", (e) => {
+        if (!isFileDrag(e)) return;
+        e.preventDefault();
+        chatDragCounter = 0;
+        chatDropOverlay.classList.remove("visible");
+        if (!currentChannel || currentChannel.type !== "text") return;
+        const file = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (file) attachFileToComposer(file);
+      });
 
       signupAvatar.addEventListener("change", () => {
         const file = signupAvatar.files[0];
@@ -13526,6 +13715,7 @@ async function handleCreateServer() {
       dmInput.addEventListener("input", () => {
         autoResizeTextarea(dmInput);
         updateMentionSuggestions(dmInput, () => (currentDmOtherUser ? [currentDmOtherUser] : []));
+        dmLinkPreviewCtrl.sync(dmInput.value);
       });
       dmReplyPreviewCancel.addEventListener("click", clearDmReplyTarget);
       dmCallButton.addEventListener("click", handleDmCallButtonClick);
