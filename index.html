@@ -9976,6 +9976,24 @@ notificationSettingsSave.onclick = async () => {
       return `until ${d.toLocaleString(undefined, { year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" })}`;
     }
 
+    /** True when a ban is currently in effect (respects banned_until expiry). */
+    function isBanActive(user) {
+      if (!user || !user.is_banned) return false;
+      if (!user.banned_until) return true;
+      const t = new Date(user.banned_until).getTime();
+      if (Number.isNaN(t)) return true;
+      return t > Date.now();
+    }
+
+    /** True when a force-logout / kick lock is currently in effect (respects force_logout_until). */
+    function isForceLogoutActive(user) {
+      if (!user || !user.force_logout) return false;
+      if (!user.force_logout_until) return true;
+      const t = new Date(user.force_logout_until).getTime();
+      if (Number.isNaN(t)) return true;
+      return t > Date.now();
+    }
+
     async function handleBanDetails(userId) {
       const user = adminUsersCache.find((u) => u.id === userId);
       if (!user) return;
@@ -10176,7 +10194,7 @@ notificationSettingsSave.onclick = async () => {
                 : user.banned_reason,
         };
 
-        if (isAdmin(currentProfile) && banSource.is_banned) {
+        if (isAdmin(currentProfile) && isBanActive(banSource)) {
           viewProfileBanRow.style.display = "";
           const untilText = `Banned ${formatUntil(banSource.banned_until)}`;
           viewProfileBanReasonEl.textContent = banSource.banned_reason
@@ -11689,19 +11707,32 @@ async function handleCreateServer() {
 
       adminUsersPanel.innerHTML = users
         .map((u) => {
+          const banActive = isBanActive(u);
+          const lockActive = isForceLogoutActive(u);
           const badges = [];
           if (u.global_role !== "user") badges.push(`<span class="admin-row-badge">${escapeHtml(u.global_role)}</span>`);
-          if (u.is_banned) badges.push(`<span class="admin-row-badge admin-row-badge-danger">Banned</span>`);
-          if (u.force_logout) badges.push(`<span class="admin-row-badge admin-row-badge-danger">Locked out</span>`);
+          if (banActive) {
+            badges.push(`<span class="admin-row-badge admin-row-badge-danger">Banned</span>`);
+          }
+          if (lockActive && !banActive) {
+            const shortKick =
+              u.force_logout_until &&
+              new Date(u.force_logout_until).getTime() - Date.now() < 5 * 60 * 1000;
+            badges.push(
+              shortKick
+                ? `<span class="admin-row-badge admin-row-badge-danger">Session reset</span>`
+                : `<span class="admin-row-badge admin-row-badge-danger">Locked out</span>`
+            );
+          }
 
           const roleChangeBlocked = u.global_role === "superadmin" && u.id !== currentProfile.id;
-          const banActions = u.is_banned
+          const banActions = banActive
             ? `<button class="identity-action-button" data-action="unban">Unban</button>
                <button class="identity-action-button" data-action="ban-details">Ban details</button>`
             : `<button class="identity-action-button identity-action-button-danger" data-action="ban">Ban</button>`;
-          const lockActions = u.is_banned
+          const lockActions = banActive
             ? ""
-            : u.force_logout
+            : lockActive
               ? `<button class="identity-action-button" data-action="allow-login">Allow login</button>`
               : `<button class="identity-action-button" data-action="force-logout">Force logout</button>`;
 
@@ -11711,7 +11742,13 @@ async function handleCreateServer() {
                 <div class="user-avatar" style="width:32px;height:32px;flex-shrink:0;">${avatarHTML(u)}</div>
                 <div style="min-width:0; flex:1;">
                   <div class="admin-row-name">${escapeHtml(u.username || "")} ${badges.join(" ")}</div>
-                  <div class="admin-row-meta">Joined ${new Date(u.created_at).toLocaleDateString()}</div>
+                  <div class="admin-row-meta">Joined ${new Date(u.created_at).toLocaleDateString()}${
+                    banActive
+                      ? ` · Banned ${formatUntil(u.banned_until)}`
+                      : lockActive
+                        ? ` · Signed out ${formatUntil(u.force_logout_until)}`
+                        : ""
+                  }</div>
                 </div>
               </div>
               <div class="admin-row-actions" data-user-id="${u.id}">
