@@ -966,6 +966,64 @@
       display: flex !important;
     }
 
+    .call-mute-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(240, 71, 95, 0.92);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 6;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    }
+    .call-main-video.speaking-ring,
+    .call-main-placeholder.speaking-ring {
+      outline: 3px solid #22c55e;
+      outline-offset: -3px;
+    }
+    .call-connecting {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      background: rgba(7, 8, 12, 0.92);
+      z-index: 20;
+      color: #fff;
+    }
+    .call-connecting.visible {
+      display: flex;
+    }
+    .call-connecting-spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(255,255,255,0.15);
+      border-top-color: #818cf8;
+      border-radius: 50%;
+      animation: call-spin 0.8s linear infinite;
+    }
+    @keyframes call-spin {
+      to { transform: rotate(360deg); }
+    }
+    .call-connecting-text {
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .call-connecting-sub {
+      font-size: 12px;
+      color: rgba(255,255,255,0.55);
+    }
+
+
     html.has-custom-bg-color .app-shell,
     html.has-custom-bg-color body {
       background-color: var(--bg-canvas);
@@ -5790,7 +5848,7 @@
       </div>
       <div class="call-overlay-header-right">
         <div class="call-layout-controls" id="call-layout-controls">
-          <button type="button" class="call-layout-btn active" data-layout="speaker" title="Speaker view">Speaker</button>
+          <button type="button" class="call-layout-btn active" data-layout="focus" title="Focus view">Focus</button>
           <button type="button" class="call-layout-btn" data-layout="gallery" title="Gallery view">Gallery</button>
         </div>
         <select id="call-focus-select" class="call-focus-select" title="Who to focus">
@@ -5800,6 +5858,11 @@
       </div>
     </div>
     <div class="call-overlay-stage" id="call-overlay-stage">
+      <div class="call-connecting" id="call-connecting">
+        <div class="call-connecting-spinner"></div>
+        <div class="call-connecting-text" id="call-connecting-text">Connecting…</div>
+        <div class="call-connecting-sub" id="call-connecting-sub">Setting up your call</div>
+      </div>
       <div class="call-recording-banner" id="call-recording-banner"><span class="call-recording-dot"></span> Recording in progress</div>
       <div class="call-main-placeholder" id="call-main-placeholder">
         <div class="call-main-placeholder-avatar" id="call-main-avatar"></div>
@@ -6281,7 +6344,6 @@
                   <option value="dark">Dark</option>
                   <option value="midnight">Midnight</option>
                   <option value="ash">Ash</option>
-                  <option value="custom">Custom</option>
                   <option value="__more__">More themes…</option>
                 </select>
                 <div id="more-themes-grid" class="more-themes-grid" style="display:none;"></div>
@@ -8644,11 +8706,11 @@ notificationSettingsSave.onclick = async () => {
       { value: "mint", label: "Mint", group: "gradient", swatch: "linear-gradient(135deg,#0d1f1a,#134e4a,#2dd4bf)", desc: "Fresh mint" },
       { value: "candy", label: "Candy", group: "gradient", swatch: "linear-gradient(135deg,#2a1030,#7c3aed,#ec4899)", desc: "Pink purple" },
       { value: "slate", label: "Slate", group: "gradient", swatch: "linear-gradient(135deg,#0f172a,#1e293b,#38bdf8)", desc: "Cool slate" },
-      { value: "custom", label: "Custom", group: "extra", swatch: "linear-gradient(135deg,#6366f1,#0a0b0e)", desc: "Your colors" },
     ];
     const EXTRA_THEMES = ALL_THEMES.filter((t) => t.group !== "core");
 
     function themeLabel(theme) {
+      if (theme === "custom") return "Custom";
       const found = ALL_THEMES.find((t) => t.value === theme);
       if (found) return found.label;
       if (!theme) return "Theme";
@@ -8717,7 +8779,7 @@ notificationSettingsSave.onclick = async () => {
         { key: "gradient", title: "Gradient" },
       ];
       groups.forEach((g) => {
-        const items = ALL_THEMES.filter((t) => t.group === g.key);
+        const items = ALL_THEMES.filter((t) => t.group === g.key && t.value !== "custom");
         if (!items.length) return;
         const section = document.createElement("div");
         section.className = "more-themes-section";
@@ -12845,6 +12907,13 @@ async function handleCreateServer() {
     function handleOpenDmModal() {
       dmModal.classList.add("visible");
       loadDmConversations();
+      // Call / Video only when a conversation is selected
+      if (!currentDmConversationId) {
+        if (dmCallButton) dmCallButton.style.display = "none";
+        if (dmVideoCallButton) dmVideoCallButton.style.display = "none";
+      } else {
+        try { updateDmCallButton(); } catch (e) {}
+      }
 
       if (currentDmConversationId) {
         Array.from(dmConversationList.querySelectorAll(".dm-conversation-item")).forEach((el) => {
@@ -12862,11 +12931,13 @@ async function handleCreateServer() {
       clearDmReplyTarget();
       dmChatHeader.textContent = "Select a conversation";
       dmMessageList.innerHTML = "";
-      dmCallButton.style.display = "none";
-      dmVoiceBar.classList.remove("visible");
+      if (dmCallButton) dmCallButton.style.display = "none";
+      if (dmVideoCallButton) dmVideoCallButton.style.display = "none";
+      if (dmVoiceBar) dmVoiceBar.classList.remove("visible");
       Array.from(dmConversationList.querySelectorAll(".dm-conversation-item")).forEach((el) => {
         el.classList.remove("active");
       });
+      try { updateDmCallButton(); } catch (e) {}
       reportFocusStateToServiceWorker();
     }
 
@@ -14015,25 +14086,32 @@ async function handleCreateServer() {
 
     async function toggleDmCamera() {
       if (!voiceRoom || voiceContext !== "dm") return;
+      if (!voicePreferVideo && !voiceVideoEnabled && !voiceScreenSharing) {
+        // Pure voice call — camera stays disabled
+        showToast("Camera is only available on video calls", { duration: 2000 });
+        return;
+      }
       try {
         const next = !voiceVideoEnabled;
         await voiceRoom.localParticipant.setCameraEnabled(next);
-        voiceVideoEnabled = next;
+        // Give LiveKit a moment to publish/unpublish before reading state
+        await new Promise((r) => setTimeout(r, 120));
+        syncLocalMediaFlagsFromRoom();
+        // Trust the requested state if sync lags
+        if (next && !voiceVideoEnabled) voiceVideoEnabled = true;
+        if (!next) voiceVideoEnabled = false;
         renderDmVideoStage();
         updateDmCallMediaButtons();
         updateCallOverlayControls();
-        // Stay on the full call page for video calls even with camera off (show avatar)
-        if (voicePreferVideo || voiceScreenSharing) {
-          showCallOverlay(true);
-          renderCallOverlayStage();
-        } else if (next) {
-          // Enabling camera mid-voice call upgrades to video UI
-          voicePreferVideo = true;
-          showCallOverlay(true);
-        }
-        showToast(next ? "Camera on" : "Camera off", { duration: 1500 });
+        showCallOverlay(true);
+        scheduleCallStageRender();
+        showToast(voiceVideoEnabled ? "Camera on" : "Camera off", { duration: 1500 });
       } catch (err) {
         console.error(err);
+        syncLocalMediaFlagsFromRoom();
+        updateDmCallMediaButtons();
+        updateCallOverlayControls();
+        scheduleCallStageRender();
         showToast(err.message || "Failed to toggle camera", { variant: "danger" });
       }
     }
@@ -14283,9 +14361,13 @@ async function handleCreateServer() {
         room
           .on(RoomEvent.ParticipantConnected, () => {
             renderVoiceParticipants();
+            try { setCallConnecting(false); } catch (e) {}
+            try { updateCallOverlayChrome(); } catch (e) {}
             try { updateDmCallButton(); } catch (e) {}
             try { updateCallOverlayControls(); } catch (e) {}
             try { renderDmCallBar(); } catch (e) {}
+            try { scheduleCallStageRender(); } catch (e) {}
+            try { updateMuteBadges(); } catch (e) {}
           })
           .on(RoomEvent.ParticipantDisconnected, () => {
             renderVoiceParticipants();
@@ -14326,8 +14408,7 @@ async function handleCreateServer() {
           })
           .on(RoomEvent.ActiveSpeakersChanged, () => {
             renderVoiceParticipants();
-            // Soft refresh — sticky auto-focus avoids rapid flipping
-            renderCallOverlayStage();
+            updateSpeakingIndicators();
           })
           .on(RoomEvent.DataReceived, (payload, participant) => {
             try {
@@ -14336,10 +14417,25 @@ async function handleCreateServer() {
               handleIncomingCallData(data, participant);
             } catch (e) {}
           })
-          .on(RoomEvent.LocalTrackPublished, () => { syncLocalMediaFlagsFromRoom(); renderVoiceParticipants(); renderDmVideoStage(); renderCallOverlayStage(); updateDmCallMediaButtons(); updateCallOverlayControls(); })
-          .on(RoomEvent.LocalTrackUnpublished, () => { syncLocalMediaFlagsFromRoom(); renderVoiceParticipants(); renderDmVideoStage(); renderCallOverlayStage(); updateDmCallMediaButtons(); updateCallOverlayControls(); })
-          .on(RoomEvent.TrackMuted, renderVoiceParticipants)
-          .on(RoomEvent.TrackUnmuted, renderVoiceParticipants)
+          .on(RoomEvent.LocalTrackPublished, () => { syncLocalMediaFlagsFromRoom(); renderVoiceParticipants(); renderDmVideoStage(); scheduleCallStageRender(); updateDmCallMediaButtons(); updateCallOverlayControls(); updateMuteBadges(); })
+          .on(RoomEvent.LocalTrackUnpublished, () => { syncLocalMediaFlagsFromRoom(); renderVoiceParticipants(); renderDmVideoStage(); scheduleCallStageRender(); updateDmCallMediaButtons(); updateCallOverlayControls(); updateMuteBadges(); })
+          .on(RoomEvent.TrackMuted, (pub, participant) => {
+            renderVoiceParticipants();
+            syncLocalMediaFlagsFromRoom();
+            updateMuteBadges();
+            // Only rebuild stage if a video track muted (camera off)
+            if (pub && (pub.kind === "video" || (pub.track && pub.track.kind === "video"))) {
+              scheduleCallStageRender();
+            }
+          })
+          .on(RoomEvent.TrackUnmuted, (pub, participant) => {
+            renderVoiceParticipants();
+            syncLocalMediaFlagsFromRoom();
+            updateMuteBadges();
+            if (pub && (pub.kind === "video" || (pub.track && pub.track.kind === "video"))) {
+              scheduleCallStageRender();
+            }
+          })
           .on(RoomEvent.Disconnected, () => {
             // Remote hangup or network drop — full local teardown
             const wasDm = voiceContext === "dm";
@@ -14401,6 +14497,10 @@ async function handleCreateServer() {
         } else if (voiceContext === "dm") {
           renderDmVideoStage();
           updateDmCallMediaButtons();
+          try { setCallConnecting(false); } catch (e) {}
+          try { updateCallOverlayChrome(); } catch (e) {}
+          try { scheduleCallStageRender(); } catch (e) {}
+          try { updateMuteBadges(); } catch (e) {}
         }
         showToast(`Joined ${voicePreferVideo ? "video" : "voice"}: ${descriptor.name}`, { variant: "accent" });
       } catch (err) {
@@ -14538,11 +14638,11 @@ async function handleCreateServer() {
 
     async function updateDmCallButton() {
       if (!currentDmConversationId) {
-        dmCallButton.style.display = "none";
+        if (dmCallButton) dmCallButton.style.display = "none";
         if (dmVideoCallButton) dmVideoCallButton.style.display = "none";
         return;
       }
-      dmCallButton.style.display = "inline-flex";
+      if (dmCallButton) dmCallButton.style.display = "inline-flex";
       if (dmVideoCallButton) dmVideoCallButton.style.display = "inline-flex";
       if (voiceRoom && voiceContext === "dm" && activeDmCallId) {
         const remoteCount = voiceRoom.remoteParticipants ? voiceRoom.remoteParticipants.size : 0;
@@ -14565,7 +14665,7 @@ async function handleCreateServer() {
 
 
     let remoteIsRecording = false;
-    let callLayoutMode = "speaker"; // speaker | gallery
+    let callLayoutMode = "focus"; // focus | gallery
     let callFocusIdentity = "auto";
     let stickySpeakerId = null;
     let stickySpeakerUntil = 0;
@@ -14591,6 +14691,89 @@ async function handleCreateServer() {
 
 
 
+
+    let _callStageRenderTimer = null;
+    function scheduleCallStageRender() {
+      if (_callStageRenderTimer) clearTimeout(_callStageRenderTimer);
+      _callStageRenderTimer = setTimeout(() => {
+        _callStageRenderTimer = null;
+        try { renderCallOverlayStage(); } catch (e) {}
+      }, 80);
+    }
+
+    function updateSpeakingIndicators() {
+      if (!voiceRoom) return;
+      const speakingIds = new Set((voiceRoom.activeSpeakers || []).map((p) => p.identity));
+      document.querySelectorAll(".call-grid-tile[data-identity]").forEach((tile) => {
+        tile.classList.toggle("speaking", speakingIds.has(tile.dataset.identity));
+      });
+      const focusId = callFocusIdentity && callFocusIdentity !== "auto"
+        ? callFocusIdentity
+        : null;
+      // Prefer highlighting the focused person, else any remote speaker
+      let ringId = focusId;
+      if (!ringId) {
+        const remote = (voiceRoom.activeSpeakers || []).find(
+          (p) => p.identity !== voiceRoom.localParticipant.identity
+        );
+        ringId = remote ? remote.identity : ((voiceRoom.activeSpeakers || [])[0] || {}).identity;
+      }
+      const mainVid = document.getElementById("call-main-video");
+      const mainPh = document.getElementById("call-main-placeholder");
+      const speaking = !!(ringId && speakingIds.has(ringId));
+      if (mainVid) mainVid.classList.toggle("speaking-ring", speaking && mainVid.style.display !== "none");
+      if (mainPh) mainPh.classList.toggle("speaking-ring", speaking && mainPh.style.display !== "none");
+    }
+
+    function isParticipantMicMuted(participant) {
+      if (!participant) return false;
+      try {
+        if (participant.isMicrophoneEnabled === false) return true;
+      } catch (e) {}
+      try {
+        const pubs = participant.audioTrackPublications
+          ? Array.from(participant.audioTrackPublications.values())
+          : [];
+        if (!pubs.length) return false;
+        return pubs.every((p) => p.isMuted || !p.track);
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function updateMuteBadges() {
+      if (!voiceRoom) return;
+      const all = [voiceRoom.localParticipant, ...Array.from(voiceRoom.remoteParticipants.values())];
+      all.forEach((p) => {
+        const muted = isParticipantMicMuted(p);
+        document.querySelectorAll(`[data-identity="${CSS.escape(p.identity)}"]`).forEach((el) => {
+          let badge = el.querySelector(".call-mute-badge");
+          if (muted) {
+            if (!badge) {
+              badge = document.createElement("div");
+              badge.className = "call-mute-badge";
+              badge.title = "Muted";
+              badge.textContent = "M";
+              el.style.position = el.style.position || "relative";
+              el.appendChild(badge);
+            }
+          } else if (badge) {
+            badge.remove();
+          }
+        });
+      });
+    }
+
+    function setCallConnecting(visible, title, sub) {
+      const el = document.getElementById("call-connecting");
+      const t = document.getElementById("call-connecting-text");
+      const s = document.getElementById("call-connecting-sub");
+      if (!el) return;
+      el.classList.toggle("visible", !!visible);
+      if (t && title) t.textContent = title;
+      if (s && sub) s.textContent = sub;
+    }
+
     function showCallOverlay(force) {
       // Voice-only calls stay in the compact call bar — full page is for video / screen share
       if (!force && !voicePreferVideo && !voiceVideoEnabled && !voiceScreenSharing) {
@@ -14613,9 +14796,18 @@ async function handleCreateServer() {
         if (dmModal) dmModal.classList.remove("visible");
       } catch (e) {}
       updateCallOverlayChrome();
+      if (!voiceRoom) {
+        setCallConnecting(true, "Connecting…", "Setting up your call");
+      } else if (voiceRoom.remoteParticipants.size === 0) {
+        setCallConnecting(false);
+      } else {
+        setCallConnecting(false);
+      }
       renderCallOverlayStage();
       updateCallOverlayControls();
       refreshCallFocusOptions();
+      updateSpeakingIndicators();
+      updateMuteBadges();
     }
 
     function hideCallOverlay() {
@@ -14625,6 +14817,7 @@ async function handleCreateServer() {
       c.overlay.setAttribute("aria-hidden", "true");
       c.overlay.style.cssText = "";
       document.body.classList.remove("in-call-overlay");
+      try { setCallConnecting(false); } catch (e) {}
       if (c.mainVideo) {
         try { c.mainVideo.srcObject = null; } catch (e) {}
         c.mainVideo.style.display = "none";
@@ -14636,7 +14829,7 @@ async function handleCreateServer() {
       if (c.pip) c.pip.style.display = "none";
       if (c.banner) c.banner.classList.remove("visible");
       remoteIsRecording = false;
-      callLayoutMode = "speaker";
+      callLayoutMode = "focus";
       callFocusIdentity = "auto";
       stickySpeakerId = null;
       stickySpeakerUntil = 0;
@@ -14646,15 +14839,23 @@ async function handleCreateServer() {
       const c = callEls();
       if (!c.title) return;
       const name = currentDmOtherUser ? currentDmOtherUser.username : "Call";
-      const kind = voicePreferVideo || voiceVideoEnabled ? "Video call" : "Voice call";
+      const kind = voicePreferVideo || voiceVideoEnabled || voiceScreenSharing ? "Video call" : "Voice call";
       c.title.textContent = `${kind} · ${name}`;
       if (c.sub) {
-        const n = (voiceRoom && (1 + voiceRoom.remoteParticipants.size)) || dmCallParticipants.length || 1;
-        c.sub.textContent = voiceRoom ? `${n} in call` : "Connecting…";
+        if (!voiceRoom) {
+          c.sub.textContent = `Calling ${name}…`;
+        } else if (voiceRoom.remoteParticipants.size === 0) {
+          c.sub.textContent = `Waiting for ${name} to join…`;
+        } else {
+          const n = 1 + voiceRoom.remoteParticipants.size;
+          c.sub.textContent = `${n} in call`;
+        }
       }
       if (c.mainName) c.mainName.textContent = name;
-      if (c.mainAvatar && currentDmOtherUser) {
-        c.mainAvatar.innerHTML = avatarHTML(currentDmOtherUser);
+      if (c.mainAvatar) {
+        const profile = currentDmOtherUser || (currentProfile && voiceRoom && voiceRoom.remoteParticipants.size === 0 ? currentDmOtherUser : null);
+        if (currentDmOtherUser) c.mainAvatar.innerHTML = avatarHTML(currentDmOtherUser);
+        else if (currentProfile) c.mainAvatar.innerHTML = avatarHTML(currentProfile);
       }
     }
 
@@ -14773,10 +14974,16 @@ async function handleCreateServer() {
 
     function attachTrackToVideoEl(track, videoEl, muted) {
       if (!videoEl || !track) return;
-      try {
-        track.detach(videoEl);
-      } catch (e) {}
-      track.attach(videoEl);
+      // Avoid detach/attach cycle if this element is already showing this track (prevents black flash)
+      const already = videoEl.srcObject && track.mediaStreamTrack &&
+        videoEl.srcObject.getTracks && videoEl.srcObject.getTracks().some((t) => t.id === track.mediaStreamTrack.id);
+      if (!already) {
+        try {
+          // Only detach this element, don't tear down other consumers
+          track.detach(videoEl);
+        } catch (e) {}
+        track.attach(videoEl);
+      }
       videoEl.autoplay = true;
       videoEl.playsInline = true;
       videoEl.muted = !!muted;
@@ -14811,7 +15018,7 @@ async function handleCreateServer() {
       refreshCallFocusOptions();
 
       // Screen share always takes priority in speaker mode
-      if (screens.length && callLayoutMode === "speaker") {
+      if (screens.length && callLayoutMode === "focus") {
         if (c.grid) c.grid.style.display = "none";
         const main = screens[0];
         if (c.mainVideo) {
@@ -14834,6 +15041,7 @@ async function handleCreateServer() {
         }
         if (pipPerson && c.pip) {
           c.pip.style.display = "block";
+          c.pip.dataset.identity = pipPerson.identity;
           if (pipPerson.hasCam && pipPerson.camera && c.pipVideo) {
             c.pipVideo.style.display = "block";
             if (c.pipAvatar) c.pipAvatar.style.display = "none";
@@ -14854,6 +15062,8 @@ async function handleCreateServer() {
         } else if (c.pip) {
           c.pip.style.display = "none";
         }
+        updateSpeakingIndicators();
+        updateMuteBadges();
         return;
       }
 
@@ -14897,6 +15107,7 @@ async function handleCreateServer() {
         screens.forEach((s) => {
           const tile = document.createElement("div");
           tile.className = "call-grid-tile";
+          tile.dataset.identity = s.identity;
           const v = document.createElement("video");
           v.autoplay = true;
           v.playsInline = true;
@@ -14909,6 +15120,8 @@ async function handleCreateServer() {
           c.grid.appendChild(tile);
           attachTrackToVideoEl(s.track, v, s.isLocal);
         });
+        updateSpeakingIndicators();
+        updateMuteBadges();
         return;
       }
 
@@ -14940,6 +15153,7 @@ async function handleCreateServer() {
         const pipP = others[0];
         if (pipP && c.pip) {
           c.pip.style.display = "block";
+          c.pip.dataset.identity = pipP.identity;
           if (pipP.hasCam && pipP.camera && c.pipVideo) {
             c.pipVideo.style.display = "block";
             if (c.pipAvatar) c.pipAvatar.style.display = "none";
@@ -14951,13 +15165,19 @@ async function handleCreateServer() {
             }
             if (c.pipAvatar) {
               c.pipAvatar.style.display = "flex";
-              c.pipAvatar.innerHTML = pipP.profile
-                ? avatarHTML(pipP.profile)
+              const prof = pipP.profile || (pipP.isLocal ? currentProfile : currentDmOtherUser);
+              c.pipAvatar.innerHTML = prof
+                ? avatarHTML(prof)
                 : `<div class="call-tile-initials">${(pipP.name || "?")[0]}</div>`;
             }
           }
           if (c.pipLabel) c.pipLabel.textContent = pipP.name + (pipP.isLocal ? " (you)" : "");
+        } else if (c.pip) {
+          c.pip.style.display = "none";
         }
+        if (c.mainPlaceholder) c.mainPlaceholder.dataset.identity = focus.identity;
+        updateSpeakingIndicators();
+        updateMuteBadges();
         return;
       }
 
@@ -14970,10 +15190,12 @@ async function handleCreateServer() {
         c.mainPlaceholder.style.display = "flex";
         const person = focus || people.find((p) => !p.isLocal) || people[0];
         if (person) {
+          c.mainPlaceholder.dataset.identity = person.identity;
           if (c.mainName) c.mainName.textContent = person.name + (person.isLocal ? " (you)" : "");
           if (c.mainAvatar) {
-            c.mainAvatar.innerHTML = person.profile
-              ? avatarHTML(person.profile)
+            const prof = person.profile || (person.isLocal ? currentProfile : currentDmOtherUser);
+            c.mainAvatar.innerHTML = prof
+              ? avatarHTML(prof)
               : `<div class="call-tile-initials">${(person.name || "?")[0]}</div>`;
           }
         }
@@ -14983,13 +15205,31 @@ async function handleCreateServer() {
       const remote = people.find((p) => !p.isLocal);
       if (self && remote && c.pip) {
         c.pip.style.display = "block";
+        c.pip.dataset.identity = self.identity;
         if (c.pipVideo) c.pipVideo.style.display = "none";
         if (c.pipAvatar) {
           c.pipAvatar.style.display = "flex";
-          c.pipAvatar.innerHTML = self.profile ? avatarHTML(self.profile) : "";
+          c.pipAvatar.innerHTML = self.profile
+            ? avatarHTML(self.profile)
+            : `<div class="call-tile-initials">${(self.name || "?")[0]}</div>`;
         }
         if (c.pipLabel) c.pipLabel.textContent = self.name + " (you)";
       }
+
+      // Ensure avatar path always has profile for local when cam off
+      if (c.mainPlaceholder && c.mainPlaceholder.style.display !== "none" && currentProfile) {
+        const person = people.find((p) => !p.isLocal) || people.find((p) => p.isLocal);
+        if (person) {
+          c.mainPlaceholder.dataset.identity = person.identity;
+          if (c.mainAvatar) {
+            const prof = person.profile || (person.isLocal ? currentProfile : currentDmOtherUser);
+            if (prof) c.mainAvatar.innerHTML = avatarHTML(prof);
+          }
+        }
+      }
+
+      updateSpeakingIndicators();
+      updateMuteBadges();
     }
 
     function broadcastCallData(payload) {
@@ -15033,7 +15273,11 @@ async function handleCreateServer() {
 
       // Full-page only for video calls; voice stays in the compact bar
       if (withVideo) {
-        try { showCallOverlay(true); } catch (e) {}
+        try {
+          showCallOverlay(true);
+          const nm = currentDmOtherUser ? currentDmOtherUser.username : "them";
+          setCallConnecting(true, "Connecting…", `Calling ${nm}`);
+        } catch (e) {}
       }
 
       try {
@@ -15561,6 +15805,10 @@ async function handleCreateServer() {
         pendingSettingsBackgroundRemoved = false;
         applyProfileTheme(profile);
         applyProfileAppearance(profile);
+        try {
+          rebuildThemeSelect(themeSelect, profile.theme);
+          rebuildThemeSelect(settingsTheme, profile.theme);
+        } catch (e) {}
         settingsModal.classList.remove("visible");
         showToast("Appearance updated", { variant: "accent" });
       } catch (err) {
@@ -16383,7 +16631,7 @@ async function handleSignIn() {
       });
       document.querySelectorAll(".call-layout-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
-          callLayoutMode = btn.dataset.layout || "speaker";
+          callLayoutMode = btn.dataset.layout || "focus";
           updateCallOverlayControls();
           renderCallOverlayStage();
         });
