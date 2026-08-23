@@ -1041,6 +1041,35 @@
       font-weight: 700;
       color: #fff;
     }
+
+    .call-main-placeholder-avatar {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1a1c22;
+      border: 3px solid rgba(255,255,255,0.15);
+    }
+    .call-main-placeholder-avatar img,
+    .call-main-placeholder-avatar svg {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover;
+      display: block;
+    }
+    .call-pip-avatar img,
+    .call-pip-avatar svg {
+      width: 72% !important;
+      height: 72% !important;
+      max-width: 120px;
+      max-height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
     .call-pip {
       position: absolute;
       right: 16px;
@@ -8594,26 +8623,27 @@ notificationSettingsSave.onclick = async () => {
     }
 
     const PRIMARY_THEMES = ["light", "dark", "midnight", "ash"];
+    let lastNamedTheme = "dark";
     const ALL_THEMES = [
-      { value: "light", label: "Light", group: "core", swatch: "linear-gradient(135deg,#f5f6f8,#e8e9ec)", desc: "Clean bright UI" },
-      { value: "dark", label: "Dark", group: "core", swatch: "linear-gradient(135deg,#131418,#0a0b0e)", desc: "Default dark" },
-      { value: "midnight", label: "Midnight", group: "core", swatch: "linear-gradient(135deg,#0d0d0d,#000)", desc: "True black" },
-      { value: "ash", label: "Ash", group: "core", swatch: "linear-gradient(135deg,#2b2d31,#1e1f22)", desc: "Discord-style" },
-      { value: "dracula", label: "Dracula", group: "extra", swatch: "linear-gradient(135deg,#282a36,#191a21)", desc: "Purple neon" },
-      { value: "nord", label: "Nord", group: "extra", swatch: "linear-gradient(135deg,#2a2f3c,#191d26)", desc: "Arctic cool" },
-      { value: "rose-pine", label: "Rosé Pine", group: "extra", swatch: "linear-gradient(135deg,#1f1d2e,#191724)", desc: "Soft rose" },
-      { value: "sepia", label: "Sepia", group: "extra", swatch: "linear-gradient(135deg,#fbf3e3,#f1e7d3)", desc: "Warm paper" },
-      { value: "forest", label: "Forest", group: "extra", swatch: "linear-gradient(135deg,#1c1b14,#14140f)", desc: "Mossy green" },
-      { value: "ocean", label: "Ocean", group: "extra", swatch: "linear-gradient(135deg,#0a212c,#05161e)", desc: "Deep teal" },
-      { value: "sunset", label: "Sunset", group: "extra", swatch: "linear-gradient(135deg,#2a1810,#1a1210)", desc: "Warm orange" },
-      { value: "lavender", label: "Lavender", group: "extra", swatch: "linear-gradient(135deg,#1e1b2e,#16141f)", desc: "Soft violet" },
-      { value: "aurora", label: "Aurora", group: "extra", swatch: "linear-gradient(135deg,#122820,#0c1412)", desc: "Northern lights" },
-      { value: "ember", label: "Ember", group: "extra", swatch: "linear-gradient(135deg,#281818,#140c0c)", desc: "Hot coals" },
-      { value: "cosmos", label: "Cosmos", group: "gradient", swatch: "linear-gradient(135deg,#0f0c29,#302b63,#24243e)", desc: "Space purple" },
-      { value: "horizon", label: "Horizon", group: "gradient", swatch: "linear-gradient(135deg,#0b1026,#1a2744,#c45c26)", desc: "Dusk sky" },
+      { value: "light", label: "Light", group: "core", swatch: "linear-gradient(135deg,#ffffff 40%,#4f46e5)", desc: "Clean bright UI" },
+      { value: "dark", label: "Dark", group: "core", swatch: "linear-gradient(135deg,#15171c 40%,#818cf8)", desc: "Default dark" },
+      { value: "midnight", label: "Midnight", group: "core", swatch: "linear-gradient(135deg,#0d0d0d 40%,#7dd3fc)", desc: "True black" },
+      { value: "ash", label: "Ash", group: "core", swatch: "linear-gradient(135deg,#2b2d31 40%,#5865f2)", desc: "Discord-style" },
+      { value: "dracula", label: "Dracula", group: "extra", swatch: "linear-gradient(135deg,#282a36 40%,#bd93f9)", desc: "Purple neon" },
+      { value: "nord", label: "Nord", group: "extra", swatch: "linear-gradient(135deg,#2a2f3c 40%,#88c0d0)", desc: "Arctic cool" },
+      { value: "rose-pine", label: "Rosé Pine", group: "extra", swatch: "linear-gradient(135deg,#1f1d2e 40%,#eb6f92)", desc: "Soft rose" },
+      { value: "sepia", label: "Sepia", group: "extra", swatch: "linear-gradient(135deg,#fbf3e3 40%,#b5651d)", desc: "Warm paper" },
+      { value: "forest", label: "Forest", group: "extra", swatch: "linear-gradient(135deg,#1c1b14 40%,#8fae4f)", desc: "Mossy green" },
+      { value: "ocean", label: "Ocean", group: "extra", swatch: "linear-gradient(135deg,#0a212c 40%,#14b8c4)", desc: "Deep teal" },
+      { value: "sunset", label: "Sunset", group: "extra", swatch: "linear-gradient(135deg,#241a16 40%,#f97316)", desc: "Warm orange" },
+      { value: "lavender", label: "Lavender", group: "extra", swatch: "linear-gradient(135deg,#1e1b2e 40%,#a78bfa)", desc: "Soft violet" },
+      { value: "aurora", label: "Aurora", group: "extra", swatch: "linear-gradient(135deg,#121c1a 40%,#2dd4bf)", desc: "Northern lights" },
+      { value: "ember", label: "Ember", group: "extra", swatch: "linear-gradient(135deg,#1c1212 40%,#ef4444)", desc: "Hot coals" },
+      { value: "cosmos", label: "Cosmos", group: "gradient", swatch: "linear-gradient(135deg,#0f0c29,#302b63,#a78bfa)", desc: "Space purple" },
+      { value: "horizon", label: "Horizon", group: "gradient", swatch: "linear-gradient(135deg,#0b1026,#1a2744,#fb923c)", desc: "Dusk sky" },
       { value: "mint", label: "Mint", group: "gradient", swatch: "linear-gradient(135deg,#0d1f1a,#134e4a,#2dd4bf)", desc: "Fresh mint" },
       { value: "candy", label: "Candy", group: "gradient", swatch: "linear-gradient(135deg,#2a1030,#7c3aed,#ec4899)", desc: "Pink purple" },
-      { value: "slate", label: "Slate", group: "gradient", swatch: "linear-gradient(135deg,#0f172a,#1e293b,#334155)", desc: "Cool slate" },
+      { value: "slate", label: "Slate", group: "gradient", swatch: "linear-gradient(135deg,#0f172a,#1e293b,#38bdf8)", desc: "Cool slate" },
       { value: "custom", label: "Custom", group: "extra", swatch: "linear-gradient(135deg,#6366f1,#0a0b0e)", desc: "Your colors" },
     ];
     const EXTRA_THEMES = ALL_THEMES.filter((t) => t.group !== "core");
@@ -8654,6 +8684,7 @@ notificationSettingsSave.onclick = async () => {
 
     function setTheme(theme) {
       if (!theme || theme === "__more__") return;
+      if (theme !== "custom") lastNamedTheme = theme;
       document.documentElement.setAttribute("data-theme", theme);
       // Apply gradient canvas backgrounds for gradient themes
       const root = document.documentElement;
@@ -8743,6 +8774,7 @@ notificationSettingsSave.onclick = async () => {
 
     function applyProfileTheme(profile) {
       if (!profile || !profile.theme || profile.theme === "system") return;
+      if (profile.theme !== "custom") lastNamedTheme = profile.theme;
       setTheme(profile.theme);
     }
 
@@ -13805,17 +13837,24 @@ async function handleCreateServer() {
     }
 
     function resolveVoiceProfile(identity, isLocal) {
-      const profile = findMemberProfile(identity);
-      if (!profile && !isLocal) {
-
+      if (isLocal && currentProfile) return currentProfile;
+      if (currentProfile && currentProfile.id === identity) return currentProfile;
+      if (currentDmOtherUser && currentDmOtherUser.id === identity) return currentDmOtherUser;
+      let profile = findMemberProfile(identity);
+      if (!profile && extraKnownProfiles.has(identity)) {
+        profile = extraKnownProfiles.get(identity);
+      }
+      if (!profile && identity) {
         resolveProfile(identity).then((resolved) => {
           if (resolved) {
             extraKnownProfiles.set(identity, resolved);
-            renderVoiceParticipants();
+            try { renderVoiceParticipants(); } catch (e) {}
+            try { renderCallOverlayStage(); } catch (e) {}
+            try { renderDmCallBar(); } catch (e) {}
           }
         });
       }
-      return profile;
+      return profile || null;
     }
 
     function renderVoiceStage() {
@@ -13956,11 +13995,14 @@ async function handleCreateServer() {
     }
 
     function updateDmCallMediaButtons() {
+      const isVideoCall = !!(voicePreferVideo || voiceVideoEnabled || voiceScreenSharing);
       if (dmVideoToggleButton) {
+        dmVideoToggleButton.style.display = isVideoCall ? "" : "none";
         dmVideoToggleButton.classList.toggle("active", !!voiceVideoEnabled);
         dmVideoToggleButton.textContent = voiceVideoEnabled ? "Cam on" : "Cam";
       }
       if (dmScreenShareButton) {
+        dmScreenShareButton.style.display = isVideoCall ? "" : "none";
         dmScreenShareButton.classList.toggle("active", !!voiceScreenSharing);
         dmScreenShareButton.textContent = voiceScreenSharing ? "Sharing" : "Share";
       }
@@ -13980,14 +14022,14 @@ async function handleCreateServer() {
         renderDmVideoStage();
         updateDmCallMediaButtons();
         updateCallOverlayControls();
-        if (next) {
+        // Stay on the full call page for video calls even with camera off (show avatar)
+        if (voicePreferVideo || voiceScreenSharing) {
           showCallOverlay(true);
-        } else if (!voiceScreenSharing && !voicePreferVideo) {
-          // Back to compact voice UI if this wasn't a video call
-          try { hideCallOverlay(); } catch (e) {}
-          try { renderDmCallBar(); } catch (e) {}
-        } else {
           renderCallOverlayStage();
+        } else if (next) {
+          // Enabling camera mid-voice call upgrades to video UI
+          voicePreferVideo = true;
+          showCallOverlay(true);
         }
         showToast(next ? "Camera on" : "Camera off", { duration: 1500 });
       } catch (err) {
@@ -14239,8 +14281,25 @@ async function handleCreateServer() {
         const room = new Room({ adaptiveStream: true, dynacast: true });
 
         room
-          .on(RoomEvent.ParticipantConnected, renderVoiceParticipants)
-          .on(RoomEvent.ParticipantDisconnected, renderVoiceParticipants)
+          .on(RoomEvent.ParticipantConnected, () => {
+            renderVoiceParticipants();
+            try { updateDmCallButton(); } catch (e) {}
+            try { updateCallOverlayControls(); } catch (e) {}
+            try { renderDmCallBar(); } catch (e) {}
+          })
+          .on(RoomEvent.ParticipantDisconnected, () => {
+            renderVoiceParticipants();
+            try { updateDmCallButton(); } catch (e) {}
+            try { updateCallOverlayControls(); } catch (e) {}
+            try { renderDmCallBar(); } catch (e) {}
+            // Auto-end DM call when everyone else has left
+            if (voiceContext === "dm" && voiceRoom && voiceRoom.remoteParticipants.size === 0) {
+              showToast("Call ended — everyone else left", { duration: 2500 });
+              setTimeout(() => {
+                try { disconnectVoice(); } catch (e) {}
+              }, 400);
+            }
+          })
           .on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
             if (track.kind === "audio") {
               const el = track.attach();
@@ -14486,7 +14545,9 @@ async function handleCreateServer() {
       dmCallButton.style.display = "inline-flex";
       if (dmVideoCallButton) dmVideoCallButton.style.display = "inline-flex";
       if (voiceRoom && voiceContext === "dm" && activeDmCallId) {
-        const label = dmCallParticipants.length <= 1 ? "End call" : "Leave call";
+        const remoteCount = voiceRoom.remoteParticipants ? voiceRoom.remoteParticipants.size : 0;
+        const alone = remoteCount === 0 && (dmCallParticipants.length <= 1);
+        const label = alone ? "End call" : "Leave call";
         dmCallButton.innerHTML = `${uiIcon("phone", 14)} ${label}`;
         if (dmVideoCallButton) dmVideoCallButton.style.display = "none";
         return;
@@ -14602,16 +14663,21 @@ async function handleCreateServer() {
       const camBtn = document.getElementById("call-ctrl-cam");
       const shareBtn = document.getElementById("call-ctrl-share");
       const recBtn = document.getElementById("call-ctrl-record");
+      const leaveBtn = document.getElementById("call-ctrl-leave");
       const c = callEls();
+      const isVideoCall = !!(voicePreferVideo || voiceVideoEnabled || voiceScreenSharing);
       if (muteBtn) {
         muteBtn.classList.toggle("active", !!voiceMuted);
         muteBtn.textContent = voiceMuted ? "Unmute" : "Mute";
       }
+      // Camera / share only on video calls
       if (camBtn) {
+        camBtn.style.display = isVideoCall ? "" : "none";
         camBtn.classList.toggle("active", !!voiceVideoEnabled);
         camBtn.textContent = voiceVideoEnabled ? "Cam on" : "Camera";
       }
       if (shareBtn) {
+        shareBtn.style.display = isVideoCall ? "" : "none";
         shareBtn.classList.toggle("active", !!voiceScreenSharing);
         shareBtn.textContent = voiceScreenSharing ? "Sharing" : "Share";
       }
@@ -14620,6 +14686,16 @@ async function handleCreateServer() {
         recBtn.classList.toggle("recording", rec);
         recBtn.textContent = rec ? "Stop" : "Record";
       }
+      // End when alone, Leave when others are present
+      if (leaveBtn && voiceRoom) {
+        const alone = voiceRoom.remoteParticipants.size === 0;
+        leaveBtn.textContent = alone ? "End" : "Leave";
+        leaveBtn.title = alone ? "End call" : "Leave call";
+      }
+      const layoutCtrls = document.getElementById("call-layout-controls");
+      const focusSel = document.getElementById("call-focus-select");
+      if (layoutCtrls) layoutCtrls.style.display = isVideoCall ? "" : "none";
+      if (focusSel) focusSel.style.display = isVideoCall ? "" : "none";
       if (c.banner) {
         const show = !!callRecorder || remoteIsRecording;
         c.banner.classList.toggle("visible", show);
@@ -14638,7 +14714,7 @@ async function handleCreateServer() {
       const c = callEls();
       if (!c.focusSelect || !voiceRoom) return;
       const prev = callFocusIdentity;
-      c.focusSelect.innerHTML = `<option value="auto">Auto focus</option>`;
+      c.focusSelect.innerHTML = `<option value="auto">Default view</option>`;
       const participants = [voiceRoom.localParticipant, ...Array.from(voiceRoom.remoteParticipants.values())];
       participants.forEach((p) => {
         const isLocal = p.identity === voiceRoom.localParticipant.identity;
@@ -14840,31 +14916,12 @@ async function handleCreateServer() {
       if (c.grid) c.grid.style.display = "none";
 
       const speakingIds = new Set((voiceRoom.activeSpeakers || []).map((p) => p.identity));
-      const now = Date.now();
 
+      // Manual focus only — no auto-switching (prevents flash when someone speaks)
       let focus =
-        callFocusIdentity !== "auto"
+        callFocusIdentity && callFocusIdentity !== "auto"
           ? people.find((p) => p.identity === callFocusIdentity)
           : null;
-
-      if (!focus && callFocusIdentity === "auto") {
-        // Sticky auto-focus: only switch speaker after 1.2s of someone else speaking
-        const topSpeaker = (voiceRoom.activeSpeakers || [])[0];
-        const topId = topSpeaker && topSpeaker.identity;
-        if (topId && topId !== stickySpeakerId) {
-          if (!stickySpeakerId || now > stickySpeakerUntil) {
-            stickySpeakerId = topId;
-            stickySpeakerUntil = now + 1200;
-          }
-        } else if (topId && topId === stickySpeakerId) {
-          stickySpeakerUntil = now + 1200;
-        }
-        focus =
-          people.find((p) => p.identity === stickySpeakerId) ||
-          people.find((p) => !p.isLocal) ||
-          people.find((p) => p.isLocal) ||
-          null;
-      }
       if (!focus) {
         focus =
           people.find((p) => !p.isLocal) ||
@@ -15075,7 +15132,8 @@ async function handleCreateServer() {
         await Promise.all(otherParticipants.map((p) => resolveProfile(p.user_id)))
       ).map((p) => (p ? p.username : "Unknown"));
       const namesText = names.length ? names.join(", ") : "Waiting for others to join...";
-      const isAlone = dmCallParticipants.length <= 1;
+      const remoteN = voiceRoom && voiceRoom.remoteParticipants ? voiceRoom.remoteParticipants.size : Math.max(0, dmCallParticipants.length - 1);
+      const isAlone = remoteN === 0;
 
       dmCallBarEl.innerHTML = `
         <div class="dm-call-bar-info">
@@ -15948,13 +16006,18 @@ async function handleSignIn() {
 
       settingsAccentReset.addEventListener("click", () => {
         clearAccentOverrides();
-        // Re-apply active theme so CSS variables refresh without reload
         const themeNow =
-          (currentProfile && currentProfile.theme) ||
+          (currentProfile && currentProfile.theme && currentProfile.theme !== "custom"
+            ? currentProfile.theme
+            : null) ||
+          lastNamedTheme ||
           document.documentElement.getAttribute("data-theme") ||
-          "light";
-        document.documentElement.setAttribute("data-theme", themeNow);
-        // Force style recalc
+          "dark";
+        if (themeNow === "custom") {
+          setTheme(lastNamedTheme || "dark");
+        } else {
+          setTheme(themeNow);
+        }
         void document.documentElement.offsetHeight;
         const themeAccent = getComputedThemeAccentHex();
         if (settingsAccentColor) settingsAccentColor.value = themeAccent;
@@ -15975,12 +16038,34 @@ async function handleSignIn() {
       }
       if (settingsBgReset) {
         settingsBgReset.addEventListener("click", () => {
+          clearBackgroundOverrides();
+          // Restore last named theme (not forced dark)
+          const themeNow =
+            (currentProfile && currentProfile.theme && currentProfile.theme !== "custom"
+              ? currentProfile.theme
+              : null) || lastNamedTheme || "dark";
+          setTheme(themeNow);
+          void document.documentElement.offsetHeight;
+          const canvas = getComputedStyle(document.documentElement).getPropertyValue("--bg-canvas").trim() || "#0a0b0e";
+          const surface = getComputedStyle(document.documentElement).getPropertyValue("--surface").trim() || canvas;
           const bg = document.getElementById("settings-bg-color");
           const bg2 = document.getElementById("settings-bg-color-2");
           const bgg = document.getElementById("settings-bg-gradient");
-          if (bg) { bg.value = "#0a0b0e"; bg.dataset.userSet = "0"; }
-          if (bg2) bg2.value = "#1a1c22";
+          const toHex = (raw) => {
+            if (!raw) return "#0a0b0e";
+            if (/^#/.test(raw)) return raw.length === 4
+              ? "#" + raw[1]+raw[1]+raw[2]+raw[2]+raw[3]+raw[3]
+              : raw;
+            const m = raw.match(/\d+/g);
+            if (!m) return "#0a0b0e";
+            return "#" + m.slice(0,3).map((n) => Number(n).toString(16).padStart(2,"0")).join("");
+          };
+          if (bg) { bg.value = toHex(canvas); bg.dataset.userSet = "0"; }
+          if (bg2) bg2.value = toHex(surface);
           if (bgg) bgg.checked = false;
+          try { syncColorPickerMode("bg", false); } catch (e) {}
+          try { updateColorPickerPreview("bg"); } catch (e) {}
+          showToast("Background restored to theme", { duration: 1800 });
         });
       }
 
