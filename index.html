@@ -681,7 +681,7 @@
       position: absolute;
       top: 0;
       bottom: 0;
-      width: 280px;
+      width: 320px;
       max-width: calc(100% - 24px);
       z-index: 50;
       transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -1220,6 +1220,13 @@
     .channel-server-meta {
       font-size: 11px;
       color: var(--text-tertiary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .channel-server-meta #current-server-meta {
+      white-space: nowrap;
     }
 
     .channel-list-actions {
@@ -7849,8 +7856,7 @@ notificationSettingsSave.onclick = async () => {
       el.style.left = `${Math.min(Math.max(left, margin), maxLeft)}px`;
       el.style.top = `${Math.min(Math.max(top, margin), maxTop)}px`;
     }
-
-
+    
     function positionAnchoredPopover(el, anchorRect, margin = 8, gap = 8) {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
