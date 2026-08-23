@@ -7382,7 +7382,6 @@
         if (seenIncomingCallIds.has(call.id)) return;
         seenIncomingCallIds.add(call.id);
         if (call.started_by === currentUser.id) return;
-        // Respect DM mute — no top-right popup or notifications for muted conversations
         if (call.conversation_id && mutedConversationIds.has(call.conversation_id)) return;
         const alreadyOnThisCall =
           voiceRoom &&
@@ -7392,7 +7391,6 @@
         showIncomingCallPopup(call);
       });
 
-      // Drop ended calls from the seen set and dismiss the top-right popup
       seenIncomingCallIds.forEach((id) => {
         if (!currentIds.has(id)) seenIncomingCallIds.delete(id);
       });
@@ -8738,14 +8736,12 @@ notificationSettingsSave.onclick = async () => {
       if (!selectEl) return;
       const current = activeTheme || document.documentElement.getAttribute("data-theme") || "light";
       selectEl.innerHTML = "";
-      // Always show the 4 core themes
       PRIMARY_THEMES.forEach((v) => {
         const opt = document.createElement("option");
         opt.value = v;
         opt.textContent = themeLabel(v);
         selectEl.appendChild(opt);
       });
-      // If active theme is not one of the four, show it as a single temporary 5th option
       if (current && !PRIMARY_THEMES.includes(current) && current !== "__more__") {
         const opt = document.createElement("option");
         opt.value = current;
@@ -8765,7 +8761,6 @@ notificationSettingsSave.onclick = async () => {
       if (!theme || theme === "__more__") return;
       if (theme !== "custom") lastNamedTheme = theme;
       document.documentElement.setAttribute("data-theme", theme);
-      // Apply gradient canvas backgrounds for gradient themes
       const root = document.documentElement;
       root.classList.remove("theme-has-gradient-bg");
       root.style.removeProperty("--theme-gradient-bg");
@@ -8902,11 +8897,9 @@ notificationSettingsSave.onclick = async () => {
 
     function applyBackgroundColor(color, gradient) {
       const root = document.documentElement;
-      // Don't fight a chat background *image* for the page chrome; still tint canvas
       if (gradient) {
         root.style.setProperty("--bg-canvas", color || "#0a0b0e");
         root.style.setProperty("--surface", color || "#0a0b0e");
-        // Derive slightly lighter surfaces from the base color for panels
         root.style.backgroundImage = gradient;
         root.style.backgroundAttachment = "fixed";
         root.style.backgroundColor = color || "#0a0b0e";
@@ -9012,12 +9005,10 @@ notificationSettingsSave.onclick = async () => {
         if (appearance.bg_gradient && appearance.bg_color && appearance.bg_color_2) {
           bgGrad = `linear-gradient(160deg, ${appearance.bg_color}, ${appearance.bg_color_2})`;
         }
-        // Page-wide background color only when no chat background *image*
         if (!profile || !profile.background_url) {
           applyBackgroundColor(appearance.bg_color || null, bgGrad);
         } else {
           clearBackgroundOverrides();
-          // still allow solid accent on custom
         }
       } else {
         clearAccentOverrides();
@@ -9031,7 +9022,6 @@ notificationSettingsSave.onclick = async () => {
     async function handleThemeChange(theme) {
       if (!theme || theme === "__more__") return;
       setTheme(theme);
-      // Named themes ignore saved custom colors until user picks Custom again
       if (theme !== "custom") {
         clearAccentOverrides();
         clearBackgroundOverrides();
@@ -9041,7 +9031,6 @@ notificationSettingsSave.onclick = async () => {
       if (!currentUser) return;
       try {
         const payload = { theme };
-        // When leaving custom, also clear stored color overrides so they don't stick
         if (theme !== "custom" && currentProfile && currentProfile.appearance) {
           payload.appearance = {
             ...currentProfile.appearance,
@@ -10417,8 +10406,6 @@ notificationSettingsSave.onclick = async () => {
       }
     }
 
-
-    // ---- Presence / online members (Supabase Realtime Presence) ----
     let serverPresenceChannel = null;
     const onlineUserIds = new Set();
 
@@ -12924,7 +12911,6 @@ async function handleCreateServer() {
     function handleOpenDmModal() {
       dmModal.classList.add("visible");
       loadDmConversations();
-      // Call / Video only when a conversation is selected
       if (!currentDmConversationId) {
         if (dmCallButton) dmCallButton.style.display = "none";
         if (dmVideoCallButton) dmVideoCallButton.style.display = "none";
@@ -14104,17 +14090,14 @@ async function handleCreateServer() {
     async function toggleDmCamera() {
       if (!voiceRoom || voiceContext !== "dm") return;
       if (!voicePreferVideo && !voiceVideoEnabled && !voiceScreenSharing) {
-        // Pure voice call — camera stays disabled
         showToast("Camera is only available on video calls", { duration: 2000 });
         return;
       }
       try {
         const next = !voiceVideoEnabled;
         await voiceRoom.localParticipant.setCameraEnabled(next);
-        // Give LiveKit a moment to publish/unpublish before reading state
         await new Promise((r) => setTimeout(r, 120));
         syncLocalMediaFlagsFromRoom();
-        // Trust the requested state if sync lags
         if (next && !voiceVideoEnabled) voiceVideoEnabled = true;
         if (!next) voiceVideoEnabled = false;
         renderDmVideoStage();
@@ -14157,7 +14140,6 @@ async function handleCreateServer() {
       });
       voiceScreenSharing = sharing;
       voiceVideoEnabled = cam || voicePreferVideo && cam;
-      // Prefer actual publication state for camera
       voiceVideoEnabled = cam;
     }
 
@@ -14171,7 +14153,6 @@ async function handleCreateServer() {
           await voiceRoom.localParticipant.setScreenShareEnabled(true);
         } else {
           await voiceRoom.localParticipant.setScreenShareEnabled(false);
-          // Explicitly unpublish any leftover screen tracks
           const pubs = Array.from(voiceRoom.localParticipant.videoTrackPublications.values());
           for (const pub of pubs) {
             const src = pub.source;
@@ -14186,7 +14167,6 @@ async function handleCreateServer() {
             }
           }
         }
-        // Read real room state so UI can't get stuck on "Sharing"
         syncLocalMediaFlagsFromRoom();
         if (!next && hadCamera) {
           try {
@@ -14391,7 +14371,6 @@ async function handleCreateServer() {
             try { updateDmCallButton(); } catch (e) {}
             try { updateCallOverlayControls(); } catch (e) {}
             try { renderDmCallBar(); } catch (e) {}
-            // Auto-end DM call when everyone else has left
             if (voiceContext === "dm" && voiceRoom && voiceRoom.remoteParticipants.size === 0) {
               showToast("Call ended — everyone else left", { duration: 2500 });
               setTimeout(() => {
@@ -14410,7 +14389,6 @@ async function handleCreateServer() {
               tryPlayAudioEl(el);
             }
             if (track.kind === "video") {
-              // Clear stale black frames left after screen-share ends
               try {
                 const mv = document.getElementById("call-main-video");
                 const pv = document.getElementById("call-pip-video");
@@ -14453,7 +14431,6 @@ async function handleCreateServer() {
             renderVoiceParticipants();
             syncLocalMediaFlagsFromRoom();
             updateMuteBadges();
-            // Only rebuild stage if a video track muted (camera off)
             if (pub && (pub.kind === "video" || (pub.track && pub.track.kind === "video"))) {
               scheduleCallStageRender();
             }
@@ -14467,7 +14444,6 @@ async function handleCreateServer() {
             }
           })
           .on(RoomEvent.Disconnected, () => {
-            // Remote hangup or network drop — full local teardown
             const wasDm = voiceContext === "dm";
             const callId = activeDmCallId;
             voiceRoom = null;
@@ -14491,7 +14467,6 @@ async function handleCreateServer() {
         }
 
         await room.localParticipant.setMicrophoneEnabled(true);
-        // Voice calls must not turn the camera on
         if (voicePreferVideo && context === "dm") {
           try {
             await room.localParticipant.setCameraEnabled(true);
@@ -14604,7 +14579,6 @@ async function handleCreateServer() {
       const wasDm = voiceContext === "dm";
       const callId = activeDmCallId;
       const room = voiceRoom;
-      // Clear refs first so UI can't act on a half-dead room
       voiceRoom = null;
       activeDmCallId = null;
       try {
@@ -14695,7 +14669,7 @@ async function handleCreateServer() {
 
 
     let remoteIsRecording = false;
-    let callLayoutMode = "gallery"; // focus | gallery
+    let callLayoutMode = "gallery";
     let callFocusIdentity = "auto";
     let stickySpeakerId = null;
     let stickySpeakerUntil = 0;
@@ -14740,7 +14714,6 @@ async function handleCreateServer() {
       const focusId = callFocusIdentity && callFocusIdentity !== "auto"
         ? callFocusIdentity
         : null;
-      // Prefer highlighting the focused person, else any remote speaker
       let ringId = focusId;
       if (!ringId) {
         const remote = (voiceRoom.activeSpeakers || []).find(
@@ -14764,7 +14737,6 @@ async function handleCreateServer() {
         const pubs = participant.audioTrackPublications
           ? Array.from(participant.audioTrackPublications.values())
           : [];
-        // Any muted/missing mic publication counts as muted (remote mute uses isMuted)
         if (pubs.length) {
           return pubs.some((p) => p.isMuted || !p.track);
         }
@@ -14776,7 +14748,6 @@ async function handleCreateServer() {
       if (!el) return;
       const style = window.getComputedStyle(el);
       if (style.display === "none" || style.visibility === "hidden") {
-        // Don't put a badge on a hidden node
         const existing = el.querySelector(":scope > .call-mute-badge");
         if (existing) existing.remove();
         return;
@@ -14811,16 +14782,13 @@ async function handleCreateServer() {
         mutedById[p.identity] = isParticipantMicMuted(p);
       });
 
-      // Generic: any tile/pip with data-identity
       document.querySelectorAll("[data-identity]").forEach((el) => {
-        // Skip nested children that aren't stage containers (e.g. labels)
         if (el.classList && (el.classList.contains("call-grid-tile-label") || el.classList.contains("call-pip-label"))) return;
         const id = el.dataset.identity;
         if (!id || !(id in mutedById)) return;
         ensureMuteBadge(el, mutedById[id]);
       });
 
-      // Focus main stage: badge on the visible surface (video or placeholder)
       const mainVid = document.getElementById("call-main-video");
       const mainPh = document.getElementById("call-main-placeholder");
       const stage = document.getElementById("call-overlay-stage");
@@ -14835,7 +14803,6 @@ async function handleCreateServer() {
             : mainPh && mainPh.style.display !== "none"
               ? mainPh
               : stage;
-        // Prefer a dedicated overlay host on the stage so it stays top-right of the main view
         if (stage) {
           stage.dataset.mainIdentity = mainId;
           let host = document.getElementById("call-main-mute-host");
@@ -14847,7 +14814,6 @@ async function handleCreateServer() {
             stage.appendChild(host);
           }
           host.dataset.identity = mainId;
-          // Clear and re-apply so we don't stack
           host.innerHTML = "";
           if (mutedById[mainId]) {
             const badge = document.createElement("div");
@@ -14861,7 +14827,6 @@ async function handleCreateServer() {
         ensureMuteBadge(mainVisible, mutedById[mainId]);
       }
 
-      // PiP
       const pip = document.getElementById("call-pip");
       if (pip && pip.dataset.identity && pip.style.display !== "none") {
         ensureMuteBadge(pip, !!mutedById[pip.dataset.identity]);
@@ -14879,7 +14844,6 @@ async function handleCreateServer() {
     }
 
     function showCallOverlay(force) {
-      // Voice-only calls stay in the compact call bar — full page is for video / screen share
       if (!force && !voicePreferVideo && !voiceVideoEnabled && !voiceScreenSharing) {
         try { hideCallOverlay(); } catch (e) {}
         try { renderDmCallBar(); } catch (e) {}
@@ -14983,7 +14947,6 @@ async function handleCreateServer() {
         muteBtn.classList.toggle("active", !!voiceMuted);
         muteBtn.textContent = voiceMuted ? "Unmute" : "Mute";
       }
-      // Camera / share only on video calls
       if (camBtn) {
         camBtn.style.display = isVideoCall ? "" : "none";
         camBtn.classList.toggle("active", !!voiceVideoEnabled);
@@ -14999,7 +14962,6 @@ async function handleCreateServer() {
         recBtn.classList.toggle("recording", rec);
         recBtn.textContent = rec ? "Stop" : "Record";
       }
-      // End when alone, Leave when others are present
       if (leaveBtn && voiceRoom) {
         const alone = voiceRoom.remoteParticipants.size === 0;
         leaveBtn.textContent = alone ? "End" : "Leave";
@@ -15086,12 +15048,10 @@ async function handleCreateServer() {
 
     function attachTrackToVideoEl(track, videoEl, muted) {
       if (!videoEl || !track) return;
-      // Avoid detach/attach cycle if this element is already showing this track (prevents black flash)
       const already = videoEl.srcObject && track.mediaStreamTrack &&
         videoEl.srcObject.getTracks && videoEl.srcObject.getTracks().some((t) => t.id === track.mediaStreamTrack.id);
       if (!already) {
         try {
-          // Only detach this element, don't tear down other consumers
           track.detach(videoEl);
         } catch (e) {}
         track.attach(videoEl);
@@ -15135,7 +15095,6 @@ async function handleCreateServer() {
       const { screens, cameras, people } = collectVideoTracks();
       refreshCallFocusOptions();
 
-      // Screen share always takes priority in speaker mode
       if (screens.length && callLayoutMode === "focus") {
         if (c.grid) c.grid.style.display = "none";
         const main = screens[0];
@@ -15145,7 +15104,6 @@ async function handleCreateServer() {
         }
         if (c.mainPlaceholder) c.mainPlaceholder.style.display = "none";
 
-        // PiP: preferred focus person camera, else remote, else local
         let pipPerson = null;
         if (callFocusIdentity !== "auto") {
           pipPerson = people.find((p) => p.identity === callFocusIdentity) || null;
@@ -15187,7 +15145,6 @@ async function handleCreateServer() {
 
       if (c.pip) c.pip.style.display = "none";
 
-      // Gallery: everyone as tiles (video or avatar)
       if (callLayoutMode === "gallery" && c.grid) {
         if (c.mainVideo) {
           c.mainVideo.style.display = "none";
@@ -15221,7 +15178,6 @@ async function handleCreateServer() {
             if (tile && speaking) tile.classList.add("speaking");
           }
         });
-        // Also show screen shares as extra tiles
         screens.forEach((s) => {
           const tile = document.createElement("div");
           tile.className = "call-grid-tile";
@@ -15243,12 +15199,10 @@ async function handleCreateServer() {
         return;
       }
 
-      // Focus mode: remote on main, local always in bottom-right PiP
       if (c.grid) c.grid.style.display = "none";
 
       const self = people.find((p) => p.isLocal) || null;
       const remote = people.find((p) => !p.isLocal) || null;
-      // Manual focus picks a person for main; default prefers remote
       let mainPerson =
         callFocusIdentity && callFocusIdentity !== "auto"
           ? people.find((p) => p.identity === callFocusIdentity)
@@ -15259,12 +15213,10 @@ async function handleCreateServer() {
           ? remote
           : self;
 
-      // --- MAIN ---
       if (mainPerson && mainPerson.hasCam && mainPerson.camera) {
         if (c.mainPlaceholder) c.mainPlaceholder.style.display = "none";
         if (c.mainVideo) {
           c.mainVideo.style.display = "block";
-          // Force re-bind after screen-share stop so the camera isn't left black
           try { c.mainVideo.srcObject = null; } catch (e) {}
           attachTrackToVideoEl(mainPerson.camera.track, c.mainVideo, !!mainPerson.isLocal);
         }
@@ -15272,7 +15224,6 @@ async function handleCreateServer() {
         const stageEl = document.getElementById("call-overlay-stage");
         if (stageEl) stageEl.dataset.mainIdentity = mainPerson.identity;
       } else {
-        // Avatar for main person (their cam is off)
         if (c.mainVideo) {
           c.mainVideo.style.display = "none";
           try { c.mainVideo.srcObject = null; } catch (e) {}
@@ -15299,7 +15250,6 @@ async function handleCreateServer() {
         }
       }
 
-      // --- PIP (always bottom-right): local self-view when remote is main ---
       if (pipPerson && c.pip) {
         c.pip.style.cssText =
           "display:block;position:absolute;right:16px;bottom:16px;left:auto;top:auto;width:min(200px,28vw);aspect-ratio:16/10;border-radius:12px;overflow:hidden;z-index:6;background:#16181f;border:2px solid rgba(255,255,255,0.18);";
@@ -15375,7 +15325,6 @@ async function handleCreateServer() {
 
       voicePreferVideo = !!withVideo;
 
-      // Full-page only for video calls; voice stays in the compact bar
       if (withVideo) {
         try {
           showCallOverlay(true);
@@ -16391,7 +16340,6 @@ async function handleSignIn() {
       if (settingsBgReset) {
         settingsBgReset.addEventListener("click", () => {
           clearBackgroundOverrides();
-          // Restore last named theme (not forced dark)
           const themeNow =
             (currentProfile && currentProfile.theme && currentProfile.theme !== "custom"
               ? currentProfile.theme
@@ -16651,7 +16599,6 @@ async function handleSignIn() {
       themeSelect.addEventListener("change", () => {
         const v = themeSelect.value;
         if (v === "__more__") {
-          // reset select to current theme while modal is open
           if (currentProfile && currentProfile.theme) themeSelect.value = currentProfile.theme;
           else themeSelect.value = document.documentElement.getAttribute("data-theme") || "light";
           openMoreThemesModal(false);
@@ -16711,7 +16658,6 @@ async function handleSignIn() {
         });
       });
 
-      // Call overlay controls
       const callCtrlMute = document.getElementById("call-ctrl-mute");
       const callCtrlCam = document.getElementById("call-ctrl-cam");
       const callCtrlShare = document.getElementById("call-ctrl-share");
@@ -16732,7 +16678,6 @@ async function handleSignIn() {
         ov.classList.toggle("cinema-mode", !!on);
         if (ctrls) ctrls.classList.toggle("hidden-bar", !!on);
         if (callShowBarBtn) callShowBarBtn.style.display = on ? "block" : "none";
-        // Keep PiP hidden via CSS in cinema mode
       };
       if (callCtrlCinema) {
         callCtrlCinema.addEventListener("click", () => setCinemaMode(true));
@@ -16740,7 +16685,6 @@ async function handleSignIn() {
       if (callShowBarBtn) {
         callShowBarBtn.addEventListener("click", () => setCinemaMode(false));
       }
-      // Esc exits cinema mode
       document.addEventListener("keydown", (e) => {
         if (e.key === "Escape") {
           const ov = document.getElementById("call-overlay");
@@ -16754,7 +16698,6 @@ async function handleSignIn() {
           ov.style.cssText = "display:none!important;";
           document.body.classList.remove("in-call-overlay");
         }
-        // Keep the floating call bar so the user can reopen
         try { renderDmCallBar(); } catch (e) {}
       });
       document.querySelectorAll(".call-layout-btn").forEach((btn) => {
