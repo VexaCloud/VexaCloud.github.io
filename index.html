@@ -924,6 +924,20 @@
     .call-overlay {
       z-index: 1200 !important;
     }
+
+    #more-themes-modal {
+      z-index: 800 !important;
+    }
+    #more-themes-modal .modal-close {
+      pointer-events: auto;
+      cursor: pointer;
+      position: relative;
+      z-index: 2;
+    }
+    .call-overlay.visible {
+      display: flex !important;
+    }
+
     html.has-custom-bg-color .app-shell,
     html.has-custom-bg-color body {
       background-color: var(--bg-canvas);
@@ -7454,17 +7468,23 @@
 
       const el = document.createElement("div");
       el.className = "incoming-call-popup";
+      const isVideoCall = !!(
+        call.is_video ||
+        call.video ||
+        (Array.isArray(call.participants) &&
+          call.participants.some((p) => p && (p.video || p.is_video) && p.user_id === call.started_by))
+      );
       el.innerHTML = `
         <div class="incoming-call-info">
           <div class="incoming-call-name">${uiIcon("phone", 16)} ${escapeHtml(name)}</div>
-          <div class="incoming-call-sub">Incoming voice call</div>
+          <div class="incoming-call-sub">${isVideoCall ? "Incoming video call" : "Incoming voice call"}</div>
         </div>
         <div class="incoming-call-actions">
           <button class="incoming-call-button incoming-call-answer">Answer</button>
-          <button class="incoming-call-button incoming-call-answer-video" style="background:var(--accent);color:#fff;">Video</button>
           <button class="incoming-call-button incoming-call-decline">Dismiss</button>
         </div>
       `;
+      el.dataset.isVideo = isVideoCall ? "1" : "0";
       const stack = getTopRightAlertStack();
       const callBar = stack.querySelector(".dm-call-bar");
       if (callBar) stack.insertBefore(el, callBar);
@@ -7480,11 +7500,15 @@
         }
       };
 
-      const joinIncoming = async (withVideo) => {
+      const joinIncoming = async () => {
         dismiss();
         try {
           if (voiceRoom) await disconnectVoice();
-          voicePreferVideo = !!withVideo;
+          const wantVideo = el.dataset.isVideo === "1";
+          voicePreferVideo = wantVideo;
+          // Open full call page first so the UI isn't cramped in the DM modal
+          showCallOverlay();
+          updateCallOverlayChrome();
           handleOpenDmModal();
           openDmConversation(call.conversation_id, other);
           const { call: joined } = await apiFetch(`/api/voice-calls/${call.id}/join`, { method: "POST" });
@@ -7500,12 +7524,11 @@
         } catch (err) {
           console.error(err);
           showToast(err.message || "Failed to join call", { variant: "danger" });
+          try { hideCallOverlay(); } catch (e) {}
         }
       };
       el.querySelector(".incoming-call-decline").addEventListener("click", dismiss);
-      el.querySelector(".incoming-call-answer").addEventListener("click", () => joinIncoming(false));
-      const videoBtn = el.querySelector(".incoming-call-answer-video");
-      if (videoBtn) videoBtn.addEventListener("click", () => joinIncoming(true));
+      el.querySelector(".incoming-call-answer").addEventListener("click", () => joinIncoming());
 
       setTimeout(() => {
         if (incomingCallPopupCallId === call.id) dismiss();
@@ -13928,8 +13951,30 @@ async function handleCreateServer() {
       if (!voiceRoom || voiceContext !== "dm") return;
       try {
         const next = !voiceScreenSharing;
-        await voiceRoom.localParticipant.setScreenShareEnabled(next);
+        const hadCamera = !!voiceVideoEnabled;
+        await voiceRoom.localParticipant.setScreenShareEnabled(next, {
+          // Keep camera published alongside screen when possible
+          audio: true,
+        });
         voiceScreenSharing = next;
+        // When stopping share, LiveKit may drop the camera track — restore it
+        if (!next && hadCamera) {
+          try {
+            await voiceRoom.localParticipant.setCameraEnabled(true);
+            voiceVideoEnabled = true;
+          } catch (camErr) {
+            console.error("Failed to restore camera after screen share", camErr);
+          }
+        }
+        // When starting share, keep camera on if it was on
+        if (next && hadCamera) {
+          try {
+            await voiceRoom.localParticipant.setCameraEnabled(true);
+            voiceVideoEnabled = true;
+          } catch (camErr) {
+            console.error(camErr);
+          }
+        }
         renderDmVideoStage();
         renderCallOverlayStage();
         updateDmCallMediaButtons();
@@ -14388,11 +14433,18 @@ async function handleCreateServer() {
       }
       c.overlay.classList.add("visible");
       c.overlay.setAttribute("aria-hidden", "false");
+      // Hard-force full-page takeover (beats conflicting modal z-index / display)
+      c.overlay.style.cssText =
+        "display:flex!important;position:fixed!important;inset:0!important;z-index:99999!important;flex-direction:column;background:#07080c;color:#f5f6f8;";
       document.body.classList.add("in-call-overlay");
-      // Close DM modal so the call page owns the screen
       try {
         const dmModal = document.getElementById("dm-modal");
         if (dmModal) dmModal.classList.remove("visible");
+      } catch (e) {}
+      try {
+        document.querySelectorAll(".modal-backdrop.visible").forEach((m) => {
+          if (m.id !== "call-overlay") m.classList.remove("visible");
+        });
       } catch (e) {}
       updateCallOverlayChrome();
       renderCallOverlayStage();
@@ -14405,6 +14457,7 @@ async function handleCreateServer() {
       if (!c.overlay) return;
       c.overlay.classList.remove("visible");
       c.overlay.setAttribute("aria-hidden", "true");
+      c.overlay.style.cssText = "";
       document.body.classList.remove("in-call-overlay");
       if (c.mainVideo) {
         try { c.mainVideo.srcObject = null; } catch (e) {}
@@ -14795,17 +14848,22 @@ async function handleCreateServer() {
 
       voicePreferVideo = !!withVideo;
 
+      // Full-page call UI immediately (like server voice stage)
+      try { showCallOverlay(); } catch (e) {}
+
       try {
         let call;
         const { call: existingCall } = await apiFetch(`/api/dms/${currentDmConversationId}/call`);
         if (existingCall) {
           const { call: joined } = await apiFetch(`/api/voice-calls/${existingCall.id}/join`, {
             method: "POST",
+            body: JSON.stringify({ video: !!withVideo }),
           });
           call = joined;
         } else {
           const { call: started } = await apiFetch(`/api/dms/${currentDmConversationId}/call/start`, {
             method: "POST",
+            body: JSON.stringify({ is_video: !!withVideo }),
           });
           call = started;
         }
@@ -14821,6 +14879,7 @@ async function handleCreateServer() {
       } catch (err) {
         console.error(err);
         showToast(err.message || "Failed to start/join call", { variant: "danger" });
+        try { hideCallOverlay(); } catch (e) {}
       }
     }
 
@@ -15751,8 +15810,15 @@ async function handleSignIn() {
       });
 
       settingsAccentReset.addEventListener("click", () => {
-        // Temporarily clear overrides so we read the real theme accent
         clearAccentOverrides();
+        // Re-apply active theme so CSS variables refresh without reload
+        const themeNow =
+          (currentProfile && currentProfile.theme) ||
+          document.documentElement.getAttribute("data-theme") ||
+          "light";
+        document.documentElement.setAttribute("data-theme", themeNow);
+        // Force style recalc
+        void document.documentElement.offsetHeight;
         const themeAccent = getComputedThemeAccentHex();
         if (settingsAccentColor) settingsAccentColor.value = themeAccent;
         const a2 = document.getElementById("settings-accent-color-2");
@@ -15761,9 +15827,9 @@ async function handleSignIn() {
         if (ag) ag.checked = false;
         try { syncColorPickerMode("accent", false); } catch (e) {}
         try { updateColorPickerPreview("accent"); } catch (e) {}
-        // Preview: show theme accent immediately (not custom override)
+        applyAccentColor(null);
         clearAccentOverrides();
-        showToast("Accent reset to theme default — save appearance to keep it", { duration: 2200 });
+        showToast("Accent restored to theme", { duration: 1800 });
       });
       const settingsBgReset = document.getElementById("settings-bg-reset");
       const settingsBgColor = document.getElementById("settings-bg-color");
@@ -16019,14 +16085,26 @@ async function handleSignIn() {
         }
         handleThemeChange(v);
       });
-      const moreThemesClose = document.getElementById("more-themes-close");
       const moreThemesModal = document.getElementById("more-themes-modal");
-      if (moreThemesClose && moreThemesModal) {
-        moreThemesClose.addEventListener("click", () => moreThemesModal.classList.remove("visible"));
+      const closeMoreThemes = () => {
+        if (moreThemesModal) moreThemesModal.classList.remove("visible");
+      };
+      if (moreThemesModal) {
         moreThemesModal.addEventListener("click", (e) => {
-          if (e.target === moreThemesModal) moreThemesModal.classList.remove("visible");
+          if (e.target === moreThemesModal) closeMoreThemes();
+          const closeBtn = e.target.closest && e.target.closest("#more-themes-close, .modal-close");
+          if (closeBtn && moreThemesModal.contains(closeBtn)) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeMoreThemes();
+          }
         });
       }
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && moreThemesModal && moreThemesModal.classList.contains("visible")) {
+          closeMoreThemes();
+        }
+      });
       if (settingsTheme) {
         settingsTheme.addEventListener("change", () => {
           const v = settingsTheme.value;
