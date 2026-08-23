@@ -755,7 +755,10 @@ function showInitError(message) {
           }
           handleOpenDmModal();
           openDmConversation(call.conversation_id, other);
-          const { call: joined } = await apiFetch(`/api/voice-calls/${call.id}/join`, { method: "POST" });
+          const { call: joined } = await apiFetch(`/api/voice-calls/${call.id}/join`, {
+            method: "POST",
+            body: JSON.stringify({ video: wantVideo }),
+          });
           activeDmCallId = joined.id;
           activeDmCallStartedAt = Date.now();
           dmCallParticipants = Array.isArray(joined.participants) ? joined.participants : [];
@@ -1540,7 +1543,6 @@ function showAuthOverlay() {
     const dmVoiceMuteButton = document.getElementById("dm-voice-mute-button");
     const dmVoiceLeaveButton = document.getElementById("dm-voice-leave-button");
     const dmVideoCallButton = document.getElementById("dm-video-call-button");
-    const dmVideoStage = document.getElementById("dm-video-stage");
     const dmVideoToggleButton = document.getElementById("dm-video-toggle-button");
     const dmScreenShareButton = document.getElementById("dm-screen-share-button");
     const dmRecordButton = document.getElementById("dm-record-button");
@@ -7125,64 +7127,6 @@ async function handleCreateServer() {
     let voiceConnectGeneration = 0;
 
 
-    function renderDmVideoStage() {
-      if (!dmVideoStage) return;
-      if (!voiceRoom || voiceContext !== "dm") {
-        dmVideoStage.classList.remove("visible");
-        dmVideoStage.innerHTML = "";
-        return;
-      }
-      const participants = [voiceRoom.localParticipant, ...Array.from(voiceRoom.remoteParticipants.values())];
-      const tiles = [];
-      participants.forEach((p) => {
-        const pubs = Array.from(p.videoTrackPublications?.values?.() || p.trackPublications?.values?.() || []);
-        pubs.forEach((pub) => {
-          if (!pub || pub.kind !== "video" && pub.track?.kind !== "video") return;
-          const track = pub.track;
-          if (!track || track.isMuted) return;
-          const isLocal = p.identity === voiceRoom.localParticipant.identity;
-          const profile = resolveVoiceProfile(p.identity, isLocal);
-          const name = profile ? profile.username : isLocal ? "You" : "User";
-          const source = pub.source === 2 || pub.source === "screen_share" || (pub.trackName || "").includes("screen") ? "screen" : "camera";
-          tiles.push({ identity: p.identity, track, name, isLocal, source });
-        });
-      });
-      if (!tiles.length) {
-        dmVideoStage.classList.remove("visible");
-        dmVideoStage.innerHTML = "";
-        return;
-      }
-      dmVideoStage.classList.add("visible");
-      const existing = new Map();
-      Array.from(dmVideoStage.querySelectorAll(".dm-video-tile")).forEach((el) => {
-        existing.set(el.dataset.key, el);
-      });
-      const used = new Set();
-      tiles.forEach((t) => {
-        const key = `${t.identity}:${t.source}:${t.track.sid || ""}`;
-        used.add(key);
-        let tile = existing.get(key);
-        if (!tile) {
-          tile = document.createElement("div");
-          tile.className = "dm-video-tile";
-          tile.dataset.key = key;
-          const video = t.track.attach();
-          video.autoplay = true;
-          video.playsInline = true;
-          video.muted = t.isLocal;
-          tile.appendChild(video);
-          const label = document.createElement("div");
-          label.className = "dm-video-tile-label";
-          label.textContent = `${t.name}${t.source === "screen" ? " (screen)" : ""}`;
-          tile.appendChild(label);
-          dmVideoStage.appendChild(tile);
-        }
-      });
-      existing.forEach((el, key) => {
-        if (!used.has(key)) el.remove();
-      });
-    }
-
     function updateDmCallMediaButtons() {
       const isVideoCall = !!(voicePreferVideo || voiceVideoEnabled || voiceScreenSharing);
       if (dmVideoToggleButton) {
@@ -7215,7 +7159,6 @@ async function handleCreateServer() {
         syncLocalMediaFlagsFromRoom();
         if (next && !voiceVideoEnabled) voiceVideoEnabled = true;
         if (!next) voiceVideoEnabled = false;
-        renderDmVideoStage();
         updateDmCallMediaButtons();
         updateCallOverlayControls();
         showCallOverlay(true);
@@ -7299,7 +7242,6 @@ async function handleCreateServer() {
           }
           syncLocalMediaFlagsFromRoom();
         }
-        renderDmVideoStage();
         renderCallOverlayStage();
         updateDmCallMediaButtons();
         updateCallOverlayControls();
@@ -7504,7 +7446,6 @@ async function handleCreateServer() {
               tryPlayAudioEl(el);
             }
             if (track.kind === "video") {
-              renderDmVideoStage();
               scheduleCallStageRender();
             }
             renderVoiceParticipants();
@@ -7512,7 +7453,6 @@ async function handleCreateServer() {
           .on(RoomEvent.TrackUnsubscribed, (track) => {
             track.detach().forEach((el) => el.remove());
             if (track.kind === "video") {
-              renderDmVideoStage();
               scheduleCallStageRender();
             }
             renderVoiceParticipants();
@@ -7528,8 +7468,8 @@ async function handleCreateServer() {
               handleIncomingCallData(data, participant);
             } catch (e) {}
           })
-          .on(RoomEvent.LocalTrackPublished, () => { syncLocalMediaFlagsFromRoom(); renderVoiceParticipants(); renderDmVideoStage(); scheduleCallStageRender(); updateDmCallMediaButtons(); updateCallOverlayControls(); updateMuteBadges(); })
-          .on(RoomEvent.LocalTrackUnpublished, () => { syncLocalMediaFlagsFromRoom(); renderVoiceParticipants(); renderDmVideoStage(); scheduleCallStageRender(); updateDmCallMediaButtons(); updateCallOverlayControls(); updateMuteBadges(); })
+          .on(RoomEvent.LocalTrackPublished, () => { syncLocalMediaFlagsFromRoom(); renderVoiceParticipants(); scheduleCallStageRender(); updateDmCallMediaButtons(); updateCallOverlayControls(); updateMuteBadges(); })
+          .on(RoomEvent.LocalTrackUnpublished, () => { syncLocalMediaFlagsFromRoom(); renderVoiceParticipants(); scheduleCallStageRender(); updateDmCallMediaButtons(); updateCallOverlayControls(); updateMuteBadges(); })
           .on(RoomEvent.TrackMuted, (pub, participant) => {
             renderVoiceParticipants();
             syncLocalMediaFlagsFromRoom();
@@ -7603,7 +7543,6 @@ async function handleCreateServer() {
           pollActiveVoiceRooms();
           setVoiceStageVisible(true);
         } else if (voiceContext === "dm") {
-          renderDmVideoStage();
           updateDmCallMediaButtons();
           try { setCallConnecting(false); } catch (e) {}
           try { updateCallOverlayChrome(); } catch (e) {}
@@ -7623,12 +7562,6 @@ async function handleCreateServer() {
     function leaveVoiceCleanup() {
       try { stopCallRecording(false); } catch (e) {}
       try { hideCallOverlay(); } catch (e) {}
-      try {
-        if (dmVideoStage) {
-          dmVideoStage.classList.remove("visible");
-          dmVideoStage.innerHTML = "";
-        }
-      } catch (e) {}
       voiceVideoEnabled = false;
       voiceScreenSharing = false;
       voicePreferVideo = false;
@@ -7761,8 +7694,21 @@ async function handleCreateServer() {
       }
       try {
         const { call } = await apiFetch(`/api/dms/${currentDmConversationId}/call`);
-        dmCallButton.innerHTML = `${uiIcon("phone", 14)} ${call ? "Join call" : "Call"}`;
-        if (dmVideoCallButton) dmVideoCallButton.innerHTML = call ? "Join video" : "Video";
+        // Voice calls and video calls are separate call kinds — never offer to join an
+        // in-progress call with the other kind. Only the button matching the existing
+        // call's type stays visible; with no call in progress, either kind can be started.
+        const existingIsVideo = !!(call && (call.is_video || call.video));
+        if (call) {
+          dmCallButton.innerHTML = `${uiIcon("phone", 14)} Join call`;
+          dmCallButton.style.display = existingIsVideo ? "none" : "inline-flex";
+          if (dmVideoCallButton) {
+            dmVideoCallButton.innerHTML = "Join video";
+            dmVideoCallButton.style.display = existingIsVideo ? "inline-flex" : "none";
+          }
+        } else {
+          dmCallButton.innerHTML = `${uiIcon("phone", 14)} Call`;
+          if (dmVideoCallButton) dmVideoCallButton.innerHTML = "Video";
+        }
       } catch (err) {
         console.error(err);
         dmCallButton.innerHTML = `${uiIcon("phone", 14)} Call`;
@@ -8435,19 +8381,36 @@ async function handleCreateServer() {
         await disconnectVoice();
       }
 
-      voicePreferVideo = !!withVideo;
-
-      if (withVideo) {
-        try {
-          showCallOverlay(true);
-          const nm = currentDmOtherUser ? currentDmOtherUser.username : "them";
-          setCallConnecting(true, "Connecting…", `Calling ${nm}`);
-        } catch (e) {}
-      }
-
       try {
         let call;
         const { call: existingCall } = await apiFetch(`/api/dms/${currentDmConversationId}/call`);
+        if (existingCall) {
+          // Voice and video calls are separate — always join as whatever the existing call
+          // already is, regardless of which button was clicked. The buttons in
+          // updateDmCallButton() are kept in sync with this so a mismatched click shouldn't
+          // normally happen, but this is the actual gate.
+          const existingIsVideo = !!(existingCall.is_video || existingCall.video);
+          if (!!withVideo !== existingIsVideo) {
+            showToast(
+              existingIsVideo
+                ? "There's already a video call — join that instead."
+                : "There's already a voice call — join that instead.",
+              { variant: "danger" }
+            );
+            return;
+          }
+        }
+
+        voicePreferVideo = !!withVideo;
+
+        if (withVideo) {
+          try {
+            showCallOverlay(true);
+            const nm = currentDmOtherUser ? currentDmOtherUser.username : "them";
+            setCallConnecting(true, "Connecting…", `Calling ${nm}`);
+          } catch (e) {}
+        }
+
         if (existingCall) {
           const { call: joined } = await apiFetch(`/api/voice-calls/${existingCall.id}/join`, {
             method: "POST",
