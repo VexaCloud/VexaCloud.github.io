@@ -2938,7 +2938,11 @@
     }
 
     .modal-wider {
-      width: 820px;
+      width: 960px;
+    }
+
+    #admin-dashboard-modal .modal-wider {
+      width: min(1100px, calc(100vw - 32px));
     }
 
     .modal-tall {
@@ -3379,10 +3383,15 @@
       display: flex;
       gap: 6px;
       flex-shrink: 0;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       justify-content: flex-end;
       align-items: center;
-      max-width: 52%;
+      max-width: none;
+    }
+
+    .admin-row-actions .identity-action-button {
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .admin-row-badge {
@@ -4184,8 +4193,8 @@
       border-radius: var(--r-md);
       gap: 6px;
       box-sizing: border-box;
-      overflow-x: hidden;
-      overflow-y: hidden;
+      overflow: hidden;
+      padding: 8px;
     }
 
     .emoji-picker-tabs {
@@ -4195,7 +4204,7 @@
       border-bottom: 1px solid var(--border-strong);
       overflow-x: auto;
       overflow-y: hidden;
-
+      flex-shrink: 0;
       scrollbar-width: thin;
     }
 
@@ -4232,6 +4241,7 @@
       font-size: 13px;
       padding: 6px 8px;
       outline: none;
+      flex-shrink: 0;
     }
 
     .emoji-picker-category-label {
@@ -4241,16 +4251,18 @@
       letter-spacing: 0.03em;
       color: var(--text-tertiary, var(--text-secondary));
       padding: 0 2px;
+      flex-shrink: 0;
     }
 
     .emoji-picker-grid {
       display: grid;
-
       grid-template-columns: repeat(8, minmax(0, 1fr));
       gap: 2px;
       overflow-y: auto;
       overflow-x: hidden;
-      max-height: 260px;
+      flex: 1 1 auto;
+      min-height: 120px;
+      max-height: none;
       box-sizing: border-box;
     }
 
@@ -7736,33 +7748,57 @@ notificationSettingsSave.onclick = async () => {
       el.style.top = `${Math.min(Math.max(top, margin), maxTop)}px`;
     }
 
-    /** Prefer placing above the anchor when there isn't enough room below (or vice versa). */
+    /** Prefer placing above the anchor when near the bottom; shrink to fit viewport. */
     function positionAnchoredPopover(el, anchorRect, margin = 8, gap = 8) {
-      const w = el.offsetWidth || 320;
-      const h = el.offsetHeight || 320;
       const vw = window.innerWidth;
       const vh = window.innerHeight;
 
-      const spaceBelow = vh - anchorRect.bottom - margin;
-      const spaceAbove = anchorRect.top - margin;
-      // Prefer above when the anchor is in the lower half or there isn't room below.
+      // Clear previous height constraints so we measure the natural size first.
+      el.style.maxHeight = "";
+      el.style.height = "";
+      el.style.top = "-9999px";
+      el.style.left = "0px";
+      el.style.visibility = "hidden";
+
+      const naturalH = Math.max(el.offsetHeight || 320, 200);
+      const w = el.offsetWidth || 320;
+
+      const spaceBelow = Math.max(0, vh - anchorRect.bottom - margin - gap);
+      const spaceAbove = Math.max(0, anchorRect.top - margin - gap);
+
+      // Prefer above when the anchor is in the lower half of the screen, or below doesn't fit.
       const preferAbove =
-        spaceBelow < h + gap || (anchorRect.top > vh * 0.55 && spaceAbove >= Math.min(h, spaceBelow));
+        spaceBelow < Math.min(naturalH, 280) ||
+        (anchorRect.bottom > vh * 0.5 && spaceAbove >= spaceBelow);
+
+      const available = preferAbove ? spaceAbove : spaceBelow;
+      const maxH = Math.max(160, Math.min(naturalH, available > 0 ? available : vh - margin * 2));
+
+      el.style.maxHeight = `${maxH}px`;
+
+      // Re-measure after applying max-height (grid flexes down).
+      const h = el.offsetHeight || maxH;
 
       let top;
-      if (preferAbove && spaceAbove >= gap) {
-        top = anchorRect.top - h - gap;
+      if (preferAbove) {
+        top = anchorRect.top - gap - h;
         if (top < margin) top = margin;
       } else {
         top = anchorRect.bottom + gap;
         if (top + h > vh - margin) {
-          // Flip to above if that fits better
-          if (spaceAbove > spaceBelow) {
-            top = Math.max(margin, anchorRect.top - h - gap);
-          } else {
-            top = Math.max(margin, vh - h - margin);
-          }
+          top = Math.max(margin, vh - h - margin);
         }
+      }
+
+      // Final safety: if still overflowing, pin to the side with more room and recap height.
+      if (top + h > vh - margin) {
+        const fitH = Math.max(160, vh - margin - top);
+        el.style.maxHeight = `${fitH}px`;
+      }
+      if (top < margin) {
+        top = margin;
+        const fitH = Math.max(160, Math.min(el.offsetHeight || maxH, vh - margin * 2));
+        el.style.maxHeight = `${fitH}px`;
       }
 
       let left = anchorRect.left;
@@ -7771,6 +7807,7 @@ notificationSettingsSave.onclick = async () => {
 
       el.style.left = `${left}px`;
       el.style.top = `${top}px`;
+      el.style.visibility = "";
     }
 
     const EMOJI_CATEGORIES = [
@@ -8064,7 +8101,14 @@ notificationSettingsSave.onclick = async () => {
     let openEmojiPickerAnchor = null;
 
     function closeEmojiPicker() {
-      if (openEmojiPickerEl) openEmojiPickerEl.remove();
+      if (openEmojiPickerEl) {
+        if (typeof openEmojiPickerEl._cleanupReposition === "function") {
+          try {
+            openEmojiPickerEl._cleanupReposition();
+          } catch (_) {}
+        }
+        openEmojiPickerEl.remove();
+      }
       openEmojiPickerEl = null;
       openEmojiPickerAnchor = null;
       document.removeEventListener("click", closeEmojiPickerOnOutsideClick);
@@ -8159,14 +8203,25 @@ notificationSettingsSave.onclick = async () => {
 
       // Position after content is rendered so height is accurate; flip above when near bottom.
       const placePicker = () => {
+        if (!picker.isConnected || !anchorEl.isConnected) return;
         const rect = anchorEl.getBoundingClientRect();
         positionAnchoredPopover(picker, rect);
       };
       placePicker();
       requestAnimationFrame(() => {
         placePicker();
-        searchInput.focus();
+        requestAnimationFrame(() => {
+          placePicker();
+          searchInput.focus();
+        });
       });
+      const onReposition = () => placePicker();
+      window.addEventListener("resize", onReposition);
+      window.addEventListener("scroll", onReposition, true);
+      picker._cleanupReposition = () => {
+        window.removeEventListener("resize", onReposition);
+        window.removeEventListener("scroll", onReposition, true);
+      };
 
       openEmojiPickerEl = picker;
       openEmojiPickerAnchor = anchorEl;
