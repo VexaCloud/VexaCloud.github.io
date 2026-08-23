@@ -854,13 +854,41 @@
       color: #fff;
     }
     .call-focus-select {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.12);
-      color: #fff;
+      background: #1a1c24;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #f5f6f8;
       border-radius: 8px;
       padding: 6px 10px;
       font-size: 12px;
-      max-width: 160px;
+      max-width: 180px;
+      min-width: 120px;
+    }
+    .call-focus-select option {
+      background: #1a1c24;
+      color: #f5f6f8;
+    }
+    .call-grid-tile.speaking {
+      border-color: #22c55e !important;
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.35);
+    }
+    .call-grid.single-participant {
+      grid-template-columns: minmax(240px, 420px);
+      justify-content: center;
+      align-content: center;
+    }
+    .call-grid.single-participant .call-grid-tile {
+      min-height: 280px;
+      width: 100%;
+    }
+    .more-theme-swatch {
+      display: block !important;
+      height: 40px !important;
+      min-height: 40px;
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background-size: cover !important;
+      background-repeat: no-repeat !important;
     }
     .call-minimize-btn {
       min-width: auto !important;
@@ -7256,9 +7284,17 @@
         showIncomingCallPopup(call);
       });
 
+      // Drop ended calls from the seen set and dismiss the top-right popup
       seenIncomingCallIds.forEach((id) => {
         if (!currentIds.has(id)) seenIncomingCallIds.delete(id);
       });
+      if (incomingCallPopupCallId && !currentIds.has(incomingCallPopupCallId)) {
+        try {
+          if (incomingCallPopupEl) incomingCallPopupEl.remove();
+        } catch (e) {}
+        incomingCallPopupEl = null;
+        incomingCallPopupCallId = null;
+      }
     }
 
     function startSyncPolling() {
@@ -7506,9 +7542,10 @@
           if (voiceRoom) await disconnectVoice();
           const wantVideo = el.dataset.isVideo === "1";
           voicePreferVideo = wantVideo;
-          // Open full call page first so the UI isn't cramped in the DM modal
-          showCallOverlay();
-          updateCallOverlayChrome();
+          if (wantVideo) {
+            showCallOverlay(true);
+            updateCallOverlayChrome();
+          }
           handleOpenDmModal();
           openDmConversation(call.conversation_id, other);
           const { call: joined } = await apiFetch(`/api/voice-calls/${call.id}/join`, { method: "POST" });
@@ -7520,7 +7557,11 @@
           subscribeDmCallRealtime(call.conversation_id);
           updateDmCallButton();
           renderDmCallBar();
-          showCallOverlay();
+          if (wantVideo) showCallOverlay(true);
+          else {
+            try { hideCallOverlay(); } catch (e) {}
+            try { renderDmCallBar(); } catch (e) {}
+          }
         } catch (err) {
           console.error(err);
           showToast(err.message || "Failed to join call", { variant: "danger" });
@@ -8657,7 +8698,7 @@ notificationSettingsSave.onclick = async () => {
           btn.type = "button";
           btn.className = "more-theme-chip" + (active === t.value ? " active" : "");
           btn.innerHTML = `
-            <span class="more-theme-swatch" style="background:${t.swatch}"></span>
+            <span class="more-theme-swatch" style="background-image:${t.swatch};background-color:#1a1c22;"></span>
             <span class="more-theme-name">${t.label}</span>
             <span class="more-theme-desc">${t.desc || ""}</span>
           `;
@@ -13937,9 +13978,17 @@ async function handleCreateServer() {
         await voiceRoom.localParticipant.setCameraEnabled(next);
         voiceVideoEnabled = next;
         renderDmVideoStage();
-        renderCallOverlayStage();
         updateDmCallMediaButtons();
         updateCallOverlayControls();
+        if (next) {
+          showCallOverlay(true);
+        } else if (!voiceScreenSharing && !voicePreferVideo) {
+          // Back to compact voice UI if this wasn't a video call
+          try { hideCallOverlay(); } catch (e) {}
+          try { renderDmCallBar(); } catch (e) {}
+        } else {
+          renderCallOverlayStage();
+        }
         showToast(next ? "Camera on" : "Camera off", { duration: 1500 });
       } catch (err) {
         console.error(err);
@@ -13947,41 +13996,87 @@ async function handleCreateServer() {
       }
     }
 
+    function syncLocalMediaFlagsFromRoom() {
+      if (!voiceRoom) {
+        voiceScreenSharing = false;
+        voiceVideoEnabled = false;
+        return;
+      }
+      const pubs = voiceRoom.localParticipant.videoTrackPublications
+        ? Array.from(voiceRoom.localParticipant.videoTrackPublications.values())
+        : [];
+      let sharing = false;
+      let cam = false;
+      pubs.forEach((pub) => {
+        if (!pub || pub.isMuted || !pub.track) return;
+        const src = pub.source;
+        const isScreen =
+          src === 2 ||
+          src === "screen_share" ||
+          src === "screen_share_audio" ||
+          (typeof src === "string" && src.toLowerCase().includes("screen"));
+        if (isScreen) sharing = true;
+        else cam = true;
+      });
+      voiceScreenSharing = sharing;
+      voiceVideoEnabled = cam || voicePreferVideo && cam;
+      // Prefer actual publication state for camera
+      voiceVideoEnabled = cam;
+    }
+
     async function toggleDmScreenShare() {
       if (!voiceRoom || voiceContext !== "dm") return;
       try {
-        const next = !voiceScreenSharing;
+        const currentlySharing = !!voiceScreenSharing;
+        const next = !currentlySharing;
         const hadCamera = !!voiceVideoEnabled;
-        await voiceRoom.localParticipant.setScreenShareEnabled(next, {
-          // Keep camera published alongside screen when possible
-          audio: true,
-        });
-        voiceScreenSharing = next;
-        // When stopping share, LiveKit may drop the camera track — restore it
+        if (next) {
+          await voiceRoom.localParticipant.setScreenShareEnabled(true);
+        } else {
+          await voiceRoom.localParticipant.setScreenShareEnabled(false);
+          // Explicitly unpublish any leftover screen tracks
+          const pubs = Array.from(voiceRoom.localParticipant.videoTrackPublications.values());
+          for (const pub of pubs) {
+            const src = pub.source;
+            const isScreen =
+              src === 2 ||
+              src === "screen_share" ||
+              (typeof src === "string" && String(src).toLowerCase().includes("screen"));
+            if (isScreen && pub.track) {
+              try {
+                await voiceRoom.localParticipant.unpublishTrack(pub.track);
+              } catch (e) {}
+            }
+          }
+        }
+        // Read real room state so UI can't get stuck on "Sharing"
+        syncLocalMediaFlagsFromRoom();
         if (!next && hadCamera) {
           try {
             await voiceRoom.localParticipant.setCameraEnabled(true);
-            voiceVideoEnabled = true;
           } catch (camErr) {
             console.error("Failed to restore camera after screen share", camErr);
           }
+          syncLocalMediaFlagsFromRoom();
         }
-        // When starting share, keep camera on if it was on
         if (next && hadCamera) {
           try {
             await voiceRoom.localParticipant.setCameraEnabled(true);
-            voiceVideoEnabled = true;
           } catch (camErr) {
             console.error(camErr);
           }
+          syncLocalMediaFlagsFromRoom();
         }
         renderDmVideoStage();
         renderCallOverlayStage();
         updateDmCallMediaButtons();
         updateCallOverlayControls();
-        showToast(next ? "Screen sharing" : "Screen share stopped", { duration: 1500 });
+        showToast(voiceScreenSharing ? "Screen sharing" : "Screen share stopped", { duration: 1500 });
       } catch (err) {
         console.error(err);
+        syncLocalMediaFlagsFromRoom();
+        updateDmCallMediaButtons();
+        updateCallOverlayControls();
         showToast(err.message || "Failed to share screen", { variant: "danger" });
       }
     }
@@ -14170,7 +14265,11 @@ async function handleCreateServer() {
             }
             renderVoiceParticipants();
           })
-          .on(RoomEvent.ActiveSpeakersChanged, () => { renderVoiceParticipants(); renderCallOverlayStage(); })
+          .on(RoomEvent.ActiveSpeakersChanged, () => {
+            renderVoiceParticipants();
+            // Soft refresh — sticky auto-focus avoids rapid flipping
+            renderCallOverlayStage();
+          })
           .on(RoomEvent.DataReceived, (payload, participant) => {
             try {
               const text = typeof payload === "string" ? payload : new TextDecoder().decode(payload);
@@ -14178,8 +14277,8 @@ async function handleCreateServer() {
               handleIncomingCallData(data, participant);
             } catch (e) {}
           })
-          .on(RoomEvent.LocalTrackPublished, () => { renderVoiceParticipants(); renderDmVideoStage(); renderCallOverlayStage(); updateDmCallMediaButtons(); updateCallOverlayControls(); })
-          .on(RoomEvent.LocalTrackUnpublished, () => { renderVoiceParticipants(); renderDmVideoStage(); renderCallOverlayStage(); updateDmCallMediaButtons(); updateCallOverlayControls(); })
+          .on(RoomEvent.LocalTrackPublished, () => { syncLocalMediaFlagsFromRoom(); renderVoiceParticipants(); renderDmVideoStage(); renderCallOverlayStage(); updateDmCallMediaButtons(); updateCallOverlayControls(); })
+          .on(RoomEvent.LocalTrackUnpublished, () => { syncLocalMediaFlagsFromRoom(); renderVoiceParticipants(); renderDmVideoStage(); renderCallOverlayStage(); updateDmCallMediaButtons(); updateCallOverlayControls(); })
           .on(RoomEvent.TrackMuted, renderVoiceParticipants)
           .on(RoomEvent.TrackUnmuted, renderVoiceParticipants)
           .on(RoomEvent.Disconnected, () => {
@@ -14207,6 +14306,7 @@ async function handleCreateServer() {
         }
 
         await room.localParticipant.setMicrophoneEnabled(true);
+        // Voice calls must not turn the camera on
         if (voicePreferVideo && context === "dm") {
           try {
             await room.localParticipant.setCameraEnabled(true);
@@ -14217,6 +14317,9 @@ async function handleCreateServer() {
             voiceVideoEnabled = false;
           }
         } else {
+          try {
+            await room.localParticipant.setCameraEnabled(false);
+          } catch (e) {}
           voiceVideoEnabled = false;
         }
         voiceScreenSharing = false;
@@ -14403,6 +14506,8 @@ async function handleCreateServer() {
     let remoteIsRecording = false;
     let callLayoutMode = "speaker"; // speaker | gallery
     let callFocusIdentity = "auto";
+    let stickySpeakerId = null;
+    let stickySpeakerUntil = 0;
 
     function callEls() {
       return {
@@ -14425,7 +14530,13 @@ async function handleCreateServer() {
 
 
 
-    function showCallOverlay() {
+    function showCallOverlay(force) {
+      // Voice-only calls stay in the compact call bar — full page is for video / screen share
+      if (!force && !voicePreferVideo && !voiceVideoEnabled && !voiceScreenSharing) {
+        try { hideCallOverlay(); } catch (e) {}
+        try { renderDmCallBar(); } catch (e) {}
+        return;
+      }
       const c = callEls();
       if (!c.overlay) {
         console.error("call-overlay element missing from DOM");
@@ -14433,18 +14544,12 @@ async function handleCreateServer() {
       }
       c.overlay.classList.add("visible");
       c.overlay.setAttribute("aria-hidden", "false");
-      // Hard-force full-page takeover (beats conflicting modal z-index / display)
       c.overlay.style.cssText =
         "display:flex!important;position:fixed!important;inset:0!important;z-index:99999!important;flex-direction:column;background:#07080c;color:#f5f6f8;";
       document.body.classList.add("in-call-overlay");
       try {
         const dmModal = document.getElementById("dm-modal");
         if (dmModal) dmModal.classList.remove("visible");
-      } catch (e) {}
-      try {
-        document.querySelectorAll(".modal-backdrop.visible").forEach((m) => {
-          if (m.id !== "call-overlay") m.classList.remove("visible");
-        });
       } catch (e) {}
       updateCallOverlayChrome();
       renderCallOverlayStage();
@@ -14472,6 +14577,8 @@ async function handleCreateServer() {
       remoteIsRecording = false;
       callLayoutMode = "speaker";
       callFocusIdentity = "auto";
+      stickySpeakerId = null;
+      stickySpeakerUntil = 0;
     }
 
     function updateCallOverlayChrome() {
@@ -14684,18 +14791,15 @@ async function handleCreateServer() {
         }
         if (c.mainPlaceholder) c.mainPlaceholder.style.display = "none";
         c.grid.style.display = "grid";
+        c.grid.classList.toggle("single-participant", people.length <= 1 && screens.length === 0);
         c.grid.innerHTML = "";
-        const list =
-          callFocusIdentity !== "auto"
-            ? [
-                ...people.filter((p) => p.identity === callFocusIdentity),
-                ...people.filter((p) => p.identity !== callFocusIdentity),
-              ]
-            : people;
+        const speakingIds = new Set((voiceRoom.activeSpeakers || []).map((p) => p.identity));
+        const list = people.slice();
         list.forEach((person) => {
+          const speaking = speakingIds.has(person.identity);
           if (person.hasCam && person.camera) {
             const tile = document.createElement("div");
-            tile.className = "call-grid-tile";
+            tile.className = "call-grid-tile" + (speaking ? " speaking" : "");
             tile.dataset.identity = person.identity;
             const v = document.createElement("video");
             v.autoplay = true;
@@ -14709,7 +14813,8 @@ async function handleCreateServer() {
             c.grid.appendChild(tile);
             attachTrackToVideoEl(person.camera.track, v, person.isLocal);
           } else {
-            renderAvatarTile(c.grid, person);
+            const tile = renderAvatarTile(c.grid, person, speaking ? "speaking" : "");
+            if (tile && speaking) tile.classList.add("speaking");
           }
         });
         // Also show screen shares as extra tiles
@@ -14734,13 +14839,34 @@ async function handleCreateServer() {
       // Speaker mode without screen share
       if (c.grid) c.grid.style.display = "none";
 
+      const speakingIds = new Set((voiceRoom.activeSpeakers || []).map((p) => p.identity));
+      const now = Date.now();
+
       let focus =
         callFocusIdentity !== "auto"
           ? people.find((p) => p.identity === callFocusIdentity)
           : null;
+
+      if (!focus && callFocusIdentity === "auto") {
+        // Sticky auto-focus: only switch speaker after 1.2s of someone else speaking
+        const topSpeaker = (voiceRoom.activeSpeakers || [])[0];
+        const topId = topSpeaker && topSpeaker.identity;
+        if (topId && topId !== stickySpeakerId) {
+          if (!stickySpeakerId || now > stickySpeakerUntil) {
+            stickySpeakerId = topId;
+            stickySpeakerUntil = now + 1200;
+          }
+        } else if (topId && topId === stickySpeakerId) {
+          stickySpeakerUntil = now + 1200;
+        }
+        focus =
+          people.find((p) => p.identity === stickySpeakerId) ||
+          people.find((p) => !p.isLocal) ||
+          people.find((p) => p.isLocal) ||
+          null;
+      }
       if (!focus) {
         focus =
-          people.find((p) => !p.isLocal && p.hasCam) ||
           people.find((p) => !p.isLocal) ||
           people.find((p) => p.isLocal) ||
           null;
@@ -14848,8 +14974,10 @@ async function handleCreateServer() {
 
       voicePreferVideo = !!withVideo;
 
-      // Full-page call UI immediately (like server voice stage)
-      try { showCallOverlay(); } catch (e) {}
+      // Full-page only for video calls; voice stays in the compact bar
+      if (withVideo) {
+        try { showCallOverlay(true); } catch (e) {}
+      }
 
       try {
         let call;
@@ -14875,7 +15003,11 @@ async function handleCreateServer() {
         subscribeDmCallRealtime(currentDmConversationId);
         updateDmCallButton();
         renderDmCallBar();
-        showCallOverlay();
+        if (withVideo) showCallOverlay(true);
+        else {
+          try { hideCallOverlay(); } catch (e) {}
+          try { renderDmCallBar(); } catch (e) {}
+        }
       } catch (err) {
         console.error(err);
         showToast(err.message || "Failed to start/join call", { variant: "danger" });
@@ -14958,7 +15090,12 @@ async function handleCreateServer() {
 
       dmCallBarEl.querySelector(".dm-call-bar-info").addEventListener("click", () => {
         if (voiceRoom && voiceContext === "dm") {
-          showCallOverlay();
+          if (voicePreferVideo || voiceVideoEnabled || voiceScreenSharing) {
+            showCallOverlay(true);
+          } else {
+            handleOpenDmModal();
+            if (currentDmOtherUser) openDmConversation(currentDmConversationId, currentDmOtherUser);
+          }
           return;
         }
         handleOpenDmModal();
@@ -16153,8 +16290,11 @@ async function handleSignIn() {
         const ov = document.getElementById("call-overlay");
         if (ov) {
           ov.classList.remove("visible");
+          ov.style.cssText = "display:none!important;";
           document.body.classList.remove("in-call-overlay");
         }
+        // Keep the floating call bar so the user can reopen
+        try { renderDmCallBar(); } catch (e) {}
       });
       document.querySelectorAll(".call-layout-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
