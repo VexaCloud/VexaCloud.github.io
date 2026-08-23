@@ -4189,7 +4189,8 @@
       align-items: stretch;
       width: 320px;
       max-width: calc(100vw - 16px);
-      max-height: min(380px, calc(100vh - 16px));
+      height: 360px;
+      max-height: calc(100vh - 24px);
       border-radius: var(--r-md);
       gap: 6px;
       box-sizing: border-box;
@@ -4261,8 +4262,7 @@
       overflow-y: auto;
       overflow-x: hidden;
       flex: 1 1 auto;
-      min-height: 120px;
-      max-height: none;
+      min-height: 0;
       box-sizing: border-box;
     }
 
@@ -7748,58 +7748,38 @@ notificationSettingsSave.onclick = async () => {
       el.style.top = `${Math.min(Math.max(top, margin), maxTop)}px`;
     }
 
-    /** Prefer placing above the anchor when near the bottom; shrink to fit viewport. */
+    /**
+     * Place a fixed popover above or below an anchor — once.
+     * Prefer above when the anchor is in the lower half of the viewport.
+     */
     function positionAnchoredPopover(el, anchorRect, margin = 8, gap = 8) {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
+      const preferredH = 360;
+      const w = Math.min(el.offsetWidth || 320, vw - margin * 2);
 
-      // Clear previous height constraints so we measure the natural size first.
-      el.style.maxHeight = "";
-      el.style.height = "";
-      el.style.top = "-9999px";
-      el.style.left = "0px";
-      el.style.visibility = "hidden";
+      const spaceBelow = vh - anchorRect.bottom - margin - gap;
+      const spaceAbove = anchorRect.top - margin - gap;
 
-      const naturalH = Math.max(el.offsetHeight || 320, 200);
-      const w = el.offsetWidth || 320;
+      // Open upward when near the bottom of the screen (or below can't fit the panel).
+      const openAbove =
+        spaceBelow < preferredH * 0.6 ||
+        (anchorRect.bottom > vh * 0.55 && spaceAbove >= Math.min(spaceBelow, preferredH * 0.5));
 
-      const spaceBelow = Math.max(0, vh - anchorRect.bottom - margin - gap);
-      const spaceAbove = Math.max(0, anchorRect.top - margin - gap);
+      const available = openAbove ? spaceAbove : spaceBelow;
+      const h = Math.max(200, Math.min(preferredH, available > 40 ? available : vh - margin * 2));
 
-      // Prefer above when the anchor is in the lower half of the screen, or below doesn't fit.
-      const preferAbove =
-        spaceBelow < Math.min(naturalH, 280) ||
-        (anchorRect.bottom > vh * 0.5 && spaceAbove >= spaceBelow);
+      el.style.width = `${Math.min(320, vw - margin * 2)}px`;
+      el.style.height = `${h}px`;
+      el.style.maxHeight = `${h}px`;
 
-      const available = preferAbove ? spaceAbove : spaceBelow;
-      const maxH = Math.max(160, Math.min(naturalH, available > 0 ? available : vh - margin * 2));
+      let top = openAbove
+        ? anchorRect.top - gap - h
+        : anchorRect.bottom + gap;
 
-      el.style.maxHeight = `${maxH}px`;
-
-      // Re-measure after applying max-height (grid flexes down).
-      const h = el.offsetHeight || maxH;
-
-      let top;
-      if (preferAbove) {
-        top = anchorRect.top - gap - h;
-        if (top < margin) top = margin;
-      } else {
-        top = anchorRect.bottom + gap;
-        if (top + h > vh - margin) {
-          top = Math.max(margin, vh - h - margin);
-        }
-      }
-
-      // Final safety: if still overflowing, pin to the side with more room and recap height.
-      if (top + h > vh - margin) {
-        const fitH = Math.max(160, vh - margin - top);
-        el.style.maxHeight = `${fitH}px`;
-      }
-      if (top < margin) {
-        top = margin;
-        const fitH = Math.max(160, Math.min(el.offsetHeight || maxH, vh - margin * 2));
-        el.style.maxHeight = `${fitH}px`;
-      }
+      // Keep fully on-screen without further resize thrashing.
+      if (top < margin) top = margin;
+      if (top + h > vh - margin) top = Math.max(margin, vh - h - margin);
 
       let left = anchorRect.left;
       const maxLeft = Math.max(margin, vw - w - margin);
@@ -7807,7 +7787,6 @@ notificationSettingsSave.onclick = async () => {
 
       el.style.left = `${left}px`;
       el.style.top = `${top}px`;
-      el.style.visibility = "";
     }
 
     const EMOJI_CATEGORIES = [
@@ -8101,14 +8080,7 @@ notificationSettingsSave.onclick = async () => {
     let openEmojiPickerAnchor = null;
 
     function closeEmojiPicker() {
-      if (openEmojiPickerEl) {
-        if (typeof openEmojiPickerEl._cleanupReposition === "function") {
-          try {
-            openEmojiPickerEl._cleanupReposition();
-          } catch (_) {}
-        }
-        openEmojiPickerEl.remove();
-      }
+      if (openEmojiPickerEl) openEmojiPickerEl.remove();
       openEmojiPickerEl = null;
       openEmojiPickerAnchor = null;
       document.removeEventListener("click", closeEmojiPickerOnOutsideClick);
@@ -8201,27 +8173,10 @@ notificationSettingsSave.onclick = async () => {
         }
       });
 
-      // Position after content is rendered so height is accurate; flip above when near bottom.
-      const placePicker = () => {
-        if (!picker.isConnected || !anchorEl.isConnected) return;
-        const rect = anchorEl.getBoundingClientRect();
-        positionAnchoredPopover(picker, rect);
-      };
-      placePicker();
-      requestAnimationFrame(() => {
-        placePicker();
-        requestAnimationFrame(() => {
-          placePicker();
-          searchInput.focus();
-        });
-      });
-      const onReposition = () => placePicker();
-      window.addEventListener("resize", onReposition);
-      window.addEventListener("scroll", onReposition, true);
-      picker._cleanupReposition = () => {
-        window.removeEventListener("resize", onReposition);
-        window.removeEventListener("scroll", onReposition, true);
-      };
+      // Position once after content is in the DOM (no scroll-follow — that caused jitter).
+      const rect = anchorEl.getBoundingClientRect();
+      positionAnchoredPopover(picker, rect);
+      requestAnimationFrame(() => searchInput.focus());
 
       openEmojiPickerEl = picker;
       openEmojiPickerAnchor = anchorEl;
