@@ -4180,11 +4180,12 @@
       align-items: stretch;
       width: 320px;
       max-width: calc(100vw - 16px);
-      max-height: 380px;
+      max-height: min(380px, calc(100vh - 16px));
       border-radius: var(--r-md);
       gap: 6px;
       box-sizing: border-box;
       overflow-x: hidden;
+      overflow-y: hidden;
     }
 
     .emoji-picker-tabs {
@@ -6276,6 +6277,7 @@
         </div>
       `;
       const stack = getTopRightAlertStack();
+      // Keep incoming call above DM notifications / active call bar when possible
       const callBar = stack.querySelector(".dm-call-bar");
       if (callBar) stack.insertBefore(el, callBar);
       else stack.insertBefore(el, stack.firstChild);
@@ -6551,6 +6553,8 @@ function showAuthOverlay() {
       if (!("serviceWorker" in navigator)) return;
       const state = {
         type: "focus-state",
+        // Treat page as visible if the tab is visible — hasFocus can be false while reading
+        // messages / on a call with another window focused, but user is still "on the site".
         visible: document.visibilityState === "visible",
         channelId: currentChannel ? currentChannel.id : null,
         conversationId:
@@ -6564,6 +6568,7 @@ function showAuthOverlay() {
 
     window.addEventListener("focus", reportFocusStateToServiceWorker);
     window.addEventListener("blur", reportFocusStateToServiceWorker);
+    // Keep SW focus state warm (SW can restart and lose message state).
     setInterval(reportFocusStateToServiceWorker, 15000);
 
     async function getPushServiceWorkerRegistration() {
@@ -7731,6 +7736,43 @@ notificationSettingsSave.onclick = async () => {
       el.style.top = `${Math.min(Math.max(top, margin), maxTop)}px`;
     }
 
+    /** Prefer placing above the anchor when there isn't enough room below (or vice versa). */
+    function positionAnchoredPopover(el, anchorRect, margin = 8, gap = 8) {
+      const w = el.offsetWidth || 320;
+      const h = el.offsetHeight || 320;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      const spaceBelow = vh - anchorRect.bottom - margin;
+      const spaceAbove = anchorRect.top - margin;
+      // Prefer above when the anchor is in the lower half or there isn't room below.
+      const preferAbove =
+        spaceBelow < h + gap || (anchorRect.top > vh * 0.55 && spaceAbove >= Math.min(h, spaceBelow));
+
+      let top;
+      if (preferAbove && spaceAbove >= gap) {
+        top = anchorRect.top - h - gap;
+        if (top < margin) top = margin;
+      } else {
+        top = anchorRect.bottom + gap;
+        if (top + h > vh - margin) {
+          // Flip to above if that fits better
+          if (spaceAbove > spaceBelow) {
+            top = Math.max(margin, anchorRect.top - h - gap);
+          } else {
+            top = Math.max(margin, vh - h - margin);
+          }
+        }
+      }
+
+      let left = anchorRect.left;
+      const maxLeft = Math.max(margin, vw - w - margin);
+      left = Math.min(Math.max(left, margin), maxLeft);
+
+      el.style.left = `${left}px`;
+      el.style.top = `${top}px`;
+    }
+
     const EMOJI_CATEGORIES = [
       { name: "Recent", icon: "🕐", emojis: [] },
       {
@@ -8047,9 +8089,6 @@ notificationSettingsSave.onclick = async () => {
       `;
       document.body.appendChild(picker);
 
-      const rect = anchorEl.getBoundingClientRect();
-      clampToViewport(picker, rect.left, rect.top - picker.offsetHeight - 8);
-
       const tabsEl = picker.querySelector(".emoji-picker-tabs");
       const searchInput = picker.querySelector(".emoji-picker-search");
       const categoryLabel = picker.querySelector(".emoji-picker-category-label");
@@ -8118,7 +8157,16 @@ notificationSettingsSave.onclick = async () => {
         }
       });
 
-      requestAnimationFrame(() => searchInput.focus());
+      // Position after content is rendered so height is accurate; flip above when near bottom.
+      const placePicker = () => {
+        const rect = anchorEl.getBoundingClientRect();
+        positionAnchoredPopover(picker, rect);
+      };
+      placePicker();
+      requestAnimationFrame(() => {
+        placePicker();
+        searchInput.focus();
+      });
 
       openEmojiPickerEl = picker;
       openEmojiPickerAnchor = anchorEl;
@@ -12251,6 +12299,7 @@ async function handleCreateServer() {
       const wasDm = voiceContext === "dm";
       const callId = activeDmCallId;
       const room = voiceRoom;
+      // Clear local room reference first so reconnect races don't reuse a half-dead room.
       voiceRoom = null;
       if (room) {
         try {
@@ -12259,6 +12308,7 @@ async function handleCreateServer() {
           console.error(err);
         }
       }
+      // Always clean UI/state — Disconnected event may not fire reliably on every path.
       leaveVoiceCleanup();
       if (wasDm && callId) {
         try {
@@ -12395,6 +12445,7 @@ async function handleCreateServer() {
         dmCallBarEl = document.createElement("div");
         dmCallBarEl.className = "dm-call-bar";
         const stack = getTopRightAlertStack();
+        // Place call bar after any incoming-call popup so both remain visible
         const incoming = stack.querySelector(".incoming-call-popup");
         if (incoming && incoming.nextSibling) stack.insertBefore(dmCallBarEl, incoming.nextSibling);
         else if (incoming) stack.appendChild(dmCallBarEl);
