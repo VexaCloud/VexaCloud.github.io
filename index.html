@@ -7856,7 +7856,7 @@ notificationSettingsSave.onclick = async () => {
       el.style.left = `${Math.min(Math.max(left, margin), maxLeft)}px`;
       el.style.top = `${Math.min(Math.max(top, margin), maxTop)}px`;
     }
-    
+
     function positionAnchoredPopover(el, anchorRect, margin = 8, gap = 8) {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
@@ -8482,7 +8482,7 @@ notificationSettingsSave.onclick = async () => {
     }
 
     let allServers = [];
-    const SERVER_MENU_RECENT_LIMIT = 3;
+    const SERVER_MENU_RECENT_LIMIT = 4;
     const RECENT_SERVERS_KEY = "vexa_recent_server_ids";
 
     function muteBellSVG(muted) {
@@ -8842,11 +8842,7 @@ notificationSettingsSave.onclick = async () => {
               </div>
               <div class="channel-item-trailing">
                 <span class="channel-item-meta">${ch.is_private ? "Private" : ""}</span>
-                ${
-                  pushNotificationsActive
-                    ? `<button class="channel-mute-toggle" title="${isMuted ? "Unmute" : "Mute notifications"}" aria-label="${isMuted ? "Unmute" : "Mute notifications"}">${muteBellSVG(isMuted)}</button>`
-                    : ""
-                }
+                <button class="channel-mute-toggle" title="${isMuted ? "Unmute" : "Mute notifications"}" aria-label="${isMuted ? "Unmute" : "Mute notifications"}">${muteBellSVG(isMuted)}</button>
               </div>
             `;
             const muteBtn = el.querySelector(".channel-mute-toggle");
@@ -11094,11 +11090,7 @@ async function handleCreateServer() {
             </div>
             <div class="dm-conversation-trailing">
               ${badgeHTML(unread)}
-              ${
-                pushNotificationsActive
-                  ? `<button class="dm-mute-toggle" title="${isMuted ? "Unmute" : "Mute notifications"}" aria-label="${isMuted ? "Unmute" : "Mute notifications"}">${muteBellSVG(isMuted)}</button>`
-                  : ""
-              }
+              <button class="dm-mute-toggle" title="${isMuted ? "Unmute" : "Mute notifications"}" aria-label="${isMuted ? "Unmute" : "Mute notifications"}">${muteBellSVG(isMuted)}</button>
               <span class="voice-active-dot"></span>
             </div>
           </div>`;
