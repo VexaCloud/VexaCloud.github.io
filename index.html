@@ -2472,6 +2472,68 @@
       box-shadow: var(--shadow-2);
     }
 
+    .message-link-preview {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 6px;
+      padding: 8px 10px;
+      border-radius: var(--r-md);
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      max-width: 360px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: border-color 0.12s ease, background 0.12s ease;
+    }
+
+    .message-link-preview:hover {
+      border-color: var(--border-strong);
+      background: var(--surface-3);
+    }
+
+    .message-link-preview-thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--r-sm);
+      overflow: hidden;
+      flex-shrink: 0;
+      background: var(--accent-subtle);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .message-link-preview-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .message-link-preview-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .message-link-preview-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .message-link-preview-url {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     .user-list {
       display: flex;
       flex-direction: column;
@@ -4932,7 +4994,6 @@
                 </button>
               </div>
               <div class="attachment-preview" id="attachment-preview" style="display:none;"></div>
-              <div class="attachment-preview" id="link-preview" style="display:none;"></div>
               <div class="chat-input-row">
                 <div class="chat-input-shell">
                   <textarea id="chat-input" class="chat-input" placeholder="Message" autocomplete="off" rows="1"></textarea>
@@ -5690,7 +5751,6 @@
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
-          <div class="attachment-preview" id="dm-link-preview" style="display:none;"></div>
           <div class="dm-input-row">
             <textarea class="dm-input" id="dm-input" placeholder="Message..." rows="1"></textarea>
             <button class="chat-send-button" id="dm-send-button">Send</button>
@@ -7039,7 +7099,6 @@ function showAuthOverlay() {
     const attachmentInput = document.getElementById("attachment-input");
     const attachmentButton = document.getElementById("attachment-button");
     const attachmentPreview = document.getElementById("attachment-preview");
-    const linkPreviewEl = document.getElementById("link-preview");
     const chatDropOverlay = document.getElementById("chat-drop-overlay");
     const voiceBar = document.getElementById("voice-bar");
     let _voiceAudioContainer = null;
@@ -7212,7 +7271,6 @@ function showAuthOverlay() {
     const dmMessageList = document.getElementById("dm-message-list");
     const dmInput = document.getElementById("dm-input");
     const dmSendButton = document.getElementById("dm-send-button");
-    const dmLinkPreviewEl = document.getElementById("dm-link-preview");
     const dmReplyPreviewBar = document.getElementById("dm-reply-preview-bar");
     const dmReplyPreviewText = document.getElementById("dm-reply-preview-text");
     const dmReplyPreviewCancel = document.getElementById("dm-reply-preview-cancel");
@@ -9194,6 +9252,8 @@ notificationSettingsSave.onclick = async () => {
         btn.addEventListener("click", () => toggleReaction(message, btn.dataset.emoji));
       });
 
+      renderLinkPreviewInto(row, message.content);
+
       const usernameEl = row.querySelector(".message-username");
       const avatarEl = row.querySelector(".message-avatar");
       const openThisProfile = (e) => {
@@ -9530,12 +9590,6 @@ notificationSettingsSave.onclick = async () => {
       }
     }
 
-    function extractFirstUrl(text) {
-      if (!text) return null;
-      const match = text.match(/https?:\/\/[^\s<>"']+/i);
-      return match ? match[0].replace(/[),.!?]+$/, "") : null;
-    }
-
     function isImageUrlLike(url) {
       return /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?(#.*)?$/i.test(url);
     }
@@ -9543,89 +9597,88 @@ notificationSettingsSave.onclick = async () => {
     function faviconUrlFor(url) {
       try {
         const hostname = new URL(url).hostname;
-        return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=64`;
+        return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=128`;
       } catch (err) {
         return "";
       }
     }
 
-    function createLinkPreviewController(previewEl) {
-      let currentUrl = null;
-
-      function clear() {
-        currentUrl = null;
-        previewEl.style.display = "none";
-        previewEl.innerHTML = "";
+    function extractPreviewUrl(text) {
+      if (!text) return null;
+      const match = text.match(/https?:\/\/[^\s<>"']+/i);
+      if (!match) return null;
+      const candidate = match[0].replace(/[),.!?;:'"]+$/, "");
+      let parsed;
+      try {
+        parsed = new URL(candidate);
+      } catch (err) {
+        return null;
       }
-
-      function show(url) {
-        currentUrl = url;
-        let hostname = url;
-        try {
-          hostname = new URL(url).hostname;
-        } catch (err) {
-          /* keep raw url as label */
-        }
-        const looksLikeImage = isImageUrlLike(url);
-        const thumbId = `${previewEl.id}-thumb`;
-        previewEl.style.display = "flex";
-        previewEl.innerHTML = `
-          <div class="attachment-preview-thumb" id="${thumbId}">${uiIcon("link", 16)}</div>
-          <div class="attachment-preview-info">
-            <div class="attachment-preview-name">${looksLikeImage ? "Image link" : escapeHtml(hostname)}</div>
-            <div class="attachment-preview-size">${escapeHtml(url)}</div>
-          </div>
-          <button class="attachment-preview-remove" id="${previewEl.id}-remove" title="Remove preview">${uiIcon("x", 14)}</button>
-        `;
-        const thumb = document.getElementById(thumbId);
-        const img = new Image();
-        img.alt = "";
-        img.onload = () => {
-          if (currentUrl !== url || !thumb) return;
-          thumb.innerHTML = "";
-          thumb.appendChild(img);
-        };
-        img.src = looksLikeImage ? url : faviconUrlFor(url);
-        const removeBtn = document.getElementById(`${previewEl.id}-remove`);
-        if (removeBtn) removeBtn.addEventListener("click", clear);
-      }
-
-      function sync(text) {
-        const url = extractFirstUrl(text);
-        if (url) {
-          if (url !== currentUrl) show(url);
-        } else if (currentUrl) {
-          clear();
-        }
-      }
-
-      return {
-        clear,
-        sync,
-        get url() {
-          return currentUrl;
-        },
-      };
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+      if (!parsed.hostname || !parsed.hostname.includes(".")) return null;
+      return parsed.href;
     }
 
-    const linkPreviewCtrl = createLinkPreviewController(linkPreviewEl);
-    const dmLinkPreviewCtrl = createLinkPreviewController(dmLinkPreviewEl);
+    let linkPreviewIdCounter = 0;
+
+    function buildLinkPreviewHTML(url) {
+      let hostname = url;
+      try {
+        hostname = new URL(url).hostname;
+      } catch (err) {
+        /* keep raw url as label */
+      }
+      const looksLikeImage = isImageUrlLike(url);
+      const thumbId = `link-preview-thumb-${++linkPreviewIdCounter}`;
+      const html = `
+        <a class="message-link-preview" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">
+          <div class="message-link-preview-thumb" id="${thumbId}">${uiIcon("globe", 20)}</div>
+          <div class="message-link-preview-info">
+            <div class="message-link-preview-title">${looksLikeImage ? "Image link" : escapeHtml(hostname)}</div>
+            <div class="message-link-preview-url">${escapeHtml(url)}</div>
+          </div>
+        </a>
+      `;
+      return { html, thumbId, looksLikeImage };
+    }
+
+    function loadLinkPreviewThumb(url, thumbId, looksLikeImage) {
+      const thumb = document.getElementById(thumbId);
+      if (!thumb) return;
+      const img = new Image();
+      img.alt = "";
+      img.onload = () => {
+        if (!thumb.isConnected) return;
+        thumb.innerHTML = "";
+        thumb.appendChild(img);
+      };
+      img.src = looksLikeImage ? url : faviconUrlFor(url);
+    }
+
+    function renderLinkPreviewInto(rowEl, content, contentSelector) {
+      if (!rowEl) return;
+      const url = extractPreviewUrl(content);
+      if (!url) return;
+      const contentEl = rowEl.querySelector(contentSelector || ".message-content");
+      if (!contentEl) return;
+      const { html, thumbId, looksLikeImage } = buildLinkPreviewHTML(url);
+      contentEl.insertAdjacentHTML("afterend", html);
+      loadLinkPreviewThumb(url, thumbId, looksLikeImage);
+    }
 
     function handleChatInputPaste(e) {
       const items = e.clipboardData && e.clipboardData.items;
-      if (items) {
-        for (const item of items) {
-          if (item.kind === "file" && item.type && item.type.startsWith("image/")) {
-            const file = item.getAsFile();
-            if (file) {
-              e.preventDefault();
-              attachFileToComposer(file);
-              return;
-            }
+      if (!items) return;
+      for (const item of items) {
+        if (item.kind === "file" && item.type && item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) {
+            e.preventDefault();
+            attachFileToComposer(file);
+            return;
           }
         }
       }
-      setTimeout(() => linkPreviewCtrl.sync(chatInputEl.value), 0);
     }
 
     function isFileDrag(e) {
@@ -9813,7 +9866,6 @@ notificationSettingsSave.onclick = async () => {
         });
         chatInputEl.value = "";
         autoResizeTextarea(chatInputEl);
-        linkPreviewCtrl.clear();
         clearReplyTarget();
 
         renderMessage({ ...message, user: currentProfile });
@@ -11157,6 +11209,7 @@ async function handleCreateServer() {
           </div>
         </div>
       `;
+      renderLinkPreviewInto(el, message.content, ".dm-message-content");
       el.querySelector('[data-action="reply"]').addEventListener("click", () => setDmReplyTarget(message));
       const reportBtn = el.querySelector('[data-action="report"]');
       if (reportBtn) reportBtn.addEventListener("click", () => handleReportMessage(message));
@@ -11458,7 +11511,6 @@ async function handleCreateServer() {
         });
         dmInput.value = "";
         autoResizeTextarea(dmInput);
-        dmLinkPreviewCtrl.clear();
         clearDmReplyTarget();
         renderDmMessage({ ...message, user: currentProfile });
         dmMessageList.scrollTop = dmMessageList.scrollHeight;
@@ -13520,7 +13572,6 @@ async function handleCreateServer() {
       chatInputEl.addEventListener("input", () => {
         autoResizeTextarea(chatInputEl);
         updateMentionSuggestions(chatInputEl, () => currentServerMembers.map((m) => m.user).filter(Boolean));
-        linkPreviewCtrl.sync(chatInputEl.value);
       });
       chatInputEl.addEventListener("paste", handleChatInputPaste);
       replyPreviewCancel.addEventListener("click", clearReplyTarget);
@@ -13715,7 +13766,6 @@ async function handleCreateServer() {
       dmInput.addEventListener("input", () => {
         autoResizeTextarea(dmInput);
         updateMentionSuggestions(dmInput, () => (currentDmOtherUser ? [currentDmOtherUser] : []));
-        dmLinkPreviewCtrl.sync(dmInput.value);
       });
       dmReplyPreviewCancel.addEventListener("click", clearDmReplyTarget);
       dmCallButton.addEventListener("click", handleDmCallButtonClick);
