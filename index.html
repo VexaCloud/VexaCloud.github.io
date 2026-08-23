@@ -1258,6 +1258,86 @@
     .call-ctrl-btn.danger:hover {
       background: #be123c;
     }
+
+    .call-overlay-stage {
+      background: #000 !important;
+    }
+    .call-overlay.focus-mode .call-main-video {
+      object-fit: cover !important;
+      background: #000 !important;
+    }
+    .call-overlay-controls {
+      position: absolute !important;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 10;
+      gap: 6px !important;
+      padding: 10px 12px 14px !important;
+      background: linear-gradient(0deg, rgba(0,0,0,0.5), transparent) !important;
+      border-top: none !important;
+      pointer-events: none;
+    }
+    .call-overlay-controls > * {
+      pointer-events: auto;
+    }
+    .call-overlay-controls.bar-hidden {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transform: translateY(8px);
+    }
+    .call-ctrl-btn {
+      min-width: 36px !important;
+      height: 34px !important;
+      padding: 0 10px !important;
+      border-radius: 10px !important;
+      font-size: 10px !important;
+      flex-direction: row !important;
+    }
+    .call-ctrl-btn.danger {
+      min-width: 52px !important;
+    }
+    .call-eye-toggles {
+      position: absolute;
+      right: 12px;
+      bottom: 56px;
+      z-index: 15;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .call-eye-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(0,0,0,0.55);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      backdrop-filter: blur(6px);
+    }
+    .call-eye-btn:hover { background: rgba(0,0,0,0.75); }
+    .call-eye-btn.is-off { opacity: 0.5; }
+    .call-pip.pip-hidden { display: none !important; }
+    .call-mute-badge {
+      width: 28px !important;
+      height: 28px !important;
+      padding: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    .call-mute-badge svg {
+      width: 14px;
+      height: 14px;
+      stroke: #fff;
+      fill: none;
+    }
+
     .call-main-placeholder-avatar {
       box-shadow: 0 0 0 4px rgba(255,255,255,0.08), 0 20px 48px rgba(0,0,0,0.4);
     }
@@ -5896,10 +5976,12 @@
       <button class="call-ctrl-btn" id="call-ctrl-cam" title="Toggle camera">Camera</button>
       <button class="call-ctrl-btn" id="call-ctrl-share" title="Share your screen">Share</button>
       <button class="call-ctrl-btn" id="call-ctrl-record" title="Record this call">Record</button>
-      <button class="call-ctrl-btn" id="call-ctrl-cinema" title="Hide controls & self view">Fullscreen</button>
       <button class="call-ctrl-btn danger" id="call-ctrl-leave" title="Leave call">End</button>
     </div>
-    <button type="button" class="call-hide-bar-btn" id="call-show-bar-btn" style="display:none;" title="Show controls">Show controls</button>
+    <div class="call-eye-toggles" id="call-eye-toggles">
+      <button type="button" class="call-eye-btn" id="call-toggle-pip" title="Show/hide self view" aria-label="Toggle self view"></button>
+      <button type="button" class="call-eye-btn" id="call-toggle-bar" title="Show/hide controls" aria-label="Toggle controls"></button>
+    </div>
   </div>
 
   <div class="modal-backdrop more-themes-modal" id="more-themes-modal">
@@ -9996,6 +10078,13 @@ notificationSettingsSave.onclick = async () => {
       return uiIcon(muted ? "bell-off" : "bell", 14);
     }
 
+    function eyeIcon(open) {
+      if (open) {
+        return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+      }
+      return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+    }
+
     function uiIcon(name, size) {
       const s = size || 16;
       const paths = {
@@ -10405,6 +10494,7 @@ notificationSettingsSave.onclick = async () => {
         userListEl.innerHTML = `<div class="empty-state-small">Failed to load members.</div>`;
       }
     }
+
 
     let serverPresenceChannel = null;
     const onlineUserIds = new Set();
@@ -14389,12 +14479,6 @@ async function handleCreateServer() {
               tryPlayAudioEl(el);
             }
             if (track.kind === "video") {
-              try {
-                const mv = document.getElementById("call-main-video");
-                const pv = document.getElementById("call-pip-video");
-                if (mv) mv.srcObject = null;
-                if (pv) pv.srcObject = null;
-              } catch (e) {}
               renderDmVideoStage();
               scheduleCallStageRender();
             }
@@ -14403,12 +14487,6 @@ async function handleCreateServer() {
           .on(RoomEvent.TrackUnsubscribed, (track) => {
             track.detach().forEach((el) => el.remove());
             if (track.kind === "video") {
-              try {
-                const mv = document.getElementById("call-main-video");
-                const pv = document.getElementById("call-pip-video");
-                if (mv) mv.srcObject = null;
-                if (pv) pv.srcObject = null;
-              } catch (e) {}
               renderDmVideoStage();
               scheduleCallStageRender();
             }
@@ -14669,7 +14747,7 @@ async function handleCreateServer() {
 
 
     let remoteIsRecording = false;
-    let callLayoutMode = "gallery";
+    let callLayoutMode = "gallery"; // focus | gallery
     let callFocusIdentity = "auto";
     let stickySpeakerId = null;
     let stickySpeakerUntil = 0;
@@ -14764,7 +14842,7 @@ async function handleCreateServer() {
           badge = document.createElement("div");
           badge.className = "call-mute-badge";
           badge.title = "Muted";
-          badge.textContent = "M";
+          badge.innerHTML = uiIcon("mic-off", 14);
           const pos = style.position;
           if (pos === "static" || !pos) el.style.position = "relative";
           el.appendChild(badge);
@@ -14819,7 +14897,7 @@ async function handleCreateServer() {
             const badge = document.createElement("div");
             badge.className = "call-mute-badge";
             badge.title = "Muted";
-            badge.textContent = "M";
+            badge.innerHTML = uiIcon("mic-off", 14);
             badge.style.position = "static";
             host.appendChild(badge);
           }
@@ -14887,12 +14965,10 @@ async function handleCreateServer() {
       document.body.classList.remove("in-call-overlay");
       try { setCallConnecting(false); } catch (e) {}
       try {
-        const ov = document.getElementById("call-overlay");
-        if (ov) ov.classList.remove("cinema-mode");
-        const ctrls = document.querySelector(".call-overlay-controls");
-        if (ctrls) ctrls.classList.remove("hidden-bar");
-        const showBtn = document.getElementById("call-show-bar-btn");
-        if (showBtn) showBtn.style.display = "none";
+        const ctrls = document.getElementById("call-overlay-controls");
+        if (ctrls) ctrls.classList.remove("bar-hidden");
+        const pip = document.getElementById("call-pip");
+        if (pip) pip.classList.remove("pip-hidden");
       } catch (e) {}
       if (c.mainVideo) {
         try { c.mainVideo.srcObject = null; } catch (e) {}
@@ -15048,8 +15124,12 @@ async function handleCreateServer() {
 
     function attachTrackToVideoEl(track, videoEl, muted) {
       if (!videoEl || !track) return;
-      const already = videoEl.srcObject && track.mediaStreamTrack &&
-        videoEl.srcObject.getTracks && videoEl.srcObject.getTracks().some((t) => t.id === track.mediaStreamTrack.id);
+      const mst = track.mediaStreamTrack;
+      const already =
+        videoEl.srcObject &&
+        mst &&
+        videoEl.srcObject.getTracks &&
+        videoEl.srcObject.getTracks().some((t) => t.id === mst.id);
       if (!already) {
         try {
           track.detach(videoEl);
@@ -15089,6 +15169,8 @@ async function handleCreateServer() {
     function renderCallOverlayStage() {
       const c = callEls();
       if (!c.overlay || !c.overlay.classList.contains("visible")) return;
+      c.overlay.classList.toggle("focus-mode", callLayoutMode === "focus");
+      c.overlay.classList.toggle("gallery-mode", callLayoutMode === "gallery");
       updateCallOverlayChrome();
       if (!voiceRoom) return;
 
@@ -15217,7 +15299,6 @@ async function handleCreateServer() {
         if (c.mainPlaceholder) c.mainPlaceholder.style.display = "none";
         if (c.mainVideo) {
           c.mainVideo.style.display = "block";
-          try { c.mainVideo.srcObject = null; } catch (e) {}
           attachTrackToVideoEl(mainPerson.camera.track, c.mainVideo, !!mainPerson.isLocal);
         }
         if (c.mainPlaceholder) c.mainPlaceholder.dataset.identity = mainPerson.identity;
@@ -15257,7 +15338,6 @@ async function handleCreateServer() {
         if (pipPerson.hasCam && pipPerson.camera && c.pipVideo) {
           c.pipVideo.style.display = "block";
           if (c.pipAvatar) c.pipAvatar.style.display = "none";
-          try { c.pipVideo.srcObject = null; } catch (e) {}
           attachTrackToVideoEl(pipPerson.camera.track, c.pipVideo, true);
         } else {
           if (c.pipVideo) {
@@ -16669,28 +16749,37 @@ async function handleSignIn() {
       if (callCtrlShare) callCtrlShare.addEventListener("click", toggleDmScreenShare);
       if (callCtrlRecord) callCtrlRecord.addEventListener("click", startCallRecording);
       if (callCtrlLeave) callCtrlLeave.addEventListener("click", disconnectVoice);
-      const callCtrlCinema = document.getElementById("call-ctrl-cinema");
-      const callShowBarBtn = document.getElementById("call-show-bar-btn");
-      const setCinemaMode = (on) => {
-        const ov = document.getElementById("call-overlay");
-        const ctrls = document.getElementById("call-overlay-controls") || document.querySelector(".call-overlay-controls");
-        if (!ov) return;
-        ov.classList.toggle("cinema-mode", !!on);
-        if (ctrls) ctrls.classList.toggle("hidden-bar", !!on);
-        if (callShowBarBtn) callShowBarBtn.style.display = on ? "block" : "none";
-      };
-      if (callCtrlCinema) {
-        callCtrlCinema.addEventListener("click", () => setCinemaMode(true));
-      }
-      if (callShowBarBtn) {
-        callShowBarBtn.addEventListener("click", () => setCinemaMode(false));
-      }
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") {
-          const ov = document.getElementById("call-overlay");
-          if (ov && ov.classList.contains("cinema-mode")) setCinemaMode(false);
+      let callPipVisible = true;
+      let callBarVisible = true;
+      const callTogglePip = document.getElementById("call-toggle-pip");
+      const callToggleBar = document.getElementById("call-toggle-bar");
+      const refreshEyeButtons = () => {
+        if (callTogglePip) {
+          callTogglePip.innerHTML = (typeof eyeIcon === "function" ? eyeIcon(callPipVisible) : "");
+          callTogglePip.classList.toggle("is-off", !callPipVisible);
         }
-      });
+        if (callToggleBar) {
+          callToggleBar.innerHTML = (typeof eyeIcon === "function" ? eyeIcon(callBarVisible) : "");
+          callToggleBar.classList.toggle("is-off", !callBarVisible);
+        }
+      };
+      if (callTogglePip) {
+        callTogglePip.addEventListener("click", () => {
+          callPipVisible = !callPipVisible;
+          const pip = document.getElementById("call-pip");
+          if (pip) pip.classList.toggle("pip-hidden", !callPipVisible);
+          refreshEyeButtons();
+        });
+      }
+      if (callToggleBar) {
+        callToggleBar.addEventListener("click", () => {
+          callBarVisible = !callBarVisible;
+          const ctrls = document.getElementById("call-overlay-controls");
+          if (ctrls) ctrls.classList.toggle("bar-hidden", !callBarVisible);
+          refreshEyeButtons();
+        });
+      }
+      refreshEyeButtons();
       if (callOverlayMinimize) callOverlayMinimize.addEventListener("click", () => {
         const ov = document.getElementById("call-overlay");
         if (ov) {
