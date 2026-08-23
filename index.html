@@ -536,6 +536,314 @@
       50% { opacity: 0.65; }
     }
 
+    /* Color picker cards */
+    .color-picker-card {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+    }
+    .color-picker-preview {
+      height: 40px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border-strong);
+      background: var(--accent);
+    }
+    .color-picker-modes {
+      display: flex;
+      gap: 6px;
+    }
+    .color-mode-btn {
+      flex: 1;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: var(--r-sm);
+      cursor: pointer;
+    }
+    .color-mode-btn.active {
+      background: var(--accent-subtle);
+      border-color: var(--accent);
+      color: var(--accent-hover);
+    }
+    .color-picker-stops {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .color-stop {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--text-tertiary);
+      font-weight: 600;
+    }
+    .more-themes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .more-theme-chip {
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      border-radius: var(--r-sm);
+      padding: 10px 8px;
+      cursor: pointer;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      transition: border-color 0.12s, background 0.12s;
+    }
+    .more-theme-chip:hover {
+      border-color: var(--accent);
+      color: var(--text);
+      background: var(--accent-subtle);
+    }
+    .more-theme-chip.active {
+      border-color: var(--accent);
+      background: var(--accent-subtle);
+      color: var(--accent-hover);
+    }
+    .more-themes-modal .modal-card {
+      max-width: 520px;
+      width: 92vw;
+    }
+    .more-themes-modal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 10px;
+      padding: 8px 4px 16px;
+    }
+
+    /* Full-screen call overlay */
+    .call-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 900;
+      background: #0b0c10;
+      display: none;
+      flex-direction: column;
+      color: #f5f6f8;
+    }
+    .call-overlay.visible {
+      display: flex;
+    }
+    .call-overlay-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: rgba(255,255,255,0.04);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      flex-shrink: 0;
+    }
+    .call-overlay-title {
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .call-overlay-sub {
+      font-size: 12px;
+      color: rgba(255,255,255,0.55);
+      margin-top: 2px;
+    }
+    .call-overlay-stage {
+      flex: 1;
+      position: relative;
+      min-height: 0;
+      background: radial-gradient(ellipse at center, #1a1c24 0%, #0b0c10 70%);
+      overflow: hidden;
+    }
+    .call-main-video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #0b0c10;
+    }
+    .call-main-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      color: rgba(255,255,255,0.7);
+    }
+    .call-main-placeholder-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid rgba(255,255,255,0.12);
+      background: #1a1c22;
+    }
+    .call-main-placeholder-avatar img,
+    .call-main-placeholder-avatar svg {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .call-main-placeholder-name {
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .call-pip {
+      position: absolute;
+      right: 16px;
+      bottom: 16px;
+      width: min(220px, 32vw);
+      aspect-ratio: 16/10;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid rgba(255,255,255,0.18);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+      background: #16181f;
+      z-index: 5;
+    }
+    .call-pip video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .call-pip-label {
+      position: absolute;
+      left: 8px;
+      bottom: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #fff;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+    }
+    .call-grid {
+      position: absolute;
+      inset: 16px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      align-content: center;
+    }
+    .call-grid-tile {
+      position: relative;
+      aspect-ratio: 16/10;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #16181f;
+      border: 2px solid rgba(255,255,255,0.1);
+    }
+    .call-grid-tile.speaking {
+      border-color: #2dc26b;
+      box-shadow: 0 0 0 3px rgba(45,194,107,0.25);
+    }
+    .call-grid-tile video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .call-grid-tile-label {
+      position: absolute;
+      left: 10px;
+      bottom: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+    }
+    .call-overlay-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 16px 18px 22px;
+      flex-wrap: wrap;
+      background: rgba(0,0,0,0.35);
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .call-ctrl-btn {
+      min-width: 56px;
+      height: 48px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    .call-ctrl-btn:hover {
+      background: rgba(255,255,255,0.14);
+    }
+    .call-ctrl-btn.active {
+      background: rgba(99,102,241,0.35);
+      border-color: rgba(99,102,241,0.7);
+    }
+    .call-ctrl-btn.recording {
+      background: rgba(240,71,95,0.25);
+      border-color: #f0475f;
+      color: #ff8a9a;
+      animation: rec-pulse 1.2s ease-in-out infinite;
+    }
+    .call-ctrl-btn.danger {
+      background: #f0475f;
+      border-color: #f0475f;
+      color: #fff;
+      min-width: 72px;
+    }
+    .call-ctrl-btn.danger:hover {
+      background: #d63b51;
+    }
+    .call-recording-banner {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(240,71,95,0.92);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 999px;
+      z-index: 8;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
+    .call-recording-banner.visible {
+      display: inline-flex;
+    }
+    .call-recording-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #fff;
+      animation: rec-pulse 1s ease-in-out infinite;
+    }
+    .incoming-call-popup {
+      min-width: 280px;
+    }
+
+
 
     html[style*="--accent-user"] {
       --accent: var(--accent-user);
@@ -5137,17 +5445,7 @@
           <option value="dark">Dark</option>
           <option value="midnight">Midnight</option>
           <option value="ash">Ash</option>
-          <option value="dracula">Dracula</option>
-          <option value="nord">Nord</option>
-          <option value="rose-pine">Rosé Pine</option>
-          <option value="sepia">Sepia</option>
-          <option value="forest">Forest</option>
-          <option value="ocean">Ocean</option>
-          <option value="sunset">Sunset</option>
-          <option value="lavender">Lavender</option>
-          <option value="aurora">Aurora</option>
-          <option value="ember">Ember</option>
-          <option value="custom">Custom</option>
+          <option value="__more__">More themes…</option>
         </select>
         <div id="user-pill" class="user-pill" style="display:none;">
           <div class="user-pill-avatar" id="user-pill-avatar"></div>
@@ -5543,47 +5841,62 @@
             <div class="settings-panel-section">
               <div class="settings-panel-heading">Theme</div>
               <div class="settings-row">
-                <select id="settings-theme" class="settings-input">
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
-          <option value="midnight">Midnight</option>
-          <option value="ash">Ash</option>
-          <option value="dracula">Dracula</option>
-          <option value="nord">Nord</option>
-          <option value="rose-pine">Rosé Pine</option>
-          <option value="sepia">Sepia</option>
-          <option value="forest">Forest</option>
-          <option value="ocean">Ocean</option>
-          <option value="sunset">Sunset</option>
-          <option value="lavender">Lavender</option>
-          <option value="aurora">Aurora</option>
-          <option value="ember">Ember</option>
-          <option value="custom">Custom</option>
+                                <select id="settings-theme" class="settings-input">
+                  <option value="light">Light</option>
+                  <option value="dark">Dark</option>
+                  <option value="midnight">Midnight</option>
+                  <option value="ash">Ash</option>
+                  <option value="custom">Custom</option>
+                  <option value="__more__">More themes…</option>
                 </select>
+                <div id="more-themes-grid" class="more-themes-grid" style="display:none;"></div>
               </div>
+              
               <div class="settings-row">
                 <div class="settings-label">Accent color</div>
-                <div class="settings-inline-controls">
-                  <input id="settings-accent-color" type="color" class="color-swatch-input" />
-                  <input id="settings-accent-color-2" type="color" class="color-swatch-input" title="Second color for gradient" />
-                  <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);">
-                    <input type="checkbox" id="settings-accent-gradient" /> Gradient
-                  </label>
+                <div class="color-picker-card" id="accent-picker-card">
+                  <div class="color-picker-preview" id="accent-preview"></div>
+                  <div class="color-picker-modes">
+                    <button type="button" class="color-mode-btn active" data-mode="solid" data-target="accent">Solid</button>
+                    <button type="button" class="color-mode-btn" data-mode="gradient" data-target="accent">Gradient</button>
+                  </div>
+                  <div class="color-picker-stops" id="accent-stops">
+                    <label class="color-stop">
+                      <span>Color</span>
+                      <input id="settings-accent-color" type="color" class="color-swatch-input" />
+                    </label>
+                    <label class="color-stop accent-stop-2" style="display:none;">
+                      <span>End</span>
+                      <input id="settings-accent-color-2" type="color" class="color-swatch-input" />
+                    </label>
+                  </div>
+                  <input type="checkbox" id="settings-accent-gradient" style="display:none;" />
                   <button type="button" id="settings-accent-reset" class="settings-cancel settings-cancel-compact">Reset to theme</button>
                 </div>
-                <div class="form-field-hint">Overrides the theme's accent. Enable gradient to blend two colors. Saving a custom accent switches theme to Custom.</div>
+                <div class="form-field-hint">Solid or gradient accent. Custom colors switch the theme to Custom.</div>
               </div>
               <div class="settings-row">
                 <div class="settings-label">Background color</div>
-                <div class="settings-inline-controls">
-                  <input id="settings-bg-color" type="color" class="color-swatch-input" />
-                  <input id="settings-bg-color-2" type="color" class="color-swatch-input" title="Second color for gradient" />
-                  <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);">
-                    <input type="checkbox" id="settings-bg-gradient" /> Gradient
-                  </label>
+                <div class="color-picker-card" id="bg-picker-card">
+                  <div class="color-picker-preview" id="bg-preview"></div>
+                  <div class="color-picker-modes">
+                    <button type="button" class="color-mode-btn active" data-mode="solid" data-target="bg">Solid</button>
+                    <button type="button" class="color-mode-btn" data-mode="gradient" data-target="bg">Gradient</button>
+                  </div>
+                  <div class="color-picker-stops" id="bg-stops">
+                    <label class="color-stop">
+                      <span>Color</span>
+                      <input id="settings-bg-color" type="color" class="color-swatch-input" />
+                    </label>
+                    <label class="color-stop bg-stop-2" style="display:none;">
+                      <span>End</span>
+                      <input id="settings-bg-color-2" type="color" class="color-swatch-input" />
+                    </label>
+                  </div>
+                  <input type="checkbox" id="settings-bg-gradient" style="display:none;" />
                   <button type="button" id="settings-bg-reset" class="settings-cancel settings-cancel-compact">Reset</button>
                 </div>
-                <div class="form-field-hint">Overrides the app canvas/background. Gradient applies a soft blend. Saves as Custom theme.</div>
+                <div class="form-field-hint">App canvas background. Gradient blends smoothly across the UI.</div>
               </div>
             </div>
 
@@ -6778,10 +7091,11 @@
       el.innerHTML = `
         <div class="incoming-call-info">
           <div class="incoming-call-name">${uiIcon("phone", 16)} ${escapeHtml(name)}</div>
-          <div class="incoming-call-sub">Incoming call...</div>
+          <div class="incoming-call-sub">Incoming voice call</div>
         </div>
         <div class="incoming-call-actions">
           <button class="incoming-call-button incoming-call-answer">Answer</button>
+          <button class="incoming-call-button incoming-call-answer-video" style="background:var(--accent);color:#fff;">Video</button>
           <button class="incoming-call-button incoming-call-decline">Dismiss</button>
         </div>
       `;
@@ -6800,11 +7114,11 @@
         }
       };
 
-      el.querySelector(".incoming-call-decline").addEventListener("click", dismiss);
-      el.querySelector(".incoming-call-answer").addEventListener("click", async () => {
+            const joinIncoming = async (withVideo) => {
         dismiss();
         try {
           if (voiceRoom) await disconnectVoice();
+          voicePreferVideo = !!withVideo;
           handleOpenDmModal();
           openDmConversation(call.conversation_id, other);
           const { call: joined } = await apiFetch(`/api/voice-calls/${call.id}/join`, { method: "POST" });
@@ -6816,11 +7130,16 @@
           subscribeDmCallRealtime(call.conversation_id);
           updateDmCallButton();
           renderDmCallBar();
+          showCallOverlay();
         } catch (err) {
           console.error(err);
           showToast(err.message || "Failed to join call", { variant: "danger" });
         }
-      });
+      };
+      el.querySelector(".incoming-call-decline").addEventListener("click", dismiss);
+      el.querySelector(".incoming-call-answer").addEventListener("click", () => joinIncoming(false));
+      const videoBtn = el.querySelector(".incoming-call-answer-video");
+      if (videoBtn) videoBtn.addEventListener("click", () => joinIncoming(true));
 
       setTimeout(() => {
         if (incomingCallPopupCallId === call.id) dismiss();
@@ -7844,10 +8163,91 @@ notificationSettingsSave.onclick = async () => {
       setTimeout(close, options.duration || 3500);
     }
 
+    const PRIMARY_THEMES = ["light", "dark", "midnight", "ash"];
+    const EXTRA_THEMES = [
+      { value: "dracula", label: "Dracula" },
+      { value: "nord", label: "Nord" },
+      { value: "rose-pine", label: "Rosé Pine" },
+      { value: "sepia", label: "Sepia" },
+      { value: "forest", label: "Forest" },
+      { value: "ocean", label: "Ocean" },
+      { value: "sunset", label: "Sunset" },
+      { value: "lavender", label: "Lavender" },
+      { value: "aurora", label: "Aurora" },
+      { value: "ember", label: "Ember" },
+      { value: "custom", label: "Custom" },
+    ];
+
+    function ensureThemeOption(selectEl, theme) {
+      if (!selectEl || !theme || theme === "__more__") return;
+      if ([...selectEl.options].some((o) => o.value === theme)) return;
+      if (PRIMARY_THEMES.includes(theme)) return;
+      const opt = document.createElement("option");
+      opt.value = theme;
+      const found = EXTRA_THEMES.find((t) => t.value === theme);
+      opt.textContent = found ? found.label : theme.charAt(0).toUpperCase() + theme.slice(1);
+      const more = [...selectEl.options].find((o) => o.value === "__more__");
+      if (more) selectEl.insertBefore(opt, more);
+      else selectEl.appendChild(opt);
+    }
+
     function setTheme(theme) {
+      if (!theme || theme === "__more__") return;
       document.documentElement.setAttribute("data-theme", theme);
-      themeSelect.value = theme;
-      if (settingsTheme) settingsTheme.value = theme;
+      if (themeSelect) {
+        ensureThemeOption(themeSelect, theme);
+        if ([...themeSelect.options].some((o) => o.value === theme)) themeSelect.value = theme;
+      }
+      if (settingsTheme) {
+        ensureThemeOption(settingsTheme, theme);
+        if ([...settingsTheme.options].some((o) => o.value === theme)) settingsTheme.value = theme;
+      }
+    }
+
+    function openMoreThemesModal(fromSettings) {
+      const modal = document.getElementById("more-themes-modal");
+      const grid = document.getElementById("more-themes-modal-grid");
+      if (!modal || !grid) return;
+      grid.innerHTML = "";
+      EXTRA_THEMES.forEach((t) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "more-theme-chip" + ((currentProfile && currentProfile.theme === t.value) || document.documentElement.getAttribute("data-theme") === t.value ? " active" : "");
+        btn.textContent = t.label;
+        btn.addEventListener("click", async () => {
+          modal.classList.remove("visible");
+          await handleThemeChange(t.value);
+        });
+        grid.appendChild(btn);
+      });
+      modal.classList.add("visible");
+      modal.dataset.fromSettings = fromSettings ? "1" : "0";
+    }
+
+    function syncColorPickerMode(target, isGradient) {
+      const card = document.getElementById(target === "accent" ? "accent-picker-card" : "bg-picker-card");
+      if (!card) return;
+      card.querySelectorAll(".color-mode-btn").forEach((b) => {
+        b.classList.toggle("active", b.dataset.mode === (isGradient ? "gradient" : "solid"));
+      });
+      const stop2 = card.querySelector(target === "accent" ? ".accent-stop-2" : ".bg-stop-2");
+      if (stop2) stop2.style.display = isGradient ? "" : "none";
+      const cb = document.getElementById(target === "accent" ? "settings-accent-gradient" : "settings-bg-gradient");
+      if (cb) cb.checked = !!isGradient;
+      updateColorPickerPreview(target);
+    }
+
+    function updateColorPickerPreview(target) {
+      const c1 = document.getElementById(target === "accent" ? "settings-accent-color" : "settings-bg-color");
+      const c2 = document.getElementById(target === "accent" ? "settings-accent-color-2" : "settings-bg-color-2");
+      const cb = document.getElementById(target === "accent" ? "settings-accent-gradient" : "settings-bg-gradient");
+      const preview = document.getElementById(target === "accent" ? "accent-preview" : "bg-preview");
+      if (!preview || !c1) return;
+      if (cb && cb.checked && c2) {
+        preview.style.background = `linear-gradient(135deg, ${c1.value}, ${c2.value})`;
+      } else {
+        preview.style.background = c1.value;
+      }
     }
 
     function applyProfileTheme(profile) {
@@ -13012,7 +13412,9 @@ async function handleCreateServer() {
         await voiceRoom.localParticipant.setCameraEnabled(next);
         voiceVideoEnabled = next;
         renderDmVideoStage();
+        renderCallOverlayStage();
         updateDmCallMediaButtons();
+        updateCallOverlayControls();
         showToast(next ? "Camera on" : "Camera off", { duration: 1500 });
       } catch (err) {
         console.error(err);
@@ -13027,7 +13429,9 @@ async function handleCreateServer() {
         await voiceRoom.localParticipant.setScreenShareEnabled(next);
         voiceScreenSharing = next;
         renderDmVideoStage();
+        renderCallOverlayStage();
         updateDmCallMediaButtons();
+        updateCallOverlayControls();
         showToast(next ? "Screen sharing" : "Screen share stopped", { duration: 1500 });
       } catch (err) {
         console.error(err);
@@ -13079,6 +13483,8 @@ async function handleCreateServer() {
         if (rec.state !== "inactive") rec.stop();
       } catch (e) {}
       updateDmCallMediaButtons();
+      updateCallOverlayControls();
+      try { broadcastCallData({ type: "recording_stopped", at: Date.now() }); } catch (e) {}
       if (!fromCleanup) showToast("Recording stopped — downloading…", { duration: 2000 });
     }
 
@@ -13137,7 +13543,9 @@ async function handleCreateServer() {
       };
       callRecorder.start(1000);
       updateDmCallMediaButtons();
-      showToast("Recording started", { variant: "accent", duration: 1500 });
+      updateCallOverlayControls();
+      broadcastCallData({ type: "recording_started", at: Date.now() });
+      showToast("Recording started — others were notified", { variant: "accent", duration: 2000 });
     }
 
     async function connectVoice(descriptor, context) {
@@ -13203,17 +13611,28 @@ async function handleCreateServer() {
             }
             if (track.kind === "video") {
               renderDmVideoStage();
+              renderCallOverlayStage();
             }
             renderVoiceParticipants();
           })
           .on(RoomEvent.TrackUnsubscribed, (track) => {
             track.detach().forEach((el) => el.remove());
-            if (track.kind === "video") renderDmVideoStage();
+            if (track.kind === "video") {
+              renderDmVideoStage();
+              renderCallOverlayStage();
+            }
             renderVoiceParticipants();
           })
-          .on(RoomEvent.ActiveSpeakersChanged, renderVoiceParticipants)
-          .on(RoomEvent.LocalTrackPublished, () => { renderVoiceParticipants(); renderDmVideoStage(); updateDmCallMediaButtons(); })
-          .on(RoomEvent.LocalTrackUnpublished, () => { renderVoiceParticipants(); renderDmVideoStage(); updateDmCallMediaButtons(); })
+          .on(RoomEvent.ActiveSpeakersChanged, () => { renderVoiceParticipants(); renderCallOverlayStage(); })
+          .on(RoomEvent.DataReceived, (payload, participant) => {
+            try {
+              const text = typeof payload === "string" ? payload : new TextDecoder().decode(payload);
+              const data = JSON.parse(text);
+              handleIncomingCallData(data, participant);
+            } catch (e) {}
+          })
+          .on(RoomEvent.LocalTrackPublished, () => { renderVoiceParticipants(); renderDmVideoStage(); renderCallOverlayStage(); updateDmCallMediaButtons(); updateCallOverlayControls(); })
+          .on(RoomEvent.LocalTrackUnpublished, () => { renderVoiceParticipants(); renderDmVideoStage(); renderCallOverlayStage(); updateDmCallMediaButtons(); updateCallOverlayControls(); })
           .on(RoomEvent.TrackMuted, renderVoiceParticipants)
           .on(RoomEvent.TrackUnmuted, renderVoiceParticipants)
           .on(RoomEvent.Disconnected, () => {
@@ -13278,6 +13697,7 @@ async function handleCreateServer() {
 
     function leaveVoiceCleanup() {
       try { stopCallRecording(false); } catch (e) {}
+      try { hideCallOverlay(); } catch (e) {}
       try {
         if (dmVideoStage) {
           dmVideoStage.classList.remove("visible");
@@ -13287,6 +13707,7 @@ async function handleCreateServer() {
       voiceVideoEnabled = false;
       voiceScreenSharing = false;
       voicePreferVideo = false;
+      remoteIsRecording = false;
       const wasServerVoice = voiceContext === "server";
       const previousContext = voiceContext;
       try {
@@ -13405,6 +13826,244 @@ async function handleCreateServer() {
       }
     }
 
+
+    const callOverlay = document.getElementById("call-overlay");
+    const callOverlayTitle = document.getElementById("call-overlay-title");
+    const callOverlaySub = document.getElementById("call-overlay-sub");
+    const callMainVideo = document.getElementById("call-main-video");
+    const callMainPlaceholder = document.getElementById("call-main-placeholder");
+    const callMainAvatar = document.getElementById("call-main-avatar");
+    const callMainName = document.getElementById("call-main-name");
+    const callGrid = document.getElementById("call-grid");
+    const callPip = document.getElementById("call-pip");
+    const callPipVideo = document.getElementById("call-pip-video");
+    const callPipLabel = document.getElementById("call-pip-label");
+    const callRecordingBanner = document.getElementById("call-recording-banner");
+    let remoteIsRecording = false;
+
+    function showCallOverlay() {
+      if (!callOverlay) return;
+      callOverlay.classList.add("visible");
+      callOverlay.setAttribute("aria-hidden", "false");
+      updateCallOverlayChrome();
+      renderCallOverlayStage();
+      updateCallOverlayControls();
+    }
+
+    function hideCallOverlay() {
+      if (!callOverlay) return;
+      callOverlay.classList.remove("visible");
+      callOverlay.setAttribute("aria-hidden", "true");
+      if (callMainVideo) {
+        callMainVideo.removeAttribute("srcObject");
+        callMainVideo.srcObject = null;
+        callMainVideo.style.display = "none";
+      }
+      if (callPipVideo) {
+        callPipVideo.srcObject = null;
+      }
+      if (callGrid) callGrid.innerHTML = "";
+      if (callPip) callPip.style.display = "none";
+      if (callRecordingBanner) callRecordingBanner.classList.remove("visible");
+      remoteIsRecording = false;
+    }
+
+    function updateCallOverlayChrome() {
+      if (!callOverlayTitle) return;
+      const name = currentDmOtherUser ? currentDmOtherUser.username : "Call";
+      const kind = voicePreferVideo || voiceVideoEnabled ? "Video call" : "Voice call";
+      callOverlayTitle.textContent = `${kind} · ${name}`;
+      if (callOverlaySub) {
+        const n = (voiceRoom && (1 + voiceRoom.remoteParticipants.size)) || dmCallParticipants.length || 1;
+        callOverlaySub.textContent = voiceRoom ? `${n} in call` : "Connecting…";
+      }
+      if (callMainName) callMainName.textContent = name;
+      if (callMainAvatar && currentDmOtherUser) {
+        callMainAvatar.innerHTML = avatarHTML(currentDmOtherUser);
+      }
+    }
+
+    function updateCallOverlayControls() {
+      const muteBtn = document.getElementById("call-ctrl-mute");
+      const camBtn = document.getElementById("call-ctrl-cam");
+      const shareBtn = document.getElementById("call-ctrl-share");
+      const recBtn = document.getElementById("call-ctrl-record");
+      if (muteBtn) {
+        muteBtn.classList.toggle("active", !!voiceMuted);
+        muteBtn.textContent = voiceMuted ? "Unmute" : "Mute";
+      }
+      if (camBtn) {
+        camBtn.classList.toggle("active", !!voiceVideoEnabled);
+        camBtn.textContent = voiceVideoEnabled ? "Cam on" : "Cam";
+      }
+      if (shareBtn) {
+        shareBtn.classList.toggle("active", !!voiceScreenSharing);
+        shareBtn.textContent = voiceScreenSharing ? "Sharing" : "Share";
+      }
+      if (recBtn) {
+        const rec = !!callRecorder;
+        recBtn.classList.toggle("recording", rec);
+        recBtn.textContent = rec ? "Stop" : "Rec";
+      }
+      if (callRecordingBanner) {
+        const show = !!callRecorder || remoteIsRecording;
+        callRecordingBanner.classList.toggle("visible", show);
+        if (show) {
+          callRecordingBanner.innerHTML = `<span class="call-recording-dot"></span> ${
+            callRecorder ? "You are recording this call" : "Someone is recording this call"
+          }`;
+        }
+      }
+    }
+
+    function collectVideoTracks() {
+      if (!voiceRoom) return { screens: [], cameras: [] };
+      const screens = [];
+      const cameras = [];
+      const pushFrom = (p) => {
+        const isLocal = p.identity === voiceRoom.localParticipant.identity;
+        const pubs = p.videoTrackPublications
+          ? Array.from(p.videoTrackPublications.values())
+          : [];
+        pubs.forEach((pub) => {
+          const track = pub.track;
+          if (!track || track.isMuted) return;
+          const src = pub.source;
+          const isScreen =
+            src === 2 ||
+            src === "screen_share" ||
+            src === "screen_share_audio" ||
+            (typeof src === "string" && src.toLowerCase().includes("screen"));
+          const profile = resolveVoiceProfile(p.identity, isLocal);
+          const entry = {
+            track,
+            isLocal,
+            identity: p.identity,
+            name: profile ? profile.username : isLocal ? "You" : "User",
+            isScreen,
+          };
+          if (isScreen) screens.push(entry);
+          else cameras.push(entry);
+        });
+      };
+      pushFrom(voiceRoom.localParticipant);
+      voiceRoom.remoteParticipants.forEach(pushFrom);
+      return { screens, cameras };
+    }
+
+    function attachTrackToVideoEl(track, el, muted) {
+      if (!el || !track) return;
+      try {
+        track.detach(el);
+      } catch (e) {}
+      track.attach(el);
+      el.autoplay = true;
+      el.playsInline = true;
+      el.muted = !!muted;
+      try {
+        el.play().catch(() => {});
+      } catch (e) {}
+    }
+
+    function renderCallOverlayStage() {
+      if (!callOverlay || !callOverlay.classList.contains("visible")) return;
+      updateCallOverlayChrome();
+      if (!voiceRoom) return;
+
+      const { screens, cameras } = collectVideoTracks();
+
+      if (screens.length) {
+        if (callGrid) callGrid.style.display = "none";
+        const main = screens[0];
+        if (callMainVideo) {
+          callMainVideo.style.display = "block";
+          attachTrackToVideoEl(main.track, callMainVideo, main.isLocal);
+        }
+        if (callMainPlaceholder) callMainPlaceholder.style.display = "none";
+
+        let pip = cameras.find((c) => !c.isLocal) || cameras.find((c) => c.isLocal) || null;
+        if (main.isLocal) {
+          pip = cameras.find((c) => !c.isLocal) || cameras.find((c) => c.isLocal) || null;
+        } else {
+          pip = cameras.find((c) => c.isLocal) || cameras.find((c) => !c.isLocal) || null;
+        }
+        if (pip && callPip && callPipVideo) {
+          callPip.style.display = "block";
+          attachTrackToVideoEl(pip.track, callPipVideo, true);
+          if (callPipLabel) callPipLabel.textContent = pip.name + (pip.isLocal ? " (you)" : "");
+        } else if (callPip) {
+          callPip.style.display = "none";
+        }
+        return;
+      }
+
+      if (callPip) callPip.style.display = "none";
+
+      if (cameras.length >= 2 && callGrid) {
+        if (callMainVideo) callMainVideo.style.display = "none";
+        if (callMainPlaceholder) callMainPlaceholder.style.display = "none";
+        callGrid.style.display = "grid";
+        callGrid.innerHTML = "";
+        cameras.forEach((c) => {
+          const tile = document.createElement("div");
+          tile.className = "call-grid-tile";
+          const v = document.createElement("video");
+          v.autoplay = true;
+          v.playsInline = true;
+          v.muted = c.isLocal;
+          tile.appendChild(v);
+          const label = document.createElement("div");
+          label.className = "call-grid-tile-label";
+          label.textContent = c.name + (c.isLocal ? " (you)" : "");
+          tile.appendChild(label);
+          callGrid.appendChild(tile);
+          attachTrackToVideoEl(c.track, v, c.isLocal);
+        });
+        return;
+      }
+
+      if (callGrid) callGrid.style.display = "none";
+      if (cameras.length === 1) {
+        if (callMainPlaceholder) callMainPlaceholder.style.display = "none";
+        if (callMainVideo) {
+          callMainVideo.style.display = "block";
+          attachTrackToVideoEl(cameras[0].track, callMainVideo, cameras[0].isLocal);
+        }
+        return;
+      }
+
+      if (callMainVideo) {
+        callMainVideo.style.display = "none";
+        callMainVideo.srcObject = null;
+      }
+      if (callMainPlaceholder) callMainPlaceholder.style.display = "flex";
+    }
+
+    function broadcastCallData(payload) {
+      if (!voiceRoom) return;
+      try {
+        const data = new TextEncoder().encode(JSON.stringify(payload));
+        voiceRoom.localParticipant.publishData(data, { reliable: true });
+      } catch (err) {
+        console.error("publishData failed", err);
+      }
+    }
+
+    function handleIncomingCallData(payload, participant) {
+      if (!payload || !payload.type) return;
+      if (payload.type === "recording_started") {
+        remoteIsRecording = true;
+        const who = participant?.identity
+          ? resolveVoiceProfile(participant.identity, false)?.username || "Someone"
+          : "Someone";
+        showToast(`${who} started recording this call`, { variant: "danger", duration: 4000 });
+        updateCallOverlayControls();
+      } else if (payload.type === "recording_stopped") {
+        remoteIsRecording = false;
+        updateCallOverlayControls();
+      }
+    }
+
     async function startOrJoinDmCall(withVideo) {
       if (!currentDmConversationId) return;
 
@@ -13441,6 +14100,7 @@ async function handleCreateServer() {
         subscribeDmCallRealtime(currentDmConversationId);
         updateDmCallButton();
         renderDmCallBar();
+        showCallOverlay();
       } catch (err) {
         console.error(err);
         showToast(err.message || "Failed to start/join call", { variant: "danger" });
@@ -13521,6 +14181,10 @@ async function handleCreateServer() {
       `;
 
       dmCallBarEl.querySelector(".dm-call-bar-info").addEventListener("click", () => {
+        if (voiceRoom && voiceContext === "dm") {
+          showCallOverlay();
+          return;
+        }
         handleOpenDmModal();
         if (currentDmOtherUser) openDmConversation(currentDmConversationId, currentDmOtherUser);
       });
@@ -13584,6 +14248,7 @@ async function handleCreateServer() {
       const accentGrad = document.getElementById("settings-accent-gradient");
       if (accent2) accent2.value = appearance.accent_color_2 || appearance.accent_color || getComputedThemeAccentHex();
       if (accentGrad) accentGrad.checked = !!appearance.accent_gradient;
+      try { syncColorPickerMode("accent", !!appearance.accent_gradient); } catch (e) {}
       const bgColor = document.getElementById("settings-bg-color");
       const bgColor2 = document.getElementById("settings-bg-color-2");
       const bgGrad = document.getElementById("settings-bg-gradient");
@@ -13593,6 +14258,7 @@ async function handleCreateServer() {
       }
       if (bgColor2) bgColor2.value = appearance.bg_color_2 || appearance.bg_color || "#1a1c22";
       if (bgGrad) bgGrad.checked = !!appearance.bg_gradient;
+      try { syncColorPickerMode("bg", !!appearance.bg_gradient); } catch (e) {}
       settingsTextMode.value = appearance.text_color_mode || "auto";
       settingsCustomTextColor.value = appearance.custom_text_color || "#ffffff";
       settingsCustomTextColorRow.style.display = settingsTextMode.value === "custom" ? "" : "none";
@@ -14617,7 +15283,71 @@ async function handleSignIn() {
       settingsUpdateEmailButton.addEventListener("click", handleUpdateEmail);
       identitySetPasswordButton.addEventListener("click", handleSetPassword);
 
-      themeSelect.addEventListener("change", () => handleThemeChange(themeSelect.value));
+      themeSelect.addEventListener("change", () => {
+        const v = themeSelect.value;
+        if (v === "__more__") {
+          if (currentProfile && currentProfile.theme) themeSelect.value = currentProfile.theme;
+          else themeSelect.value = document.documentElement.getAttribute("data-theme") || "light";
+          openMoreThemesModal(false);
+          return;
+        }
+        handleThemeChange(v);
+      });
+      const moreThemesClose = document.getElementById("more-themes-close");
+      const moreThemesModal = document.getElementById("more-themes-modal");
+      if (moreThemesClose && moreThemesModal) {
+        moreThemesClose.addEventListener("click", () => moreThemesModal.classList.remove("visible"));
+        moreThemesModal.addEventListener("click", (e) => {
+          if (e.target === moreThemesModal) moreThemesModal.classList.remove("visible");
+        });
+      }
+      if (settingsTheme) {
+        settingsTheme.addEventListener("change", () => {
+          const v = settingsTheme.value;
+          if (v === "__more__") {
+            if (currentProfile && currentProfile.theme) settingsTheme.value = currentProfile.theme;
+            openMoreThemesModal(true);
+            return;
+          }
+          setTheme(v);
+        });
+      }
+      document.querySelectorAll(".color-mode-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const target = btn.dataset.target;
+          const mode = btn.dataset.mode;
+          syncColorPickerMode(target, mode === "gradient");
+          if (target === "bg") {
+            const bg = document.getElementById("settings-bg-color");
+            if (bg) bg.dataset.userSet = "1";
+          }
+        });
+      });
+      ["settings-accent-color", "settings-accent-color-2", "settings-bg-color", "settings-bg-color-2"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener("input", () => {
+          const target = id.includes("accent") ? "accent" : "bg";
+          if (target === "bg") el.dataset.userSet = "1";
+          updateColorPickerPreview(target);
+        });
+      });
+
+      const callCtrlMute = document.getElementById("call-ctrl-mute");
+      const callCtrlCam = document.getElementById("call-ctrl-cam");
+      const callCtrlShare = document.getElementById("call-ctrl-share");
+      const callCtrlRecord = document.getElementById("call-ctrl-record");
+      const callCtrlLeave = document.getElementById("call-ctrl-leave");
+      const callOverlayMinimize = document.getElementById("call-overlay-minimize");
+      if (callCtrlMute) callCtrlMute.addEventListener("click", () => { toggleVoiceMute(); updateCallOverlayControls(); });
+      if (callCtrlCam) callCtrlCam.addEventListener("click", toggleDmCamera);
+      if (callCtrlShare) callCtrlShare.addEventListener("click", toggleDmScreenShare);
+      if (callCtrlRecord) callCtrlRecord.addEventListener("click", startCallRecording);
+      if (callCtrlLeave) callCtrlLeave.addEventListener("click", disconnectVoice);
+      if (callOverlayMinimize) callOverlayMinimize.addEventListener("click", () => {
+        if (callOverlay) callOverlay.classList.remove("visible");
+      });
+
 
       logoutButton.addEventListener("click", handleLogout);
 
@@ -14723,6 +15453,47 @@ async function handleSignIn() {
       }
     });
   </script>
+  
+  <div class="call-overlay" id="call-overlay" aria-hidden="true">
+    <div class="call-overlay-header">
+      <div>
+        <div class="call-overlay-title" id="call-overlay-title">Call</div>
+        <div class="call-overlay-sub" id="call-overlay-sub">Connecting…</div>
+      </div>
+      <button class="call-ctrl-btn" id="call-overlay-minimize" title="Minimize">Minimize</button>
+    </div>
+    <div class="call-overlay-stage" id="call-overlay-stage">
+      <div class="call-recording-banner" id="call-recording-banner"><span class="call-recording-dot"></span> Recording in progress</div>
+      <div class="call-main-placeholder" id="call-main-placeholder">
+        <div class="call-main-placeholder-avatar" id="call-main-avatar"></div>
+        <div class="call-main-placeholder-name" id="call-main-name">Waiting…</div>
+      </div>
+      <video class="call-main-video" id="call-main-video" autoplay playsinline style="display:none;"></video>
+      <div class="call-grid" id="call-grid" style="display:none;"></div>
+      <div class="call-pip" id="call-pip" style="display:none;">
+        <video id="call-pip-video" autoplay playsinline muted></video>
+        <div class="call-pip-label" id="call-pip-label"></div>
+      </div>
+    </div>
+    <div class="call-overlay-controls">
+      <button class="call-ctrl-btn" id="call-ctrl-mute" title="Mute">Mute</button>
+      <button class="call-ctrl-btn" id="call-ctrl-cam" title="Camera">Cam</button>
+      <button class="call-ctrl-btn" id="call-ctrl-share" title="Share screen">Share</button>
+      <button class="call-ctrl-btn" id="call-ctrl-record" title="Record">Rec</button>
+      <button class="call-ctrl-btn danger" id="call-ctrl-leave" title="Leave">Leave</button>
+    </div>
+  </div>
+
+  <div class="modal-backdrop more-themes-modal" id="more-themes-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">More themes</div>
+        <button class="modal-close" id="more-themes-close">Close</button>
+      </div>
+      <div class="more-themes-modal-grid" id="more-themes-modal-grid"></div>
+    </div>
+  </div>
+
   <div id="voice-audio-container" style="display:none;"></div>
 </body>
 </html>
