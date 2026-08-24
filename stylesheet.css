@@ -983,6 +983,23 @@
       background-color: var(--bg-canvas);
     }
 
+    /* A custom gradient background is painted on <html>/<body>. Without
+       this, .app-shell's opaque background-color (set above, for the
+       solid-color case) sits on top of it and hides the gradient
+       entirely, so custom gradients rendered as a flat solid color.
+       Make the shell transparent and let the gradient show through, then
+       give panels/top-bar a translucent blurred backing so text stays
+       legible over whatever colors were picked. */
+    html.has-custom-bg-gradient .app-shell {
+      background: transparent;
+    }
+    html.has-custom-bg-gradient .panel,
+    html.has-custom-bg-gradient .top-bar {
+      background: color-mix(in srgb, var(--surface) 88%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
     .call-overlay-header {
       display: flex;
       align-items: center;
@@ -3157,6 +3174,20 @@
       background: var(--surface-2);
     }
 
+    /* On the custom theme, --surface-2 stays pinned to its dark default
+       and never picks up whatever accent/background colors the user
+       chose — so hovering a message always flashed the same near-black
+       fill, clashing with light or colorful custom themes. Use --surface
+       (which *does* track the user's custom background) with a blur
+       instead, same treatment the built-in gradient themes already get,
+       so hover looks intentional against any color. */
+    html[data-theme="custom"] .message-row:hover,
+    html.theme-has-gradient-bg .message-row:hover {
+      background: color-mix(in srgb, var(--surface) 65%, transparent);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
     .message-avatar {
       width: 36px;
       height: 36px;
@@ -5105,6 +5136,13 @@
 
     .message-reply-thread-item:hover {
       background: var(--surface-2);
+    }
+
+    html[data-theme="custom"] .message-reply-thread-item:hover,
+    html.theme-has-gradient-bg .message-reply-thread-item:hover {
+      background: color-mix(in srgb, var(--surface) 65%, transparent);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
     }
 
     .message-reply-thread-item .message-avatar {
