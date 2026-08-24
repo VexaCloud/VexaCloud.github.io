@@ -7641,9 +7641,14 @@ async function handleCreateServer() {
       leaveVoiceCleanup();
       if (wasDm && callId) {
         try {
-          await apiFetch(`/api/voice-calls/${callId}/leave`, { method: "POST" });
+          // Prefer leave; if that fails or call is stuck, force-end so "Join call" doesn't linger
+          const res = await apiFetch(`/api/voice-calls/${callId}/leave`, { method: "POST" });
+          if (res && res.call && Array.isArray(res.call.participants) && res.call.participants.length === 0) {
+            try { await apiFetch(`/api/voice-calls/${callId}/end`, { method: "POST" }); } catch (e) {}
+          }
         } catch (err) {
           console.error(err);
+          try { await apiFetch(`/api/voice-calls/${callId}/end`, { method: "POST" }); } catch (e2) {}
         }
         try {
           updateDmCallButton();
@@ -7694,25 +7699,38 @@ async function handleCreateServer() {
       }
       try {
         const { call } = await apiFetch(`/api/dms/${currentDmConversationId}/call`);
-        // Voice calls and video calls are separate call kinds — never offer to join an
-        // in-progress call with the other kind. Only the button matching the existing
-        // call's type stays visible; with no call in progress, either kind can be started.
+        // Voice and video are separate call kinds. Matching type → Join; other type stays
+        // available so the user can hang up the existing call and start the other kind.
         const existingIsVideo = !!(call && (call.is_video || call.video));
         if (call) {
-          dmCallButton.innerHTML = `${uiIcon("phone", 14)} Join call`;
-          dmCallButton.style.display = existingIsVideo ? "none" : "inline-flex";
-          if (dmVideoCallButton) {
-            dmVideoCallButton.innerHTML = "Join video";
-            dmVideoCallButton.style.display = existingIsVideo ? "inline-flex" : "none";
+          if (existingIsVideo) {
+            dmCallButton.innerHTML = `${uiIcon("phone", 14)} Call`;
+            if (dmVideoCallButton) {
+              dmVideoCallButton.innerHTML = "Join video";
+              dmVideoCallButton.style.display = "inline-flex";
+            }
+          } else {
+            dmCallButton.innerHTML = `${uiIcon("phone", 14)} Join call`;
+            if (dmVideoCallButton) {
+              dmVideoCallButton.innerHTML = "Video";
+              dmVideoCallButton.style.display = "inline-flex";
+            }
           }
+          dmCallButton.style.display = "inline-flex";
         } else {
           dmCallButton.innerHTML = `${uiIcon("phone", 14)} Call`;
-          if (dmVideoCallButton) dmVideoCallButton.innerHTML = "Video";
+          if (dmVideoCallButton) {
+            dmVideoCallButton.innerHTML = "Video";
+            dmVideoCallButton.style.display = "inline-flex";
+          }
         }
       } catch (err) {
         console.error(err);
         dmCallButton.innerHTML = `${uiIcon("phone", 14)} Call`;
-        if (dmVideoCallButton) dmVideoCallButton.innerHTML = "Video";
+        if (dmVideoCallButton) {
+          dmVideoCallButton.innerHTML = "Video";
+          dmVideoCallButton.style.display = "inline-flex";
+        }
       }
     }
 
@@ -8145,8 +8163,6 @@ async function handleCreateServer() {
       if (!c.overlay || !c.overlay.classList.contains("visible")) return;
       c.overlay.classList.toggle("focus-mode", callLayoutMode === "focus");
       c.overlay.classList.toggle("gallery-mode", callLayoutMode === "gallery");
-      const eyes = document.getElementById("call-eye-toggles");
-      if (eyes) eyes.style.display = callLayoutMode === "focus" ? "flex" : "none";
       updateCallOverlayChrome();
       if (!voiceRoom) return;
 
@@ -8372,11 +8388,13 @@ async function handleCreateServer() {
     async function startOrJoinDmCall(withVideo) {
       if (!currentDmConversationId) return;
 
+      // Already on this DM call → hang up
       if (voiceRoom && voiceContext === "dm" && activeDmCallId) {
         await disconnectVoice();
         return;
       }
 
+      // Hang up any other call (server voice or different DM) before starting/joining
       if (voiceRoom) {
         await disconnectVoice();
       }
@@ -8384,19 +8402,45 @@ async function handleCreateServer() {
       try {
         let call;
         const { call: existingCall } = await apiFetch(`/api/dms/${currentDmConversationId}/call`);
+        // Voice and video are separate call kinds. If the active call is the other kind,
+        // end it first and start a fresh call of the requested type.
         if (existingCall) {
-          // Voice and video calls are separate — always join as whatever the existing call
-          // already is, regardless of which button was clicked. The buttons in
-          // updateDmCallButton() are kept in sync with this so a mismatched click shouldn't
-          // normally happen, but this is the actual gate.
           const existingIsVideo = !!(existingCall.is_video || existingCall.video);
           if (!!withVideo !== existingIsVideo) {
-            showToast(
-              existingIsVideo
-                ? "There's already a video call — join that instead."
-                : "There's already a voice call — join that instead.",
-              { variant: "danger" }
-            );
+            try {
+              await apiFetch(`/api/voice-calls/${existingCall.id}/leave`, { method: "POST" });
+            } catch (e) {
+              try {
+                await apiFetch(`/api/voice-calls/${existingCall.id}/end`, { method: "POST" });
+              } catch (e2) {}
+            }
+            // Fall through to start a new call of the requested type
+            const { call: started } = await apiFetch(`/api/dms/${currentDmConversationId}/call/start`, {
+              method: "POST",
+              body: JSON.stringify({ is_video: !!withVideo }),
+            });
+            call = started;
+            voicePreferVideo = !!withVideo;
+            if (withVideo) {
+              try {
+                showCallOverlay(true);
+                const nm = currentDmOtherUser ? currentDmOtherUser.username : "them";
+                setCallConnecting(true, "Connecting…", `Calling ${nm}`);
+              } catch (e) {}
+            }
+            activeDmCallId = call.id;
+            activeDmCallStartedAt = Date.now();
+            dmCallParticipants = Array.isArray(call.participants) ? call.participants : [];
+            const name = currentDmOtherUser ? currentDmOtherUser.username : "call";
+            await connectVoice({ id: call.id, name }, "dm");
+            subscribeDmCallRealtime(currentDmConversationId);
+            updateDmCallButton();
+            renderDmCallBar();
+            if (withVideo) showCallOverlay(true);
+            else {
+              try { hideCallOverlay(); } catch (e) {}
+              try { renderDmCallBar(); } catch (e) {}
+            }
             return;
           }
         }
