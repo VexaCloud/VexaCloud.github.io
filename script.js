@@ -1827,6 +1827,19 @@ notificationSettingsSave.onclick = async () => {
     ];
     const EXTRA_THEMES = ALL_THEMES.filter((t) => t.group !== "core");
 
+    // Shared source of truth for the built-in gradient themes: the actual
+    // multi-stop CSS gradient used behind the app, plus a two-color
+    // shorthand (start/end) so the settings color pickers can be
+    // pre-filled with something that matches what's on screen instead of
+    // defaulting to a flat solid color.
+    const THEME_BG_GRADIENTS = {
+      cosmos: { css: "linear-gradient(160deg, #0f0c29 0%, #302b63 50%, #24243e 100%)", stops: ["#0f0c29", "#24243e"] },
+      horizon: { css: "linear-gradient(160deg, #0b1026 0%, #1a2744 55%, #3d1f14 100%)", stops: ["#0b1026", "#3d1f14"] },
+      mint: { css: "linear-gradient(160deg, #0d1f1a 0%, #134e4a 55%, #0f766e 100%)", stops: ["#0d1f1a", "#0f766e"] },
+      candy: { css: "linear-gradient(160deg, #2a1030 0%, #5b21b6 50%, #9d174d 100%)", stops: ["#2a1030", "#9d174d"] },
+      slate: { css: "linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #334155 100%)", stops: ["#0f172a", "#334155"] },
+    };
+
     function themeLabel(theme) {
       if (theme === "custom") return "Custom";
       const found = ALL_THEMES.find((t) => t.value === theme);
@@ -1867,16 +1880,9 @@ notificationSettingsSave.onclick = async () => {
       const root = document.documentElement;
       root.classList.remove("theme-has-gradient-bg");
       root.style.removeProperty("--theme-gradient-bg");
-      const gradientThemes = {
-        cosmos: "linear-gradient(160deg, #0f0c29 0%, #302b63 50%, #24243e 100%)",
-        horizon: "linear-gradient(160deg, #0b1026 0%, #1a2744 55%, #3d1f14 100%)",
-        mint: "linear-gradient(160deg, #0d1f1a 0%, #134e4a 55%, #0f766e 100%)",
-        candy: "linear-gradient(160deg, #2a1030 0%, #5b21b6 50%, #9d174d 100%)",
-        slate: "linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #334155 100%)",
-      };
-      if (gradientThemes[theme]) {
+      if (THEME_BG_GRADIENTS[theme]) {
         root.classList.add("theme-has-gradient-bg");
-        root.style.setProperty("--theme-gradient-bg", gradientThemes[theme]);
+        root.style.setProperty("--theme-gradient-bg", THEME_BG_GRADIENTS[theme].css);
       }
       rebuildThemeSelect(themeSelect, theme);
       rebuildThemeSelect(settingsTheme, theme);
@@ -1949,6 +1955,40 @@ notificationSettingsSave.onclick = async () => {
       }
     }
 
+    // Fills in the accent/background color picker cards in Settings.
+    // For the "custom" theme this reflects the user's saved overrides.
+    // For any built-in theme it falls back to that theme's own colors —
+    // including the gradient stops for the built-in gradient themes —
+    // so opening the picker on e.g. "Cosmos" shows Cosmos's gradient
+    // ready to tweak, instead of a plain solid swatch.
+    function populateColorPickersForTheme(theme, appearance) {
+      appearance = appearance || {};
+      const themeAccent = getComputedThemeAccentHex();
+
+      const accentColorEl = document.getElementById("settings-accent-color");
+      const accentColor2El = document.getElementById("settings-accent-color-2");
+      const accentGradEl = document.getElementById("settings-accent-gradient");
+      if (accentColorEl) accentColorEl.value = appearance.accent_color || themeAccent;
+      if (accentColor2El) accentColor2El.value = appearance.accent_color_2 || appearance.accent_color || themeAccent;
+      if (accentGradEl) accentGradEl.checked = !!appearance.accent_gradient;
+      try { syncColorPickerMode("accent", !!appearance.accent_gradient); } catch (e) {}
+
+      const preset = THEME_BG_GRADIENTS[theme];
+      const useBgGradient = !!appearance.bg_gradient || (!appearance.bg_color && !!preset);
+      const bgColorEl = document.getElementById("settings-bg-color");
+      const bgColor2El = document.getElementById("settings-bg-color-2");
+      const bgGradEl = document.getElementById("settings-bg-gradient");
+      if (bgColorEl) {
+        bgColorEl.value = appearance.bg_color || (preset ? preset.stops[0] : "#0a0b0e");
+        bgColorEl.dataset.userSet = appearance.bg_color ? "1" : "0";
+      }
+      if (bgColor2El) {
+        bgColor2El.value = appearance.bg_color_2 || appearance.bg_color || (preset ? preset.stops[1] : "#1a1c22");
+      }
+      if (bgGradEl) bgGradEl.checked = useBgGradient;
+      try { syncColorPickerMode("bg", useBgGradient); } catch (e) {}
+    }
+
     function applyProfileTheme(profile) {
       if (!profile || !profile.theme || profile.theme === "system") return;
       if (profile.theme !== "custom") lastNamedTheme = profile.theme;
@@ -1996,6 +2036,7 @@ notificationSettingsSave.onclick = async () => {
       document.body.style.backgroundColor = "";
       document.body.style.background = "";
       root.classList.remove("has-custom-bg-color");
+      root.classList.remove("has-custom-bg-gradient");
     }
 
     function applyBackgroundColor(color, gradient) {
@@ -2010,6 +2051,11 @@ notificationSettingsSave.onclick = async () => {
         document.body.style.backgroundAttachment = "fixed";
         document.body.style.backgroundColor = color || "#0a0b0e";
         root.classList.add("has-custom-bg-color");
+        // A distinct class so CSS can tell "solid custom color" (where the
+        // app shell painting an opaque fill is correct) apart from
+        // "gradient custom color" (where that same opaque fill would just
+        // hide the gradient underneath it).
+        root.classList.add("has-custom-bg-gradient");
       } else if (color) {
         root.style.setProperty("--bg-canvas", color);
         root.style.setProperty("--surface", color);
@@ -2019,6 +2065,7 @@ notificationSettingsSave.onclick = async () => {
         document.body.style.backgroundColor = color;
         document.body.style.background = color;
         root.classList.add("has-custom-bg-color");
+        root.classList.remove("has-custom-bg-gradient");
       } else {
         clearBackgroundOverrides();
       }
@@ -2131,6 +2178,15 @@ notificationSettingsSave.onclick = async () => {
       } else if (currentProfile) {
         applyProfileAppearance({ ...currentProfile, theme: "custom" });
       }
+      // If Settings (Appearance) is open while a theme gets picked from the
+      // "More themes" modal, refresh the color pickers so they show that
+      // theme's own colors — including its gradient stops, for the
+      // gradient-group themes — instead of going stale.
+      try {
+        if (settingsModal && settingsModal.classList.contains("visible")) {
+          populateColorPickersForTheme(theme, theme === "custom" ? (currentProfile && currentProfile.appearance) : {});
+        }
+      } catch (e) {}
       if (!currentUser) return;
       try {
         const payload = { theme };
@@ -8630,22 +8686,7 @@ async function handleCreateServer() {
       settingsBackgroundPreview.innerHTML = currentProfile.background_url
         ? `<img src="${currentProfile.background_url}" alt="">`
         : `<span style="font-size:11px; color:var(--text-tertiary);">None</span>`;
-      settingsAccentColor.value = appearance.accent_color || getComputedThemeAccentHex();
-      const accent2 = document.getElementById("settings-accent-color-2");
-      const accentGrad = document.getElementById("settings-accent-gradient");
-      if (accent2) accent2.value = appearance.accent_color_2 || appearance.accent_color || getComputedThemeAccentHex();
-      if (accentGrad) accentGrad.checked = !!appearance.accent_gradient;
-      try { syncColorPickerMode("accent", !!appearance.accent_gradient); } catch (e) {}
-      const bgColor = document.getElementById("settings-bg-color");
-      const bgColor2 = document.getElementById("settings-bg-color-2");
-      const bgGrad = document.getElementById("settings-bg-gradient");
-      if (bgColor) {
-        bgColor.value = appearance.bg_color || "#0a0b0e";
-        bgColor.dataset.userSet = appearance.bg_color ? "1" : "0";
-      }
-      if (bgColor2) bgColor2.value = appearance.bg_color_2 || appearance.bg_color || "#1a1c22";
-      if (bgGrad) bgGrad.checked = !!appearance.bg_gradient;
-      try { syncColorPickerMode("bg", !!appearance.bg_gradient); } catch (e) {}
+      populateColorPickersForTheme(currentProfile.theme || "light", appearance);
       settingsTextMode.value = appearance.text_color_mode || "auto";
       settingsCustomTextColor.value = appearance.custom_text_color || "#ffffff";
       settingsCustomTextColorRow.style.display = settingsTextMode.value === "custom" ? "" : "none";
@@ -9754,6 +9795,7 @@ async function handleSignIn() {
             return;
           }
           setTheme(v);
+          try { populateColorPickersForTheme(v, {}); } catch (e) {}
         });
       }
       document.querySelectorAll(".color-mode-btn").forEach((btn) => {
