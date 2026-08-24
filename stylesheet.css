@@ -1236,16 +1236,6 @@
     .call-ctrl-btn.danger {
       min-width: 52px !important;
     }
-    .call-eye-toggles {
-      position: absolute;
-      top: 14px;
-      right: 14px;
-      bottom: auto;
-      z-index: 15;
-      display: none;
-      flex-direction: row;
-      gap: 8px;
-    }
     .call-eye-btn {
       width: 32px;
       height: 32px;
@@ -1254,14 +1244,36 @@
       background: rgba(0,0,0,0.55);
       color: #fff;
       cursor: pointer;
-      display: flex;
+      display: none;
       align-items: center;
       justify-content: center;
       padding: 0;
       backdrop-filter: blur(6px);
+      z-index: 16;
+      position: absolute;
+      pointer-events: auto;
     }
-    .call-overlay.focus-mode .call-eye-toggles { display: flex; }
-    .call-overlay.gallery-mode .call-eye-toggles { display: none !important; }
+    /* Self-view (PiP) toggle — bottom right */
+    .call-eye-btn.call-eye-pip {
+      right: 14px;
+      bottom: 14px;
+      top: auto;
+      left: auto;
+    }
+    /* Controls-bar toggle — sits just above the controls bar */
+    .call-eye-btn.call-eye-bar {
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 64px;
+      right: auto;
+      top: auto;
+    }
+    .call-overlay.focus-mode .call-eye-btn { display: flex; }
+    .call-overlay.gallery-mode .call-eye-btn { display: none !important; }
+    .call-overlay-controls.bar-hidden ~ .call-eye-btn.call-eye-bar,
+    .call-overlay:has(.call-overlay-controls.bar-hidden) .call-eye-btn.call-eye-bar {
+      bottom: 14px;
+    }
     .call-eye-btn:hover { background: rgba(0,0,0,0.75); }
     .call-eye-btn.is-off { opacity: 0.5; }
     .call-pip.pip-hidden { display: none !important; }
