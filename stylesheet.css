@@ -733,27 +733,90 @@
     }
 
     /* --------------------------------------------------------------- */
-    /* First-time tutorial                                             */
+    /* First-time tutorial (spotlight walkthrough)                     */
     /* --------------------------------------------------------------- */
 
-    #tutorial-modal {
+    .tutorial-overlay {
+      position: fixed;
+      inset: 0;
       z-index: 500;
+      display: none;
+      pointer-events: none;
     }
-    .tutorial-dialog {
-      width: min(480px, calc(100vw - 24px));
+    .tutorial-overlay.visible {
+      display: block;
     }
-    .tutorial-body {
+    .tutorial-spotlight {
+      position: fixed;
+      border-radius: 12px;
+      box-shadow: 0 0 0 9999px rgba(8, 10, 18, 0.72);
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+      transition: top 0.28s ease, left 0.28s ease, width 0.28s ease, height 0.28s ease, border-radius 0.28s ease, opacity 0.2s ease;
+      pointer-events: none;
+      z-index: 501;
+      opacity: 0;
+    }
+    .tutorial-spotlight.active {
+      opacity: 1;
+    }
+    .tutorial-spotlight.centered {
+      box-shadow: 0 0 0 9999px rgba(8, 10, 18, 0.72);
+      outline: none;
+    }
+    .tutorial-card {
+      position: fixed;
+      z-index: 502;
+      width: min(360px, calc(100vw - 24px));
+      background: var(--surface-elevated, var(--surface));
+      border: 1px solid var(--border-strong);
+      border-radius: var(--r-lg, 14px);
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.15);
+      padding: 16px 18px 14px;
+      pointer-events: auto;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      text-align: center;
-      padding: 8px 28px 28px;
-      gap: 4px;
+      gap: 10px;
+      transition: top 0.28s ease, left 0.28s ease, opacity 0.2s ease;
+    }
+    .tutorial-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .tutorial-card-header-text {
+      min-width: 0;
+    }
+    .tutorial-card-kicker {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 2px;
+    }
+    .tutorial-skip-link {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+    .tutorial-skip-link:hover {
+      color: var(--text);
+      background: var(--surface-hover, rgba(127, 127, 127, 0.12));
     }
     .tutorial-dots {
       display: flex;
-      gap: 6px;
-      margin-bottom: 18px;
+      gap: 5px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 2px;
     }
     .tutorial-dot {
       width: 6px;
@@ -763,46 +826,52 @@
       transition: background 0.15s ease, width 0.15s ease;
     }
     .tutorial-dot.active {
-      width: 18px;
+      width: 16px;
       background: var(--accent);
     }
     .tutorial-step-icon {
-      width: 56px;
-      height: 56px;
-      border-radius: var(--r-lg);
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
       background: var(--accent-subtle);
       color: var(--accent);
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 16px;
+      flex-shrink: 0;
     }
     .tutorial-step-icon svg {
-      width: 28px;
-      height: 28px;
+      width: 20px;
+      height: 20px;
     }
     .tutorial-step-title {
-      font-size: 17px;
+      font-size: 15px;
       font-weight: 700;
       color: var(--text);
-      margin-bottom: 8px;
+      line-height: 1.3;
     }
     .tutorial-step-desc {
       font-size: 13px;
       line-height: 1.55;
       color: var(--text-secondary);
-      max-width: 360px;
     }
     .tutorial-footer {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      padding: 4px 20px 20px;
+      margin-top: 4px;
+      padding-top: 4px;
     }
     .tutorial-nav {
       display: flex;
       gap: 8px;
+    }
+    /* Ensure highlighted UI sits above the dim layer visually */
+    .tutorial-target-active {
+      position: relative;
+      z-index: 503 !important;
+      pointer-events: none !important;
     }
 
     html.theme-has-gradient-bg body,
