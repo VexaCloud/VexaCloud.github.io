@@ -2240,6 +2240,86 @@ notificationSettingsSave.onclick = async () => {
       });
     }
 
+    function resolveCssColorToRgb(raw) {
+      if (!raw) return null;
+      const trimmed = String(raw).trim();
+      const fromHex = parseHexColor(trimmed);
+      if (fromHex) return fromHex;
+      const probe = document.createElement("div");
+      probe.style.color = trimmed;
+      document.body.appendChild(probe);
+      const computed = getComputedStyle(probe).color;
+      document.body.removeChild(probe);
+      const m = computed && computed.match(/\d+/g);
+      if (!m || m.length < 3) return null;
+      return { r: Number(m[0]), g: Number(m[1]), b: Number(m[2]) };
+    }
+
+    // Auto text mode from whatever is behind messages: chat image, custom
+    // solid/gradient colors, or the active theme canvas.
+    async function detectBackgroundTextMode(profile) {
+      const url = profile && profile.background_url;
+      if (url) {
+        try {
+          return await detectImageTextMode(url);
+        } catch (_) {
+          /* fall through to color sampling */
+        }
+      }
+
+      const appearance = (profile && profile.appearance) || {};
+      const samples = [];
+      if (appearance.bg_color) {
+        const a = parseHexColor(appearance.bg_color);
+        if (a) samples.push(a);
+      }
+      if (appearance.bg_gradient && appearance.bg_color_2) {
+        const b = parseHexColor(appearance.bg_color_2);
+        if (b) samples.push(b);
+      }
+      if (!samples.length) {
+        const root = document.documentElement;
+        const styles = getComputedStyle(root);
+        const canvas = resolveCssColorToRgb(styles.getPropertyValue("--bg-canvas"));
+        const surface = resolveCssColorToRgb(styles.getPropertyValue("--surface"));
+        if (canvas) samples.push(canvas);
+        if (surface) samples.push(surface);
+      }
+      if (!samples.length) return "light";
+
+      const avg = samples.reduce(
+        (acc, s) => ({ r: acc.r + s.r, g: acc.g + s.g, b: acc.b + s.b }),
+        { r: 0, g: 0, b: 0 }
+      );
+      const n = samples.length;
+      const lum = relativeLuminance({ r: avg.r / n, g: avg.g / n, b: avg.b / n });
+      // Dark backgrounds need light text; light backgrounds need dark text.
+      return lum < 0.52 ? "light" : "dark";
+    }
+
+    async function applyChatTextMode(profile) {
+      if (!chatBodyEl) return;
+      const appearance = (profile && profile.appearance) || {};
+      const mode = appearance.text_color_mode || "auto";
+
+      if (mode === "custom" && appearance.custom_text_color) {
+        chatBodyEl.setAttribute("data-chat-text-mode", "custom");
+        chatBodyEl.style.setProperty("--chat-custom-text-color", appearance.custom_text_color);
+        return;
+      }
+
+      chatBodyEl.style.removeProperty("--chat-custom-text-color");
+
+      if (mode === "light" || mode === "dark") {
+        chatBodyEl.setAttribute("data-chat-text-mode", mode);
+        return;
+      }
+
+      // auto
+      const detected = await detectBackgroundTextMode(profile);
+      chatBodyEl.setAttribute("data-chat-text-mode", detected);
+    }
+
     async function applyChatBackground(profile) {
       if (!chatBodyEl) return;
       const url = profile && profile.background_url;
@@ -2258,26 +2338,14 @@ notificationSettingsSave.onclick = async () => {
 
       if (!url) {
         chatBodyEl.classList.remove("has-custom-bg");
-        chatBodyEl.removeAttribute("data-chat-text-mode");
         bgImageEl.style.backgroundImage = "";
-        return;
-      }
-
-      chatBodyEl.classList.add("has-custom-bg");
-      bgImageEl.style.backgroundImage = `url("${url}")`;
-
-      const appearance = (profile && profile.appearance) || {};
-      const mode = appearance.text_color_mode || "auto";
-      if (mode === "custom" && appearance.custom_text_color) {
-        chatBodyEl.setAttribute("data-chat-text-mode", "custom");
-        chatBodyEl.style.setProperty("--chat-custom-text-color", appearance.custom_text_color);
-      } else if (mode === "light" || mode === "dark") {
-        chatBodyEl.setAttribute("data-chat-text-mode", mode);
       } else {
-
-        const detected = await detectImageTextMode(url);
-        chatBodyEl.setAttribute("data-chat-text-mode", detected);
+        chatBodyEl.classList.add("has-custom-bg");
+        bgImageEl.style.backgroundImage = `url("${url}")`;
       }
+
+      // Text mode is independent of whether an image is set.
+      await applyChatTextMode(profile);
     }
 
     function applyProfileAppearance(profile) {
