@@ -3140,35 +3140,265 @@ notificationSettingsSave.onclick = async () => {
     // from any step - skipping and finishing both persist the same flag,
     // so it never shows again either way.
 
+    // Spotlight tutorial — highlights real UI; no admin controls.
     const TUTORIAL_STEPS = [
       {
         icon: '<path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/>',
-        title: "Welcome to VexaCloud",
-        desc: "A quick look around before you dive in — this'll take about a minute, and you can skip it anytime.",
+        title: "Welcome to Hermes",
+        desc: "A quick tour of the features you’ll use every day. We’ll highlight each part of the interface — skip anytime.",
+        target: null,
+        placement: "center",
       },
       {
         icon: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
-        title: "Servers & channels",
-        desc: "Servers are communities you're part of, shown down the left edge. Inside each one, channels split conversation up by topic — pick a channel from the sidebar to jump in.",
+        title: "Your servers",
+        desc: "Servers are the communities you belong to. They’re listed along the left. Click one to open it, or use + to create a server and the compass to browse public ones.",
+        target: "#server-list, #create-server-button, #browse-servers-button",
+        placement: "right",
+        openDrawer: true,
       },
       {
-        icon: '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/>',
-        title: "Messaging",
-        desc: "Reply to a message to keep a thread together, react with an emoji, or type @ to mention someone directly — they'll get notified.",
+        icon: '<path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h10"/>',
+        title: "Channels",
+        desc: "Inside a server, channels organize chat by topic. Text channels show a #; pick one to open the conversation in the main panel.",
+        target: "#channel-list, .channel-list",
+        placement: "right",
+        openDrawer: true,
       },
       {
         icon: '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
         title: "Voice channels",
-        desc: "Voice channels let you drop into a live call with anyone else in the server — just click one to join, no invite required.",
+        desc: "Voice channels appear in the same list (often with a speaker icon). Click one to join a live call with anyone already there — no invite needed.",
+        target: '.channel-item[data-channel-type="voice"], #channel-list',
+        placement: "right",
+        openDrawer: true,
       },
       {
-        icon: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>',
-        title: "Make it yours",
-        desc: "Head into Settings anytime to pick a theme, set custom colors, and tune your notifications. You're all set — enjoy!",
+        icon: '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/>',
+        title: "Messages",
+        desc: "The main area shows the current channel’s messages. Scroll to catch up; newer messages appear at the bottom.",
+        target: "#message-list, #chat-body",
+        placement: "left",
+      },
+      {
+        icon: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+        title: "Write & send",
+        desc: "Type in the box at the bottom and press Enter or the send button. You can also drag and drop files onto the chat to share them.",
+        target: ".chat-input-area, #chat-input",
+        placement: "top",
+      },
+      {
+        icon: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+        title: "Reply, react & mention",
+        desc: "Right‑click (or long‑press) a message to reply or react with an emoji. Type @ to mention someone — they’ll get a notification.",
+        target: "#message-list, .chat-input-area",
+        placement: "top",
+      },
+      {
+        icon: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+        title: "Direct messages",
+        desc: "DMs let you chat one‑on‑one or in small groups outside any server. Open them from the top bar anytime.",
+        target: "#dm-button",
+        placement: "bottom",
+      },
+      {
+        icon: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+        title: "Notifications",
+        desc: "The bell shows new activity. Use the popover for a quick mute, or open full notification settings for finer control.",
+        target: "#notification-bell-button",
+        placement: "bottom",
+      },
+      {
+        icon: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+        title: "Members",
+        desc: "See who’s in the current server. On smaller screens, open the members drawer from this button in the chat header.",
+        target: "#members-drawer-toggle, #user-panel",
+        placement: "left",
+      },
+      {
+        icon: '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>',
+        title: "Themes",
+        desc: "Switch light/dark (and more) from the theme dropdown in the top bar. “More themes…” opens extra looks.",
+        target: "#theme-select",
+        placement: "bottom",
+      },
+      {
+        icon: '<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>',
+        title: "Your profile & settings",
+        desc: "Click your avatar or name to open Settings — profile, bio, colors, background, notifications, and account. You’re all set — enjoy!",
+        target: "#user-pill",
+        placement: "bottom",
       },
     ];
 
     let tutorialStepIndex = 0;
+    let tutorialActiveTarget = null;
+    let tutorialResizeHandler = null;
+
+    function resolveTutorialTarget(step) {
+      if (!step || !step.target) return null;
+      const selectors = step.target.split(",").map((s) => s.trim()).filter(Boolean);
+      for (const sel of selectors) {
+        try {
+          const el = document.querySelector(sel);
+          if (el && el.offsetParent !== null) {
+            const rect = el.getBoundingClientRect();
+            if (rect.width > 2 && rect.height > 2) return el;
+          }
+        } catch (_) {}
+      }
+      // Fallback: first match even if not visible (e.g. drawer closed)
+      for (const sel of selectors) {
+        try {
+          const el = document.querySelector(sel);
+          if (el) return el;
+        } catch (_) {}
+      }
+      return null;
+    }
+
+    function clearTutorialHighlight() {
+      if (tutorialActiveTarget) {
+        tutorialActiveTarget.classList.remove("tutorial-target-active");
+        tutorialActiveTarget = null;
+      }
+      const spot = document.getElementById("tutorial-spotlight");
+      if (spot) {
+        spot.classList.remove("active", "centered");
+        spot.style.cssText = "";
+      }
+    }
+
+    function positionTutorialUI(step) {
+      const card = document.getElementById("tutorial-card");
+      const spot = document.getElementById("tutorial-spotlight");
+      if (!card || !spot) return;
+
+      clearTutorialHighlight();
+
+      const pad = 8;
+      const margin = 12;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      // Ensure channels drawer is open when highlighting sidebar features
+      if (step.openDrawer) {
+        try {
+          const drawer = document.getElementById("channels-drawer");
+          if (drawer && !drawer.classList.contains("open")) {
+            drawer.classList.add("open");
+            const bd = document.getElementById("drawer-backdrop");
+            if (bd) bd.classList.add("visible");
+          }
+        } catch (_) {}
+      }
+
+      const target = resolveTutorialTarget(step);
+
+      if (!target || step.placement === "center") {
+        // Full-screen dim, card centered
+        spot.classList.add("centered", "active");
+        spot.style.top = "50%";
+        spot.style.left = "50%";
+        spot.style.width = "0px";
+        spot.style.height = "0px";
+        spot.style.borderRadius = "0";
+        card.style.top = "50%";
+        card.style.left = "50%";
+        card.style.transform = "translate(-50%, -50%)";
+        return;
+      }
+
+      tutorialActiveTarget = target;
+      target.classList.add("tutorial-target-active");
+
+      const rect = target.getBoundingClientRect();
+      const top = Math.max(4, rect.top - pad);
+      const left = Math.max(4, rect.left - pad);
+      const width = Math.min(vw - left - 4, rect.width + pad * 2);
+      const height = Math.min(vh - top - 4, rect.height + pad * 2);
+
+      spot.classList.add("active");
+      spot.classList.remove("centered");
+      spot.style.top = `${top}px`;
+      spot.style.left = `${left}px`;
+      spot.style.width = `${width}px`;
+      spot.style.height = `${height}px`;
+      spot.style.borderRadius = "12px";
+      spot.style.transform = "none";
+
+      // Measure card after content is set
+      card.style.transform = "none";
+      card.style.visibility = "hidden";
+      card.style.top = "0";
+      card.style.left = "0";
+      const cardW = card.offsetWidth || 360;
+      const cardH = card.offsetHeight || 220;
+      card.style.visibility = "";
+
+      let placement = step.placement || "bottom";
+      let cardTop, cardLeft;
+
+      const tryPlacement = (p) => {
+        if (p === "right") {
+          cardLeft = rect.right + margin;
+          cardTop = rect.top + rect.height / 2 - cardH / 2;
+        } else if (p === "left") {
+          cardLeft = rect.left - cardW - margin;
+          cardTop = rect.top + rect.height / 2 - cardH / 2;
+        } else if (p === "top") {
+          cardLeft = rect.left + rect.width / 2 - cardW / 2;
+          cardTop = rect.top - cardH - margin;
+        } else {
+          // bottom
+          cardLeft = rect.left + rect.width / 2 - cardW / 2;
+          cardTop = rect.bottom + margin;
+        }
+      };
+
+      tryPlacement(placement);
+
+      // Flip if off-screen
+      if (cardLeft + cardW > vw - 8) {
+        if (placement === "right") {
+          placement = "left";
+          tryPlacement("left");
+        } else {
+          cardLeft = Math.max(8, vw - cardW - 8);
+        }
+      }
+      if (cardLeft < 8) {
+        if (placement === "left") {
+          placement = "right";
+          tryPlacement("right");
+        } else {
+          cardLeft = 8;
+        }
+      }
+      if (cardTop + cardH > vh - 8) {
+        if (placement === "bottom") {
+          placement = "top";
+          tryPlacement("top");
+        } else {
+          cardTop = Math.max(8, vh - cardH - 8);
+        }
+      }
+      if (cardTop < 8) {
+        if (placement === "top") {
+          placement = "bottom";
+          tryPlacement("bottom");
+        } else {
+          cardTop = 8;
+        }
+      }
+
+      cardLeft = Math.max(8, Math.min(cardLeft, vw - cardW - 8));
+      cardTop = Math.max(8, Math.min(cardTop, vh - cardH - 8));
+
+      card.style.top = `${cardTop}px`;
+      card.style.left = `${cardLeft}px`;
+      card.style.transform = "none";
+    }
 
     function renderTutorialStep() {
       const step = TUTORIAL_STEPS[tutorialStepIndex];
@@ -3184,7 +3414,7 @@ notificationSettingsSave.onclick = async () => {
 
       const iconEl = document.getElementById("tutorial-step-icon");
       if (iconEl) {
-        iconEl.innerHTML = `<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${step.icon}</svg>`;
+        iconEl.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${step.icon}</svg>`;
       }
 
       const titleEl = document.getElementById("tutorial-step-title");
@@ -3198,19 +3428,40 @@ notificationSettingsSave.onclick = async () => {
 
       const nextBtn = document.getElementById("tutorial-next");
       if (nextBtn) nextBtn.textContent = tutorialStepIndex === TUTORIAL_STEPS.length - 1 ? "Get started" : "Next";
+
+      // Position after layout
+      requestAnimationFrame(() => positionTutorialUI(step));
     }
 
     function showTutorial() {
       const modal = document.getElementById("tutorial-modal");
       if (!modal) return;
       tutorialStepIndex = 0;
-      renderTutorialStep();
       modal.classList.add("visible");
+      modal.setAttribute("aria-hidden", "false");
+      renderTutorialStep();
+      if (!tutorialResizeHandler) {
+        tutorialResizeHandler = () => {
+          if (modal.classList.contains("visible")) {
+            const step = TUTORIAL_STEPS[tutorialStepIndex];
+            if (step) positionTutorialUI(step);
+          }
+        };
+        window.addEventListener("resize", tutorialResizeHandler);
+      }
     }
 
     function hideTutorial() {
       const modal = document.getElementById("tutorial-modal");
-      if (modal) modal.classList.remove("visible");
+      if (modal) {
+        modal.classList.remove("visible");
+        modal.setAttribute("aria-hidden", "true");
+      }
+      clearTutorialHighlight();
+      if (tutorialResizeHandler) {
+        window.removeEventListener("resize", tutorialResizeHandler);
+        tutorialResizeHandler = null;
+      }
     }
 
     // Called for both "Skip tutorial" and finishing the last step -
