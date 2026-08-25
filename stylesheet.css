@@ -1137,64 +1137,105 @@
       background: transparent;
     }
 
-    /* Custom themes (solid or gradient): elevate chrome so top bar and
-       panels read as distinct frosted layers — same idea as built-in
-       gradient themes. */
-    html.has-custom-bg-color .panel,
-    html.has-custom-bg-color .top-bar,
-    html.has-custom-bg-gradient .panel,
-    html.has-custom-bg-gradient .top-bar {
-      background: color-mix(in srgb, var(--surface-2, var(--surface)) 82%, transparent);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border-color: color-mix(in srgb, var(--border) 75%, transparent);
+    /* Custom solid / gradient: derive readable elevated chrome from palette
+       tokens set by applyDerivedSurfacePalette (surface / surface-2 / text). */
+    html.has-custom-bg-color .panel {
+      background: var(--surface);
+      border-color: var(--border);
     }
-    html.has-custom-bg-color .top-bar,
-    html.has-custom-bg-gradient .top-bar {
-      background: color-mix(in srgb, var(--surface-2, var(--surface)) 78%, transparent);
-      box-shadow: 0 1px 0 color-mix(in srgb, #fff 6%, transparent);
-    }
-    /* Solid custom: shell is opaque same color as --surface, so translucency
-       alone doesn't separate. Nudge elevated chrome slightly lighter. */
-    html.has-custom-bg-color:not(.has-custom-bg-gradient) .top-bar {
-      background: color-mix(in srgb, var(--surface-2, var(--surface)) 88%, #ffffff 12%);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-    }
-    html.has-custom-bg-color:not(.has-custom-bg-gradient) .panel {
-      background: color-mix(in srgb, var(--surface) 92%, #ffffff 8%);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+    html.has-custom-bg-color .top-bar {
+      background: var(--surface-2);
+      border-color: var(--border);
+      box-shadow: 0 1px 0 color-mix(in srgb, var(--text) 6%, transparent);
     }
 
-    /* Message composer: frosted “pop” on custom / gradient / chat image bg */
+    /* Gradient custom: let the bg show through frosted panels */
+    html.has-custom-bg-gradient .panel {
+      background: color-mix(in srgb, var(--surface) 78%, transparent);
+      backdrop-filter: blur(18px) saturate(1.15);
+      -webkit-backdrop-filter: blur(18px) saturate(1.15);
+      border-color: var(--border);
+    }
+    html.has-custom-bg-gradient .top-bar {
+      background: color-mix(in srgb, var(--surface-2) 72%, transparent);
+      backdrop-filter: blur(18px) saturate(1.2);
+      -webkit-backdrop-filter: blur(18px) saturate(1.2);
+      border-color: var(--border);
+      box-shadow: 0 1px 0 color-mix(in srgb, var(--text) 8%, transparent);
+    }
+    html.has-custom-bg-gradient .app-shell {
+      background: transparent;
+    }
+
+    /* Message composer pops as a distinct layer */
     html.has-custom-bg-color .chat-input-area,
+    html.theme-has-gradient-bg .chat-input-area,
+    .chat-body.has-custom-bg .chat-input-area {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      margin: 6px 10px 10px;
+      padding: 10px 12px 12px;
+      box-shadow: 0 4px 20px color-mix(in srgb, #000 18%, transparent);
+    }
     html.has-custom-bg-gradient .chat-input-area,
     html.theme-has-gradient-bg .chat-input-area,
     .chat-body.has-custom-bg .chat-input-area {
-      background: color-mix(in srgb, var(--surface-2, var(--surface)) 76%, transparent);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
-      border-radius: var(--r-md);
-      margin: 4px 10px 10px;
-      padding: 10px 12px 12px;
-      box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
-    }
-    html.has-custom-bg-color:not(.has-custom-bg-gradient) .chat-input-area {
-      background: color-mix(in srgb, var(--surface-2, var(--surface)) 86%, #ffffff 14%);
+      background: color-mix(in srgb, var(--surface-2) 80%, transparent);
+      backdrop-filter: blur(16px) saturate(1.15);
+      -webkit-backdrop-filter: blur(16px) saturate(1.15);
     }
     html.has-custom-bg-color .chat-input-shell,
+    html.theme-has-gradient-bg .chat-input-shell,
+    .chat-body.has-custom-bg .chat-input-shell {
+      background: var(--surface-3);
+      border-color: var(--border-strong);
+    }
     html.has-custom-bg-gradient .chat-input-shell,
     html.theme-has-gradient-bg .chat-input-shell,
     .chat-body.has-custom-bg .chat-input-shell {
-      background: color-mix(in srgb, var(--surface-3, var(--surface-2)) 72%, transparent);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border-color: color-mix(in srgb, var(--border) 65%, transparent);
+      background: color-mix(in srgb, var(--surface-3) 82%, transparent);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
     }
-    html.has-custom-bg-color:not(.has-custom-bg-gradient) .chat-input-shell {
-      background: color-mix(in srgb, var(--surface-3, var(--surface-2)) 88%, #ffffff 12%);
+
+    /* Chat panel body stays a touch more open over gradients */
+    html.has-custom-bg-gradient .chat-panel,
+    html.has-custom-bg-gradient .chat-body {
+      background: transparent;
+    }
+    html.has-custom-bg-gradient .chat-header {
+      background: color-mix(in srgb, var(--surface) 70%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom-color: var(--border);
+    }
+
+    /* Light custom backgrounds: keep shadows soft, not muddy */
+    html.custom-bg-is-light.has-custom-bg-color .top-bar,
+    html.custom-bg-is-light.has-custom-bg-color .panel {
+      box-shadow: 0 1px 2px color-mix(in srgb, #000 6%, transparent);
+    }
+    html.custom-bg-is-light .chat-input-area {
+      box-shadow: 0 2px 12px color-mix(in srgb, #000 8%, transparent);
+    }
+
+    /* Custom accent gradient on primary actions / active states */
+    html.has-custom-accent[style*="--accent-user-gradient"] .auth-primary-button,
+    html.has-custom-accent[style*="--accent-user-gradient"] .chat-send-button,
+    html.has-custom-accent[style*="--accent-user-gradient"] .settings-save,
+    html.has-custom-accent[style*="--accent-user-gradient"] .badge-accent,
+    html.has-custom-accent[style*="--accent-user-gradient"] .channel-item.active,
+    html.has-custom-accent[style*="--accent-user-gradient"] .server-item.active,
+    html.has-custom-accent[style*="--accent-user-gradient"] .brand-mark {
+      background: var(--accent-user-gradient) !important;
+      border-color: transparent;
+      color: var(--accent-text, #fff);
+    }
+    html.has-custom-accent .chat-send-button,
+    html.has-custom-accent .settings-save,
+    html.has-custom-accent .auth-primary-button {
+      color: var(--accent-text, #fff);
     }
 
     .call-overlay-header {
