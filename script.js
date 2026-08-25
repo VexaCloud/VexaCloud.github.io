@@ -3234,27 +3234,27 @@ notificationSettingsSave.onclick = async () => {
     let tutorialStepIndex = 0;
     let tutorialActiveTarget = null;
     let tutorialResizeHandler = null;
+    let tutorialOpenedDrawer = false;
+    let tutorialPositionTimer = null;
+    let tutorialStepToken = 0;
 
     function resolveTutorialTarget(step) {
       if (!step || !step.target) return null;
       const selectors = step.target.split(",").map((s) => s.trim()).filter(Boolean);
+      let fallback = null;
       for (const sel of selectors) {
         try {
           const el = document.querySelector(sel);
-          if (el && el.offsetParent !== null) {
-            const rect = el.getBoundingClientRect();
-            if (rect.width > 2 && rect.height > 2) return el;
+          if (!el) continue;
+          if (!fallback) fallback = el;
+          const rect = el.getBoundingClientRect();
+          // Prefer targets that are actually on-screen (drawer finished opening)
+          if (rect.width > 2 && rect.height > 2 && rect.right > 4 && rect.bottom > 4 && rect.left < window.innerWidth - 4) {
+            return el;
           }
         } catch (_) {}
       }
-      // Fallback: first match even if not visible (e.g. drawer closed)
-      for (const sel of selectors) {
-        try {
-          const el = document.querySelector(sel);
-          if (el) return el;
-        } catch (_) {}
-      }
-      return null;
+      return fallback;
     }
 
     function clearTutorialHighlight() {
@@ -3269,34 +3269,41 @@ notificationSettingsSave.onclick = async () => {
       }
     }
 
+    function tutorialEnsureDrawerOpen() {
+      const drawer = document.getElementById("channels-drawer");
+      if (!drawer) return false;
+      if (drawer.classList.contains("open")) return false;
+      drawer.classList.add("open");
+      const bd = document.getElementById("drawer-backdrop");
+      if (bd) bd.classList.add("visible");
+      tutorialOpenedDrawer = true;
+      return true;
+    }
+
+    function tutorialCloseDrawerIfNeeded() {
+      if (!tutorialOpenedDrawer) return;
+      const drawer = document.getElementById("channels-drawer");
+      if (drawer) drawer.classList.remove("open");
+      const bd = document.getElementById("drawer-backdrop");
+      if (bd) bd.classList.remove("visible");
+      tutorialOpenedDrawer = false;
+    }
+
     function positionTutorialUI(step) {
       const card = document.getElementById("tutorial-card");
       const spot = document.getElementById("tutorial-spotlight");
-      if (!card || !spot) return;
+      if (!card || !spot || !step) return;
 
       clearTutorialHighlight();
 
       const pad = 8;
-      const margin = 12;
+      const margin = 14;
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-
-      // Ensure channels drawer is open when highlighting sidebar features
-      if (step.openDrawer) {
-        try {
-          const drawer = document.getElementById("channels-drawer");
-          if (drawer && !drawer.classList.contains("open")) {
-            drawer.classList.add("open");
-            const bd = document.getElementById("drawer-backdrop");
-            if (bd) bd.classList.add("visible");
-          }
-        } catch (_) {}
-      }
 
       const target = resolveTutorialTarget(step);
 
       if (!target || step.placement === "center") {
-        // Full-screen dim, card centered
         spot.classList.add("centered", "active");
         spot.style.top = "50%";
         spot.style.left = "50%";
@@ -3313,10 +3320,12 @@ notificationSettingsSave.onclick = async () => {
       target.classList.add("tutorial-target-active");
 
       const rect = target.getBoundingClientRect();
+      // Cap highlight height so a tall list doesn't swallow the whole screen
+      const maxHighlightH = Math.min(rect.height + pad * 2, Math.max(120, vh * 0.45));
       const top = Math.max(4, rect.top - pad);
       const left = Math.max(4, rect.left - pad);
       const width = Math.min(vw - left - 4, rect.width + pad * 2);
-      const height = Math.min(vh - top - 4, rect.height + pad * 2);
+      const height = Math.min(vh - top - 4, maxHighlightH);
 
       spot.classList.add("active");
       spot.classList.remove("centered");
@@ -3327,7 +3336,6 @@ notificationSettingsSave.onclick = async () => {
       spot.style.borderRadius = "12px";
       spot.style.transform = "none";
 
-      // Measure card after content is set
       card.style.transform = "none";
       card.style.visibility = "hidden";
       card.style.top = "0";
@@ -3337,40 +3345,41 @@ notificationSettingsSave.onclick = async () => {
       card.style.visibility = "";
 
       let placement = step.placement || "bottom";
-      let cardTop, cardLeft;
+      let cardTop = 0;
+      let cardLeft = 0;
 
+      // Prefer placing the card outside the highlighted rect (especially
+      // for the left sidebar so the tooltip doesn't sit on top of servers).
       const tryPlacement = (p) => {
         if (p === "right") {
-          cardLeft = rect.right + margin;
-          cardTop = rect.top + rect.height / 2 - cardH / 2;
+          cardLeft = left + width + margin;
+          cardTop = top + Math.min(height, rect.height) / 2 - cardH / 2;
         } else if (p === "left") {
-          cardLeft = rect.left - cardW - margin;
-          cardTop = rect.top + rect.height / 2 - cardH / 2;
+          cardLeft = left - cardW - margin;
+          cardTop = top + Math.min(height, rect.height) / 2 - cardH / 2;
         } else if (p === "top") {
-          cardLeft = rect.left + rect.width / 2 - cardW / 2;
-          cardTop = rect.top - cardH - margin;
+          cardLeft = left + width / 2 - cardW / 2;
+          cardTop = top - cardH - margin;
         } else {
-          // bottom
-          cardLeft = rect.left + rect.width / 2 - cardW / 2;
-          cardTop = rect.bottom + margin;
+          cardLeft = left + width / 2 - cardW / 2;
+          cardTop = top + height + margin;
         }
       };
 
       tryPlacement(placement);
 
-      // Flip if off-screen
       if (cardLeft + cardW > vw - 8) {
         if (placement === "right") {
-          placement = "left";
-          tryPlacement("left");
+          placement = "bottom";
+          tryPlacement("bottom");
         } else {
           cardLeft = Math.max(8, vw - cardW - 8);
         }
       }
       if (cardLeft < 8) {
         if (placement === "left") {
-          placement = "right";
-          tryPlacement("right");
+          placement = "bottom";
+          tryPlacement("bottom");
         } else {
           cardLeft = 8;
         }
@@ -3392,12 +3401,50 @@ notificationSettingsSave.onclick = async () => {
         }
       }
 
+      // Final clamp; if still overlapping the highlight on the left rail,
+      // shove the card into the chat area to the right of the drawer.
       cardLeft = Math.max(8, Math.min(cardLeft, vw - cardW - 8));
       cardTop = Math.max(8, Math.min(cardTop, vh - cardH - 8));
+      if (step.openDrawer && cardLeft < left + width) {
+        cardLeft = Math.min(vw - cardW - 8, left + width + margin);
+      }
 
       card.style.top = `${cardTop}px`;
       card.style.left = `${cardLeft}px`;
       card.style.transform = "none";
+    }
+
+    function scheduleTutorialPosition(step) {
+      if (tutorialPositionTimer) {
+        clearTimeout(tutorialPositionTimer);
+        tutorialPositionTimer = null;
+      }
+      const token = ++tutorialStepToken;
+
+      const needsOpen = !!(step && step.openDrawer);
+      let justOpened = false;
+      if (needsOpen) {
+        justOpened = tutorialEnsureDrawerOpen();
+      } else {
+        tutorialCloseDrawerIfNeeded();
+      }
+
+      const run = () => {
+        if (token !== tutorialStepToken) return;
+        positionTutorialUI(step);
+        // Second pass after layout settles (fonts / list paint)
+        requestAnimationFrame(() => {
+          if (token !== tutorialStepToken) return;
+          positionTutorialUI(step);
+        });
+      };
+
+      if (justOpened) {
+        // Wait for the 0.2s drawer transform so getBoundingClientRect is correct
+        tutorialPositionTimer = setTimeout(run, 230);
+      } else {
+        requestAnimationFrame(run);
+      }
     }
 
     function renderTutorialStep() {
@@ -3429,14 +3476,14 @@ notificationSettingsSave.onclick = async () => {
       const nextBtn = document.getElementById("tutorial-next");
       if (nextBtn) nextBtn.textContent = tutorialStepIndex === TUTORIAL_STEPS.length - 1 ? "Get started" : "Next";
 
-      // Position after layout
-      requestAnimationFrame(() => positionTutorialUI(step));
+      scheduleTutorialPosition(step);
     }
 
     function showTutorial() {
       const modal = document.getElementById("tutorial-modal");
       if (!modal) return;
       tutorialStepIndex = 0;
+      tutorialOpenedDrawer = false;
       modal.classList.add("visible");
       modal.setAttribute("aria-hidden", "false");
       renderTutorialStep();
@@ -3457,7 +3504,13 @@ notificationSettingsSave.onclick = async () => {
         modal.classList.remove("visible");
         modal.setAttribute("aria-hidden", "true");
       }
+      if (tutorialPositionTimer) {
+        clearTimeout(tutorialPositionTimer);
+        tutorialPositionTimer = null;
+      }
+      tutorialStepToken += 1;
       clearTutorialHighlight();
+      tutorialCloseDrawerIfNeeded();
       if (tutorialResizeHandler) {
         window.removeEventListener("resize", tutorialResizeHandler);
         tutorialResizeHandler = null;
