@@ -1690,6 +1690,26 @@
       --text-tertiary: var(--chat-custom-text-color, #b0b3bd);
     }
 
+    /* Text mode without a chat background image (theme / solid / gradient bg) */
+    .chat-body:not(.has-custom-bg)[data-chat-text-mode="light"] .message-row,
+    .chat-body:not(.has-custom-bg)[data-chat-text-mode="light"] .message-reply-thread-item {
+      --text: #f5f6f8;
+      --text-secondary: #d8dae1;
+      --text-tertiary: #b0b3bd;
+    }
+    .chat-body:not(.has-custom-bg)[data-chat-text-mode="dark"] .message-row,
+    .chat-body:not(.has-custom-bg)[data-chat-text-mode="dark"] .message-reply-thread-item {
+      --text: #16171c;
+      --text-secondary: #3c3e46;
+      --text-tertiary: #62646c;
+    }
+    .chat-body:not(.has-custom-bg)[data-chat-text-mode="custom"] .message-row,
+    .chat-body:not(.has-custom-bg)[data-chat-text-mode="custom"] .message-reply-thread-item {
+      --text: var(--chat-custom-text-color, #f5f6f8);
+      --text-secondary: var(--chat-custom-text-color, #d8dae1);
+      --text-tertiary: var(--chat-custom-text-color, #b0b3bd);
+    }
+
     [data-density="compact"] .message-row {
       padding: 2px 10px;
       gap: 10px;
