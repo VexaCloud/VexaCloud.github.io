@@ -1186,6 +1186,7 @@
       if (cssLink) {
         cssLink.onload = function () { cssReady = true; tryGo(); };
         cssLink.onerror = function () { failed = true; fail("Failed to load stylesheet.css"); };
+        // cached stylesheet may already be loaded
         if (cssLink.sheet) { cssReady = true; }
       } else {
         cssReady = true;
@@ -1197,6 +1198,7 @@
       s.onload = function () { jsReady = true; tryGo(); };
       s.onerror = function () { failed = true; fail("Failed to load script.js"); };
       document.head.appendChild(s);
+      // timeout safety
       setTimeout(function () {
         if (!cssReady || !jsReady) {
           failed = true;
