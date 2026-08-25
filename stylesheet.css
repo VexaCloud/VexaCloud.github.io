@@ -1634,14 +1634,29 @@
       z-index: 1;
     }
 
+    /* Message text palette driven by --chat-text* set on #chat-body */
+    .chat-body[data-chat-text-mode] .message-row,
+    .chat-body[data-chat-text-mode] .message-reply-thread-item {
+      --text: var(--chat-text, var(--text));
+      --text-secondary: var(--chat-text-secondary, var(--text-secondary));
+      --text-tertiary: var(--chat-text-tertiary, var(--text-tertiary));
+    }
+    .chat-body[data-chat-text-mode] .message-content,
+    .chat-body[data-chat-text-mode] .message-reply-thread-item .message-content {
+      color: var(--chat-text-secondary, var(--text-secondary));
+    }
+    .chat-body[data-chat-text-mode] .message-username {
+      color: var(--chat-text, var(--text));
+    }
+    .chat-body[data-chat-text-mode] .message-timestamp {
+      color: var(--chat-text-tertiary, var(--text-tertiary));
+    }
+
     .chat-body.has-custom-bg .message-row {
       background: rgba(12, 13, 16, 0.58);
       backdrop-filter: blur(3px);
       -webkit-backdrop-filter: blur(3px);
       transition: background 0.12s ease;
-      --text: #f5f6f8;
-      --text-secondary: #d8dae1;
-      --text-tertiary: #b0b3bd;
     }
 
     .chat-body.has-custom-bg .message-row:hover {
@@ -1652,9 +1667,6 @@
       background: rgba(12, 13, 16, 0.46);
       backdrop-filter: blur(2px);
       -webkit-backdrop-filter: blur(2px);
-      --text: #f5f6f8;
-      --text-secondary: #d8dae1;
-      --text-tertiary: #b0b3bd;
     }
 
     .chat-body.has-custom-bg .message-reply-thread-item:hover {
@@ -1663,9 +1675,6 @@
 
     .chat-body.has-custom-bg[data-chat-text-mode="dark"] .message-row {
       background: rgba(255, 255, 255, 0.66);
-      --text: #16171c;
-      --text-secondary: #3c3e46;
-      --text-tertiary: #62646c;
     }
 
     .chat-body.has-custom-bg[data-chat-text-mode="dark"] .message-row:hover {
@@ -1674,40 +1683,10 @@
 
     .chat-body.has-custom-bg[data-chat-text-mode="dark"] .message-reply-thread-item {
       background: rgba(255, 255, 255, 0.52);
-      --text: #16171c;
-      --text-secondary: #3c3e46;
-      --text-tertiary: #62646c;
     }
 
     .chat-body.has-custom-bg[data-chat-text-mode="dark"] .message-reply-thread-item:hover {
       background: rgba(255, 255, 255, 0.7);
-    }
-
-    .chat-body.has-custom-bg[data-chat-text-mode="custom"] .message-row,
-    .chat-body.has-custom-bg[data-chat-text-mode="custom"] .message-reply-thread-item {
-      --text: var(--chat-custom-text-color, #f5f6f8);
-      --text-secondary: var(--chat-custom-text-color, #d8dae1);
-      --text-tertiary: var(--chat-custom-text-color, #b0b3bd);
-    }
-
-    /* Text mode without a chat background image (theme / solid / gradient bg) */
-    .chat-body:not(.has-custom-bg)[data-chat-text-mode="light"] .message-row,
-    .chat-body:not(.has-custom-bg)[data-chat-text-mode="light"] .message-reply-thread-item {
-      --text: #f5f6f8;
-      --text-secondary: #d8dae1;
-      --text-tertiary: #b0b3bd;
-    }
-    .chat-body:not(.has-custom-bg)[data-chat-text-mode="dark"] .message-row,
-    .chat-body:not(.has-custom-bg)[data-chat-text-mode="dark"] .message-reply-thread-item {
-      --text: #16171c;
-      --text-secondary: #3c3e46;
-      --text-tertiary: #62646c;
-    }
-    .chat-body:not(.has-custom-bg)[data-chat-text-mode="custom"] .message-row,
-    .chat-body:not(.has-custom-bg)[data-chat-text-mode="custom"] .message-reply-thread-item {
-      --text: var(--chat-custom-text-color, #f5f6f8);
-      --text-secondary: var(--chat-custom-text-color, #d8dae1);
-      --text-tertiary: var(--chat-custom-text-color, #b0b3bd);
     }
 
     [data-density="compact"] .message-row {
