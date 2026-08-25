@@ -1918,6 +1918,16 @@ notificationSettingsSave.onclick = async () => {
           `;
           btn.addEventListener("click", async () => {
             modal.classList.remove("visible");
+            const fromSettings = modal.dataset.fromSettings === "1";
+            if (fromSettings) {
+              // Settings is open: preview only — Save still owns persistence.
+              setTheme(t.value);
+              clearAccentOverrides();
+              clearBackgroundOverrides();
+              if (settingsTheme) settingsTheme.value = t.value;
+              try { populateColorPickersForTheme(t.value, {}); } catch (e) {}
+              return;
+            }
             await handleThemeChange(t.value);
           });
           row.appendChild(btn);
@@ -10087,12 +10097,13 @@ async function handleSignIn() {
         });
       }
 
-      settingsTheme.addEventListener("change", () => setTheme(settingsTheme.value));
-
       settingsAppearanceCancel.addEventListener("click", () => {
         settingsModal.classList.remove("visible");
-
-        applyProfileTheme(currentProfile);
+        // Restore saved theme + any custom colors (discard in-progress edits)
+        if (currentProfile) {
+          applyProfileTheme(currentProfile);
+          applyProfileAppearance(currentProfile);
+        }
       });
       settingsAppearanceSave.addEventListener("click", handleAppearanceSave);
 
@@ -10281,8 +10292,15 @@ async function handleSignIn() {
       });
 
       userPill.addEventListener("click", () => handleSettingsOpen());
-      settingsClose.addEventListener("click", () => settingsModal.classList.remove("visible"));
-      settingsCancel.addEventListener("click", () => settingsModal.classList.remove("visible"));
+      const closeSettingsDiscardingPreview = () => {
+        settingsModal.classList.remove("visible");
+        if (currentProfile) {
+          applyProfileTheme(currentProfile);
+          applyProfileAppearance(currentProfile);
+        }
+      };
+      settingsClose.addEventListener("click", closeSettingsDiscardingPreview);
+      settingsCancel.addEventListener("click", closeSettingsDiscardingPreview);
 
       const dangerSignOutButton = document.getElementById("danger-sign-out-button");
       if (dangerSignOutButton) {
@@ -10367,8 +10385,18 @@ async function handleSignIn() {
             openMoreThemesModal(true);
             return;
           }
+          // Preview the chosen base theme only — do not save and do not
+          // force the last custom appearance back on. Overrides clear so
+          // named themes are editable; custom is applied only on Save.
           setTheme(v);
-          try { populateColorPickersForTheme(v, {}); } catch (e) {}
+          if (v === "custom") {
+            if (currentProfile) applyProfileAppearance({ ...currentProfile, theme: "custom" });
+            try { populateColorPickersForTheme("custom", (currentProfile && currentProfile.appearance) || {}); } catch (e) {}
+          } else {
+            clearAccentOverrides();
+            clearBackgroundOverrides();
+            try { populateColorPickersForTheme(v, {}); } catch (e) {}
+          }
         });
       }
       document.querySelectorAll(".color-mode-btn").forEach((btn) => {
@@ -10382,33 +10410,8 @@ async function handleSignIn() {
           }
         });
       });
-      const previewCustomAppearanceLive = () => {
-        try {
-          const accentEl = document.getElementById("settings-accent-color");
-          const accent2El = document.getElementById("settings-accent-color-2");
-          const accentGradEl = document.getElementById("settings-accent-gradient");
-          const bgEl = document.getElementById("settings-bg-color");
-          const bg2El = document.getElementById("settings-bg-color-2");
-          const bgGradEl = document.getElementById("settings-bg-gradient");
-          if (accentEl && accentEl.value) {
-            let accentGrad = null;
-            if (accentGradEl && accentGradEl.checked && accent2El && accent2El.value) {
-              accentGrad = `linear-gradient(135deg, ${accentEl.value}, ${accent2El.value})`;
-            }
-            applyAccentColor(accentEl.value, accentGrad);
-          }
-          if (bgEl && (bgEl.dataset.userSet === "1" || (bgGradEl && bgGradEl.checked))) {
-            let bgGrad = null;
-            if (bgGradEl && bgGradEl.checked && bg2El && bg2El.value) {
-              bgGrad = `linear-gradient(160deg, ${bgEl.value}, ${bg2El.value})`;
-            }
-            applyBackgroundColor(bgEl.value, bgGrad, bg2El ? bg2El.value : bgEl.value);
-          }
-        } catch (err) {
-          console.error("Live appearance preview failed", err);
-        }
-      };
-
+      // Color pickers only update the small preview chips — full theme
+      // changes apply on Appearance Save, not while dragging.
       ["settings-accent-color", "settings-accent-color-2", "settings-bg-color", "settings-bg-color-2"].forEach((id) => {
         const el = document.getElementById(id);
         if (!el) return;
@@ -10416,13 +10419,6 @@ async function handleSignIn() {
           const target = id.includes("accent") ? "accent" : "bg";
           if (target === "bg") el.dataset.userSet = "1";
           updateColorPickerPreview(target);
-          previewCustomAppearanceLive();
-        });
-      });
-      document.querySelectorAll(".color-mode-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          // After mode toggle, refresh live preview with new solid/gradient state
-          setTimeout(previewCustomAppearanceLive, 0);
         });
       });
 
