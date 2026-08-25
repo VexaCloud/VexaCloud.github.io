@@ -1136,11 +1136,65 @@
     html.has-custom-bg-gradient .app-shell {
       background: transparent;
     }
+
+    /* Custom themes (solid or gradient): elevate chrome so top bar and
+       panels read as distinct frosted layers — same idea as built-in
+       gradient themes. */
+    html.has-custom-bg-color .panel,
+    html.has-custom-bg-color .top-bar,
     html.has-custom-bg-gradient .panel,
     html.has-custom-bg-gradient .top-bar {
-      background: color-mix(in srgb, var(--surface) 88%, transparent);
+      background: color-mix(in srgb, var(--surface-2, var(--surface)) 82%, transparent);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-color: color-mix(in srgb, var(--border) 75%, transparent);
+    }
+    html.has-custom-bg-color .top-bar,
+    html.has-custom-bg-gradient .top-bar {
+      background: color-mix(in srgb, var(--surface-2, var(--surface)) 78%, transparent);
+      box-shadow: 0 1px 0 color-mix(in srgb, #fff 6%, transparent);
+    }
+    /* Solid custom: shell is opaque same color as --surface, so translucency
+       alone doesn't separate. Nudge elevated chrome slightly lighter. */
+    html.has-custom-bg-color:not(.has-custom-bg-gradient) .top-bar {
+      background: color-mix(in srgb, var(--surface-2, var(--surface)) 88%, #ffffff 12%);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    html.has-custom-bg-color:not(.has-custom-bg-gradient) .panel {
+      background: color-mix(in srgb, var(--surface) 92%, #ffffff 8%);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
+    }
+
+    /* Message composer: frosted “pop” on custom / gradient / chat image bg */
+    html.has-custom-bg-color .chat-input-area,
+    html.has-custom-bg-gradient .chat-input-area,
+    html.theme-has-gradient-bg .chat-input-area,
+    .chat-body.has-custom-bg .chat-input-area {
+      background: color-mix(in srgb, var(--surface-2, var(--surface)) 76%, transparent);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+      border-radius: var(--r-md);
+      margin: 4px 10px 10px;
+      padding: 10px 12px 12px;
+      box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
+    }
+    html.has-custom-bg-color:not(.has-custom-bg-gradient) .chat-input-area {
+      background: color-mix(in srgb, var(--surface-2, var(--surface)) 86%, #ffffff 14%);
+    }
+    html.has-custom-bg-color .chat-input-shell,
+    html.has-custom-bg-gradient .chat-input-shell,
+    html.theme-has-gradient-bg .chat-input-shell,
+    .chat-body.has-custom-bg .chat-input-shell {
+      background: color-mix(in srgb, var(--surface-3, var(--surface-2)) 72%, transparent);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-color: color-mix(in srgb, var(--border) 65%, transparent);
+    }
+    html.has-custom-bg-color:not(.has-custom-bg-gradient) .chat-input-shell {
+      background: color-mix(in srgb, var(--surface-3, var(--surface-2)) 88%, #ffffff 12%);
     }
 
     .call-overlay-header {
