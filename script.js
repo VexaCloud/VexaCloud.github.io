@@ -2297,27 +2297,67 @@ notificationSettingsSave.onclick = async () => {
       return lum < 0.52 ? "light" : "dark";
     }
 
+    function clearChatTextModeOverrides() {
+      if (!chatBodyEl) return;
+      chatBodyEl.removeAttribute("data-chat-text-mode");
+      [
+        "--chat-custom-text-color",
+        "--chat-text",
+        "--chat-text-secondary",
+        "--chat-text-tertiary",
+      ].forEach((p) => chatBodyEl.style.removeProperty(p));
+    }
+
+    function setChatTextPalette(mode, customHex) {
+      if (!chatBodyEl) return;
+      let main;
+      let secondary;
+      let tertiary;
+      if (mode === "custom" && customHex) {
+        const base = parseHexColor(customHex) || parseHexColor("#f5f6f8");
+        main = base.hex;
+        // Soften secondary/tertiary toward mid-gray so hierarchy still reads
+        const sec = mixToward(base, relativeLuminance(base) > 0.5 ? -0.25 : 0.22);
+        const ter = mixToward(base, relativeLuminance(base) > 0.5 ? -0.4 : 0.38);
+        secondary = rgbToHex(sec.r, sec.g, sec.b);
+        tertiary = rgbToHex(ter.r, ter.g, ter.b);
+        chatBodyEl.style.setProperty("--chat-custom-text-color", main);
+      } else if (mode === "dark") {
+        main = "#16171c";
+        secondary = "#3c3e46";
+        tertiary = "#62646c";
+        chatBodyEl.style.removeProperty("--chat-custom-text-color");
+      } else {
+        // light text (explicit light, or auto→light)
+        main = "#f5f6f8";
+        secondary = "#d8dae1";
+        tertiary = "#b0b3bd";
+        chatBodyEl.style.removeProperty("--chat-custom-text-color");
+      }
+      chatBodyEl.setAttribute("data-chat-text-mode", mode === "custom" ? "custom" : mode);
+      chatBodyEl.style.setProperty("--chat-text", main);
+      chatBodyEl.style.setProperty("--chat-text-secondary", secondary);
+      chatBodyEl.style.setProperty("--chat-text-tertiary", tertiary);
+    }
+
     async function applyChatTextMode(profile) {
       if (!chatBodyEl) return;
       const appearance = (profile && profile.appearance) || {};
       const mode = appearance.text_color_mode || "auto";
 
       if (mode === "custom" && appearance.custom_text_color) {
-        chatBodyEl.setAttribute("data-chat-text-mode", "custom");
-        chatBodyEl.style.setProperty("--chat-custom-text-color", appearance.custom_text_color);
+        setChatTextPalette("custom", appearance.custom_text_color);
         return;
       }
-
-      chatBodyEl.style.removeProperty("--chat-custom-text-color");
 
       if (mode === "light" || mode === "dark") {
-        chatBodyEl.setAttribute("data-chat-text-mode", mode);
+        setChatTextPalette(mode);
         return;
       }
 
-      // auto
+      // auto — sample image, custom bg colors, or theme canvas
       const detected = await detectBackgroundTextMode(profile);
-      chatBodyEl.setAttribute("data-chat-text-mode", detected);
+      setChatTextPalette(detected);
     }
 
     async function applyChatBackground(profile) {
@@ -9649,11 +9689,25 @@ async function handleCreateServer() {
           method: "PUT",
           body: JSON.stringify(updates),
         });
-        currentProfile = profile;
+        // Merge local appearance so text_color_mode etc. stick even if the
+        // API omits nested fields on the response.
+        currentProfile = {
+          ...profile,
+          appearance: {
+            ...((profile && profile.appearance) || {}),
+            ...appearance,
+          },
+          background_url:
+            backgroundUrl !== undefined
+              ? backgroundUrl
+              : pendingSettingsBackgroundRemoved
+                ? null
+                : profile.background_url,
+        };
         pendingSettingsBackgroundFile = null;
         pendingSettingsBackgroundRemoved = false;
-        applyProfileTheme(profile);
-        applyProfileAppearance(profile);
+        applyProfileTheme(currentProfile);
+        applyProfileAppearance(currentProfile);
         try {
           rebuildThemeSelect(themeSelect, profile.theme);
           rebuildThemeSelect(settingsTheme, profile.theme);
