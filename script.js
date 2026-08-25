@@ -1995,6 +1995,54 @@ notificationSettingsSave.onclick = async () => {
       setTheme(profile.theme);
     }
 
+    function parseHexColor(hex) {
+      if (!hex || typeof hex !== "string") return null;
+      let h = hex.trim().replace(/^#/, "");
+      if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+      if (!/^[0-9a-fA-F]{6}$/.test(h)) return null;
+      return {
+        r: parseInt(h.slice(0, 2), 16),
+        g: parseInt(h.slice(2, 4), 16),
+        b: parseInt(h.slice(4, 6), 16),
+        hex: `#${h.toLowerCase()}`,
+      };
+    }
+
+    function rgbToHex(r, g, b) {
+      const clamp = (n) => Math.max(0, Math.min(255, Math.round(n)));
+      const to = (n) => clamp(n).toString(16).padStart(2, "0");
+      return `#${to(r)}${to(g)}${to(b)}`;
+    }
+
+    function relativeLuminance({ r, g, b }) {
+      const lin = (c) => {
+        const s = c / 255;
+        return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+      };
+      return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+    }
+
+    // Mix toward white (amount 0–1) or black (negative amount).
+    function mixToward(rgb, amount) {
+      if (amount >= 0) {
+        return {
+          r: rgb.r + (255 - rgb.r) * amount,
+          g: rgb.g + (255 - rgb.g) * amount,
+          b: rgb.b + (255 - rgb.b) * amount,
+        };
+      }
+      const a = -amount;
+      return {
+        r: rgb.r * (1 - a),
+        g: rgb.g * (1 - a),
+        b: rgb.b * (1 - a),
+      };
+    }
+
+    function withAlpha(rgb, alpha) {
+      return `rgba(${Math.round(rgb.r)}, ${Math.round(rgb.g)}, ${Math.round(rgb.b)}, ${alpha})`;
+    }
+
     function clearAccentOverrides() {
       const root = document.documentElement;
       root.style.removeProperty("--accent-user");
@@ -2003,33 +2051,59 @@ notificationSettingsSave.onclick = async () => {
       root.style.removeProperty("--accent-hover");
       root.style.removeProperty("--accent-strong");
       root.style.removeProperty("--accent-subtle");
+      root.style.removeProperty("--accent-text");
+      root.classList.remove("has-custom-accent");
     }
 
     function applyAccentColor(hex, gradient) {
       const root = document.documentElement;
-      if (gradient) {
-        root.style.setProperty("--accent-user", hex || "#6366f1");
-        root.style.setProperty("--accent-user-gradient", gradient);
-        root.style.setProperty("--accent", hex || "#6366f1");
-        root.style.setProperty("--accent-hover", hex || "#6366f1");
-        root.style.setProperty("--accent-strong", hex || "#6366f1");
-      } else if (hex) {
-        root.style.setProperty("--accent-user", hex);
-        root.style.setProperty("--accent", hex);
-        root.style.setProperty("--accent-hover", hex);
-        root.style.setProperty("--accent-strong", hex);
-        root.style.removeProperty("--accent-user-gradient");
-      } else {
+      const parsed = parseHexColor(hex);
+      if (!parsed && !gradient) {
         clearAccentOverrides();
+        return;
+      }
+      const base = parsed || parseHexColor("#6366f1");
+      const lum = relativeLuminance(base);
+      // Hover: slightly lighter on dark accents, slightly darker on light ones
+      const hover = mixToward(base, lum > 0.55 ? -0.12 : 0.14);
+      const strong = mixToward(base, lum > 0.55 ? -0.22 : -0.18);
+      const accentText = lum > 0.62 ? "#0f1115" : "#ffffff";
+
+      root.style.setProperty("--accent-user", base.hex);
+      root.style.setProperty("--accent", base.hex);
+      root.style.setProperty("--accent-hover", rgbToHex(hover.r, hover.g, hover.b));
+      root.style.setProperty("--accent-strong", rgbToHex(strong.r, strong.g, strong.b));
+      root.style.setProperty("--accent-subtle", withAlpha(base, 0.16));
+      root.style.setProperty("--accent-text", accentText);
+      root.classList.add("has-custom-accent");
+
+      if (gradient) {
+        root.style.setProperty("--accent-user-gradient", gradient);
+      } else {
+        root.style.removeProperty("--accent-user-gradient");
       }
     }
 
     function clearBackgroundOverrides() {
       const root = document.documentElement;
-      root.style.removeProperty("--bg-canvas");
-      root.style.removeProperty("--surface");
-      root.style.removeProperty("--surface-2");
-      root.style.removeProperty("--surface-3");
+      [
+        "--bg-canvas",
+        "--surface",
+        "--surface-2",
+        "--surface-3",
+        "--border",
+        "--border-strong",
+        "--text",
+        "--text-secondary",
+        "--text-tertiary",
+        "--input-bg",
+        "--bg-elevated",
+        "--bg-elevated-strong",
+        "--bg-soft",
+        "--tag-bg",
+        "--surface-gradient",
+        "--surface-gradient-left",
+      ].forEach((p) => root.style.removeProperty(p));
       root.style.backgroundImage = "";
       root.style.backgroundColor = "";
       document.body.style.backgroundImage = "";
@@ -2037,33 +2111,89 @@ notificationSettingsSave.onclick = async () => {
       document.body.style.background = "";
       root.classList.remove("has-custom-bg-color");
       root.classList.remove("has-custom-bg-gradient");
+      root.classList.remove("custom-bg-is-light");
+      root.classList.remove("custom-bg-is-dark");
     }
 
-    function applyBackgroundColor(color, gradient) {
+    // Build a coherent surface / text / border palette from a base bg color
+    // so custom solid + gradient themes look like real themes, not flat fills.
+    function applyDerivedSurfacePalette(baseHex, secondHex) {
+      const root = document.documentElement;
+      const primary = parseHexColor(baseHex) || parseHexColor("#131418");
+      const secondary = parseHexColor(secondHex) || primary;
+      // Blend stops so surface tones sit between the two gradient ends
+      const mid = {
+        r: (primary.r + secondary.r) / 2,
+        g: (primary.g + secondary.g) / 2,
+        b: (primary.b + secondary.b) / 2,
+      };
+      const lum = relativeLuminance(mid);
+      const isLight = lum > 0.52;
+
+      root.classList.toggle("custom-bg-is-light", isLight);
+      root.classList.toggle("custom-bg-is-dark", !isLight);
+
+      // Elevated surfaces: step away from the canvas so panels / inputs pop
+      let s1, s2, s3;
+      if (isLight) {
+        s1 = mixToward(mid, -0.04);
+        s2 = mixToward(mid, -0.1);
+        s3 = mixToward(mid, -0.16);
+      } else {
+        s1 = mixToward(mid, 0.07);
+        s2 = mixToward(mid, 0.13);
+        s3 = mixToward(mid, 0.2);
+      }
+
+      const textMain = isLight ? mixToward(mid, -0.82) : mixToward(mid, 0.92);
+      const textSec = isLight ? mixToward(mid, -0.55) : mixToward(mid, 0.62);
+      const textTer = isLight ? mixToward(mid, -0.38) : mixToward(mid, 0.42);
+      const borderRgb = isLight ? mixToward(mid, -0.55) : mixToward(mid, 0.85);
+
+      const canvasHex = primary.hex;
+      const surfaceHex = rgbToHex(s1.r, s1.g, s1.b);
+      const surface2Hex = rgbToHex(s2.r, s2.g, s2.b);
+      const surface3Hex = rgbToHex(s3.r, s3.g, s3.b);
+
+      root.style.setProperty("--bg-canvas", canvasHex);
+      root.style.setProperty("--surface", surfaceHex);
+      root.style.setProperty("--surface-2", surface2Hex);
+      root.style.setProperty("--surface-3", surface3Hex);
+      root.style.setProperty("--input-bg", surface2Hex);
+      root.style.setProperty("--bg-elevated", surfaceHex);
+      root.style.setProperty("--bg-elevated-strong", surface2Hex);
+      root.style.setProperty("--bg-soft", surfaceHex);
+      root.style.setProperty("--tag-bg", surface3Hex);
+      root.style.setProperty("--surface-gradient", surfaceHex);
+      root.style.setProperty("--surface-gradient-left", surfaceHex);
+      root.style.setProperty("--border", withAlpha(borderRgb, isLight ? 0.18 : 0.12));
+      root.style.setProperty("--border-strong", withAlpha(borderRgb, isLight ? 0.28 : 0.2));
+      root.style.setProperty("--text", rgbToHex(textMain.r, textMain.g, textMain.b));
+      root.style.setProperty("--text-secondary", rgbToHex(textSec.r, textSec.g, textSec.b));
+      root.style.setProperty("--text-tertiary", rgbToHex(textTer.r, textTer.g, textTer.b));
+
+      return { canvasHex, surfaceHex, surface2Hex, isLight, primary, secondary };
+    }
+
+    function applyBackgroundColor(color, gradient, color2) {
       const root = document.documentElement;
       if (gradient) {
-        root.style.setProperty("--bg-canvas", color || "#0a0b0e");
-        root.style.setProperty("--surface", color || "#0a0b0e");
+        const palette = applyDerivedSurfacePalette(color || "#0a0b0e", color2 || color);
         root.style.backgroundImage = gradient;
         root.style.backgroundAttachment = "fixed";
-        root.style.backgroundColor = color || "#0a0b0e";
+        root.style.backgroundColor = palette.canvasHex;
         document.body.style.backgroundImage = gradient;
         document.body.style.backgroundAttachment = "fixed";
-        document.body.style.backgroundColor = color || "#0a0b0e";
+        document.body.style.backgroundColor = palette.canvasHex;
         root.classList.add("has-custom-bg-color");
-        // A distinct class so CSS can tell "solid custom color" (where the
-        // app shell painting an opaque fill is correct) apart from
-        // "gradient custom color" (where that same opaque fill would just
-        // hide the gradient underneath it).
         root.classList.add("has-custom-bg-gradient");
       } else if (color) {
-        root.style.setProperty("--bg-canvas", color);
-        root.style.setProperty("--surface", color);
+        const palette = applyDerivedSurfacePalette(color, color);
         root.style.backgroundImage = "";
-        root.style.backgroundColor = color;
+        root.style.backgroundColor = palette.canvasHex;
         document.body.style.backgroundImage = "";
-        document.body.style.backgroundColor = color;
-        document.body.style.background = color;
+        document.body.style.backgroundColor = palette.canvasHex;
+        document.body.style.background = palette.canvasHex;
         root.classList.add("has-custom-bg-color");
         root.classList.remove("has-custom-bg-gradient");
       } else {
@@ -2156,7 +2286,11 @@ notificationSettingsSave.onclick = async () => {
           bgGrad = `linear-gradient(160deg, ${appearance.bg_color}, ${appearance.bg_color_2})`;
         }
         if (!profile || !profile.background_url) {
-          applyBackgroundColor(appearance.bg_color || null, bgGrad);
+          applyBackgroundColor(
+            appearance.bg_color || null,
+            bgGrad,
+            appearance.bg_color_2 || appearance.bg_color || null
+          );
         } else {
           clearBackgroundOverrides();
         }
@@ -10248,6 +10382,33 @@ async function handleSignIn() {
           }
         });
       });
+      const previewCustomAppearanceLive = () => {
+        try {
+          const accentEl = document.getElementById("settings-accent-color");
+          const accent2El = document.getElementById("settings-accent-color-2");
+          const accentGradEl = document.getElementById("settings-accent-gradient");
+          const bgEl = document.getElementById("settings-bg-color");
+          const bg2El = document.getElementById("settings-bg-color-2");
+          const bgGradEl = document.getElementById("settings-bg-gradient");
+          if (accentEl && accentEl.value) {
+            let accentGrad = null;
+            if (accentGradEl && accentGradEl.checked && accent2El && accent2El.value) {
+              accentGrad = `linear-gradient(135deg, ${accentEl.value}, ${accent2El.value})`;
+            }
+            applyAccentColor(accentEl.value, accentGrad);
+          }
+          if (bgEl && (bgEl.dataset.userSet === "1" || (bgGradEl && bgGradEl.checked))) {
+            let bgGrad = null;
+            if (bgGradEl && bgGradEl.checked && bg2El && bg2El.value) {
+              bgGrad = `linear-gradient(160deg, ${bgEl.value}, ${bg2El.value})`;
+            }
+            applyBackgroundColor(bgEl.value, bgGrad, bg2El ? bg2El.value : bgEl.value);
+          }
+        } catch (err) {
+          console.error("Live appearance preview failed", err);
+        }
+      };
+
       ["settings-accent-color", "settings-accent-color-2", "settings-bg-color", "settings-bg-color-2"].forEach((id) => {
         const el = document.getElementById(id);
         if (!el) return;
@@ -10255,6 +10416,13 @@ async function handleSignIn() {
           const target = id.includes("accent") ? "accent" : "bg";
           if (target === "bg") el.dataset.userSet = "1";
           updateColorPickerPreview(target);
+          previewCustomAppearanceLive();
+        });
+      });
+      document.querySelectorAll(".color-mode-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          // After mode toggle, refresh live preview with new solid/gradient state
+          setTimeout(previewCustomAppearanceLive, 0);
         });
       });
 
