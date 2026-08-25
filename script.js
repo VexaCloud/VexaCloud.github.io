@@ -3087,6 +3087,15 @@ notificationSettingsSave.onclick = async () => {
         applyProfileTheme(currentProfile);
         applyProfileAppearance(currentProfile);
 
+        // Show once per account - persisted server-side via
+        // has_completed_tutorial, not just a local/session thing, so it
+        // stays skipped across devices and reloads. Fires before the
+        // (potentially slower) servers/DMs load below so it shows up
+        // immediately rather than waiting behind a spinner.
+        if (currentProfile && !currentProfile.has_completed_tutorial) {
+          showTutorial();
+        }
+
         if (typeof window.updatePushStatusUI === "function") window.updatePushStatusUI();
         await tryApplyPendingAvatar();
 
@@ -3121,6 +3130,117 @@ notificationSettingsSave.onclick = async () => {
       let text = `You've been ${action} ${whenText}.`;
       if (err.reason) text += ` Reason: ${err.reason}`;
       return text;
+    }
+
+    // -----------------------------------------------------------------
+    // First-time tutorial
+    // -----------------------------------------------------------------
+    // Shown once, right after a fresh sign-in/sign-up, based on
+    // profiles.has_completed_tutorial (see PUT /api/profile). Skippable
+    // from any step - skipping and finishing both persist the same flag,
+    // so it never shows again either way.
+
+    const TUTORIAL_STEPS = [
+      {
+        icon: '<path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/>',
+        title: "Welcome to VexaCloud",
+        desc: "A quick look around before you dive in — this'll take about a minute, and you can skip it anytime.",
+      },
+      {
+        icon: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+        title: "Servers & channels",
+        desc: "Servers are communities you're part of, shown down the left edge. Inside each one, channels split conversation up by topic — pick a channel from the sidebar to jump in.",
+      },
+      {
+        icon: '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/>',
+        title: "Messaging",
+        desc: "Reply to a message to keep a thread together, react with an emoji, or type @ to mention someone directly — they'll get notified.",
+      },
+      {
+        icon: '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
+        title: "Voice channels",
+        desc: "Voice channels let you drop into a live call with anyone else in the server — just click one to join, no invite required.",
+      },
+      {
+        icon: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>',
+        title: "Make it yours",
+        desc: "Head into Settings anytime to pick a theme, set custom colors, and tune your notifications. You're all set — enjoy!",
+      },
+    ];
+
+    let tutorialStepIndex = 0;
+
+    function renderTutorialStep() {
+      const step = TUTORIAL_STEPS[tutorialStepIndex];
+      if (!step) return;
+
+      const dotsEl = document.getElementById("tutorial-dots");
+      if (dotsEl) {
+        dotsEl.innerHTML = TUTORIAL_STEPS.map((_, i) => `<div class="tutorial-dot${i === tutorialStepIndex ? " active" : ""}"></div>`).join("");
+      }
+
+      const counterEl = document.getElementById("tutorial-step-counter");
+      if (counterEl) counterEl.textContent = `Step ${tutorialStepIndex + 1} of ${TUTORIAL_STEPS.length}`;
+
+      const iconEl = document.getElementById("tutorial-step-icon");
+      if (iconEl) {
+        iconEl.innerHTML = `<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${step.icon}</svg>`;
+      }
+
+      const titleEl = document.getElementById("tutorial-step-title");
+      if (titleEl) titleEl.textContent = step.title;
+
+      const descEl = document.getElementById("tutorial-step-desc");
+      if (descEl) descEl.textContent = step.desc;
+
+      const backBtn = document.getElementById("tutorial-back");
+      if (backBtn) backBtn.style.display = tutorialStepIndex === 0 ? "none" : "inline-flex";
+
+      const nextBtn = document.getElementById("tutorial-next");
+      if (nextBtn) nextBtn.textContent = tutorialStepIndex === TUTORIAL_STEPS.length - 1 ? "Get started" : "Next";
+    }
+
+    function showTutorial() {
+      const modal = document.getElementById("tutorial-modal");
+      if (!modal) return;
+      tutorialStepIndex = 0;
+      renderTutorialStep();
+      modal.classList.add("visible");
+    }
+
+    function hideTutorial() {
+      const modal = document.getElementById("tutorial-modal");
+      if (modal) modal.classList.remove("visible");
+    }
+
+    // Called for both "Skip tutorial" and finishing the last step -
+    // either way the tutorial is done and shouldn't show again.
+    async function completeTutorial() {
+      hideTutorial();
+      if (currentProfile) currentProfile.has_completed_tutorial = true;
+      try {
+        await apiFetch("/api/profile", {
+          method: "PUT",
+          body: JSON.stringify({ has_completed_tutorial: true }),
+        });
+      } catch (err) {
+        console.error("Failed to save tutorial completion:", err);
+      }
+    }
+
+    function tutorialAdvance() {
+      if (tutorialStepIndex >= TUTORIAL_STEPS.length - 1) {
+        completeTutorial();
+        return;
+      }
+      tutorialStepIndex += 1;
+      renderTutorialStep();
+    }
+
+    function tutorialBack() {
+      if (tutorialStepIndex === 0) return;
+      tutorialStepIndex -= 1;
+      renderTutorialStep();
     }
 
     function openChannelsDrawer() {
@@ -9711,6 +9831,13 @@ async function handleSignIn() {
             closeViewProfileModal();
             return;
           }
+          if (backdrop.id === "tutorial-modal") {
+            // Treat clicking outside as skipping, same as the "Skip
+            // tutorial" buttons - otherwise it'd just silently reappear
+            // on the next reload since nothing would have persisted.
+            completeTutorial();
+            return;
+          }
           backdrop.classList.remove("visible");
         });
       });
@@ -9781,6 +9908,14 @@ async function handleSignIn() {
           }
         });
       }
+      const tutorialSkipTop = document.getElementById("tutorial-skip-top");
+      const tutorialSkipBottom = document.getElementById("tutorial-skip-bottom");
+      const tutorialNext = document.getElementById("tutorial-next");
+      const tutorialBackBtn = document.getElementById("tutorial-back");
+      if (tutorialSkipTop) tutorialSkipTop.addEventListener("click", completeTutorial);
+      if (tutorialSkipBottom) tutorialSkipBottom.addEventListener("click", completeTutorial);
+      if (tutorialNext) tutorialNext.addEventListener("click", tutorialAdvance);
+      if (tutorialBackBtn) tutorialBackBtn.addEventListener("click", tutorialBack);
       document.addEventListener("keydown", (e) => {
         if (e.key === "Escape" && moreThemesModal && moreThemesModal.classList.contains("visible")) {
           closeMoreThemes();
