@@ -1792,6 +1792,8 @@
       border: 1px solid var(--border);
       border-radius: var(--r-lg);
       flex-shrink: 0;
+      position: relative;
+      z-index: 10;
     }
 
     .top-bar-left {
